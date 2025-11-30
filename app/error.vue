@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import * as locales from "@nuxt/ui/locale";
+import type { NuxtError } from "#app";
+
+defineProps<{
+  error: NuxtError;
+}>();
 
 const { locale } = useI18n();
 
@@ -18,7 +23,9 @@ useHead({
   <UApp :locale="locales[locale]">
     <NuxtLoadingIndicator />
     <NuxtLayout>
-      <NuxtPage />
+      <UContainer>
+        <UError :error="error" />
+      </UContainer>
     </NuxtLayout>
   </UApp>
 </template>

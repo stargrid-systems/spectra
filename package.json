@@ -15,10 +15,15 @@
     "@nuxt/image": "^2.0.0",
     "@nuxt/test-utils": "^3.20.1",
     "@nuxt/ui": "^4.2.1",
+    "@nuxtjs/i18n": "^10.2.1",
     "eslint": "^9.39.1",
     "nuxt": "^4.2.1",
     "typescript": "^5.9.3",
     "vue": "^3.5.25",
     "vue-router": "^4.6.3"
+  },
+  "devDependencies": {
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "3.7.3"
   }
 }
