@@ -1,0 +1,9 @@
+{
+  "name": "Spectra",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:24-trixie",
+  "customizations": {
+    "vscode": {
+      "extensions": ["Vue.volar"]
+    }
+  }
+}
