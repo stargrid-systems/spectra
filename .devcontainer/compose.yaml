@@ -4,10 +4,10 @@ services:
     restart: "unless-stopped"
     command: "sleep infinity"
     networks:
-    - "authentik"
-    - "postgres"
+      - "authentik"
+      - "postgres"
     volumes:
-    - "../..:/workspaces:cached"
+      - "../..:/workspaces:cached"
 
   authentik-server: &authentik-server
     image: "ghcr.io/goauthentik/server:2025.10.2"
@@ -24,8 +24,8 @@ services:
       AUTHENTIK_BOOTSTRAP_PASSWORD: "6485b75ef3671906"
       AUTHENTIK_BOOTSTRAP_TOKEN: "398829673032ee4b"
     networks:
-    - "authentik"
-    - "postgres"
+      - "authentik"
+      - "postgres"
     depends_on:
       postgres:
         condition: "service_healthy"
@@ -43,16 +43,16 @@ services:
       POSTGRES_PASSWORD: "dev"
       POSTGRES_DB: "postgres"
     networks:
-    - "postgres"
+      - "postgres"
     volumes:
-    - "./init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh:ro"
+      - "./init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh:ro"
     healthcheck:
       interval: "30s"
       retries: 5
       start_period: "20s"
       test:
-      - "CMD-SHELL"
-      - "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"
+        - "CMD-SHELL"
+        - "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"
       timeout: "5s"
 
 networks:
