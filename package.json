@@ -20,11 +20,13 @@
     "drizzle-orm": "^0.44.7",
     "eslint": "^9.39.1",
     "nuxt": "^4.2.1",
+    "pg": "^8.16.3",
     "typescript": "^5.9.3",
     "vue": "^3.5.25",
     "vue-router": "^4.6.3"
   },
   "devDependencies": {
+    "@types/pg": "^8.15.6",
     "drizzle-kit": "^0.31.7",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "3.7.3"

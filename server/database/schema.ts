@@ -1,10 +1,27 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { pgTable, bigint, text, unique } from "drizzle-orm/pg-core";
 
-export const users = sqliteTable("users", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(),
-  avatar: text("avatar").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+const id = bigint("id", { mode: "bigint" })
+  .primaryKey()
+  .generatedAlwaysAsIdentity({ minValue: 1000 });
+
+export const users = pgTable("users", {
+  id,
+  authentikUid: text("authentik_uid").notNull().unique(),
 });
+
+export const partDefinitions = pgTable("part_definitions", {
+  id,
+  name: text("name").notNull().unique(),
+});
+
+export const parts = pgTable(
+  "parts",
+  {
+    id,
+    partDefinitionId: bigint("part_definition_id", { mode: "bigint" })
+      .references(() => partDefinitions.id)
+      .notNull(),
+    serialNumber: text("serial_number"),
+  },
+  (t) => [unique().on(t.partDefinitionId, t.serialNumber)],
+);
