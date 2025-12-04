@@ -1,26 +1,68 @@
 {
-  "id": "9ab87e64-719d-4df3-bcb7-95bed7edf275",
+  "id": "15566bc9-7120-4ea9-bcc9-428e7060245e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.part_definitions": {
-      "name": "part_definitions",
-      "schema": "",
+    "iam.users": {
+      "name": "users",
+      "schema": "iam",
       "columns": {
         "id": {
           "name": "id",
-          "type": "bigint",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "users_id_seq",
+            "schema": "iam",
+            "increment": "1",
+            "startWith": "1000",
+            "minValue": "1000",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "authentik_uid": {
+          "name": "authentik_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_authentik_uid_unique": {
+          "name": "users_authentik_uid_unique",
+          "nullsNotDistinct": false,
+          "columns": ["authentik_uid"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "parts.part_definitions": {
+      "name": "part_definitions",
+      "schema": "parts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true,
           "identity": {
             "type": "always",
             "name": "part_definitions_id_seq",
-            "schema": "public",
+            "schema": "parts",
             "increment": "1",
             "startWith": "1000",
             "minValue": "1000",
-            "maxValue": "9223372036854775807",
+            "maxValue": "2147483647",
             "cache": "1",
             "cycle": false
           }
@@ -46,30 +88,30 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.parts": {
+    "parts.parts": {
       "name": "parts",
-      "schema": "",
+      "schema": "parts",
       "columns": {
         "id": {
           "name": "id",
-          "type": "bigint",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true,
           "identity": {
             "type": "always",
             "name": "parts_id_seq",
-            "schema": "public",
+            "schema": "parts",
             "increment": "1",
             "startWith": "1000",
             "minValue": "1000",
-            "maxValue": "9223372036854775807",
+            "maxValue": "2147483647",
             "cache": "1",
             "cycle": false
           }
         },
         "part_definition_id": {
           "name": "part_definition_id",
-          "type": "bigint",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -86,6 +128,7 @@
           "name": "parts_part_definition_id_part_definitions_id_fk",
           "tableFrom": "parts",
           "tableTo": "part_definitions",
+          "schemaTo": "parts",
           "columnsFrom": ["part_definition_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
@@ -98,48 +141,6 @@
           "name": "parts_part_definition_id_serial_number_unique",
           "nullsNotDistinct": false,
           "columns": ["part_definition_id", "serial_number"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.users": {
-      "name": "users",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "bigint",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "always",
-            "name": "users_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1000",
-            "minValue": "1000",
-            "maxValue": "9223372036854775807",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "authentik_uid": {
-          "name": "authentik_uid",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "users_authentik_uid_unique": {
-          "name": "users_authentik_uid_unique",
-          "nullsNotDistinct": false,
-          "columns": ["authentik_uid"]
         }
       },
       "policies": {},

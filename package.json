@@ -11,6 +11,7 @@
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
+    "@goauthentik/api": "^2025.6.3-1751754396",
     "@nuxt/eslint": "^1.11.0",
     "@nuxt/hints": "^1.0.0-alpha.2",
     "@nuxt/image": "^2.0.0",

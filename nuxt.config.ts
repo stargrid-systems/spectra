@@ -2,7 +2,6 @@
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
-
   modules: [
     "@nuxt/eslint",
     "@nuxt/hints",
@@ -11,14 +10,21 @@ export default defineNuxtConfig({
     "@nuxt/ui",
     "@nuxtjs/i18n",
   ],
-
   css: ["~/assets/css/main.css"],
-
   i18n: {
     locales: [
       { code: "en", language: "en-US", file: "en.json" },
       { code: "de", language: "de-DE" },
     ],
     defaultLocale: "en",
+  },
+  nitro: {
+    experimental: {
+      tasks: true,
+    },
+  },
+  runtimeConfig: {
+    authentikBaseUrl: "http://authentik-server:9000/",
+    authentikAccessToken: "398829673032ee4b",
   },
 });
