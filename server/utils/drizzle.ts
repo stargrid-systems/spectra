@@ -2,6 +2,8 @@ import { drizzle } from "drizzle-orm/node-postgres";
 
 import * as schema from "../database";
 
+export { schema as tables };
+
 let instance: ReturnType<typeof drizzle> | null = null;
 
 export function useDrizzle() {
