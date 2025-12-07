@@ -17,7 +17,7 @@ export default defineTask({
     const app = await upsertApplication();
     console.log(app);
 
-    return { result: "Success" };
+    return { result: null };
   },
 });
 
