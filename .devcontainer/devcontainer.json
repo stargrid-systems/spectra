@@ -9,6 +9,10 @@
       "label": "Authentik UI"
     }
   },
+  "remoteEnv": {
+    "NUXT_AUTHENTIK_BASE_URL": "http://authentik-server:9000/",
+    "NUXT_AUTHENTIK_ACCESS_TOKEN": "398829673032ee4b"
+  },
   "features": {
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
       "moby": false

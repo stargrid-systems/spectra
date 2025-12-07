@@ -24,7 +24,7 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
-    authentikBaseUrl: "http://authentik-server:9000/",
-    authentikAccessToken: "398829673032ee4b",
+    authentikBaseUrl: "",
+    authentikAccessToken: "",
   },
 });
