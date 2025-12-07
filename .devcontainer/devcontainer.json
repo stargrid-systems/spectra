@@ -10,6 +10,7 @@
     }
   },
   "remoteEnv": {
+    "NUXT_DATABASE_URL": "postgresql://dev:dev@postgres:5432/spectra",
     "NUXT_AUTHENTIK_BASE_URL": "http://authentik-server:9000/",
     "NUXT_AUTHENTIK_ACCESS_TOKEN": "398829673032ee4b"
   },
