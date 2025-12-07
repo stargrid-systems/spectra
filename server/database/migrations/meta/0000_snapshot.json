@@ -1,9 +1,269 @@
 {
-  "id": "15566bc9-7120-4ea9-bcc9-428e7060245e",
+  "id": "df3adfa5-814f-42d3-b8a3-a8c54b43aef4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "iam.groups": {
+      "name": "groups",
+      "schema": "iam",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "groups_id_seq",
+            "schema": "iam",
+            "increment": "1",
+            "startWith": "1000",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "groups_created_by_users_id_fk": {
+          "name": "groups_created_by_users_id_fk",
+          "tableFrom": "groups",
+          "tableTo": "users",
+          "schemaTo": "iam",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "iam.organization_memberships": {
+      "name": "organization_memberships",
+      "schema": "iam",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "organization_memberships_user_id_users_id_fk": {
+          "name": "organization_memberships_user_id_users_id_fk",
+          "tableFrom": "organization_memberships",
+          "tableTo": "users",
+          "schemaTo": "iam",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "organization_memberships_organization_id_organizations_id_fk": {
+          "name": "organization_memberships_organization_id_organizations_id_fk",
+          "tableFrom": "organization_memberships",
+          "tableTo": "organizations",
+          "schemaTo": "iam",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "iam.organizations": {
+      "name": "organizations",
+      "schema": "iam",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "organizations_id_seq",
+            "schema": "iam",
+            "increment": "1",
+            "startWith": "1000",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "organizations_created_by_users_id_fk": {
+          "name": "organizations_created_by_users_id_fk",
+          "tableFrom": "organizations",
+          "tableTo": "users",
+          "schemaTo": "iam",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "iam.roles": {
+      "name": "roles",
+      "schema": "iam",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "roles_id_seq",
+            "schema": "iam",
+            "increment": "1",
+            "startWith": "1000",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "roles_created_by_users_id_fk": {
+          "name": "roles_created_by_users_id_fk",
+          "tableFrom": "roles",
+          "tableTo": "users",
+          "schemaTo": "iam",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "roles_organization_id_organizations_id_fk": {
+          "name": "roles_organization_id_organizations_id_fk",
+          "tableFrom": "roles",
+          "tableTo": "organizations",
+          "schemaTo": "iam",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "iam.users": {
       "name": "users",
       "schema": "iam",
@@ -19,11 +279,24 @@
             "schema": "iam",
             "increment": "1",
             "startWith": "1000",
-            "minValue": "1000",
+            "minValue": "1",
             "maxValue": "2147483647",
             "cache": "1",
             "cycle": false
           }
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
         },
         "authentik_uid": {
           "name": "authentik_uid",
@@ -39,7 +312,9 @@
         "users_authentik_uid_unique": {
           "name": "users_authentik_uid_unique",
           "nullsNotDistinct": false,
-          "columns": ["authentik_uid"]
+          "columns": [
+            "authentik_uid"
+          ]
         }
       },
       "policies": {},
@@ -61,11 +336,18 @@
             "schema": "parts",
             "increment": "1",
             "startWith": "1000",
-            "minValue": "1000",
+            "minValue": "1",
             "maxValue": "2147483647",
             "cache": "1",
             "cycle": false
           }
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         },
         "name": {
           "name": "name",
@@ -81,7 +363,9 @@
         "part_definitions_name_unique": {
           "name": "part_definitions_name_unique",
           "nullsNotDistinct": false,
-          "columns": ["name"]
+          "columns": [
+            "name"
+          ]
         }
       },
       "policies": {},
@@ -103,11 +387,18 @@
             "schema": "parts",
             "increment": "1",
             "startWith": "1000",
-            "minValue": "1000",
+            "minValue": "1",
             "maxValue": "2147483647",
             "cache": "1",
             "cycle": false
           }
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         },
         "part_definition_id": {
           "name": "part_definition_id",
@@ -129,8 +420,12 @@
           "tableFrom": "parts",
           "tableTo": "part_definitions",
           "schemaTo": "parts",
-          "columnsFrom": ["part_definition_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "part_definition_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -140,7 +435,10 @@
         "parts_part_definition_id_serial_number_unique": {
           "name": "parts_part_definition_id_serial_number_unique",
           "nullsNotDistinct": false,
-          "columns": ["part_definition_id", "serial_number"]
+          "columns": [
+            "part_definition_id",
+            "serial_number"
+          ]
         }
       },
       "policies": {},
@@ -149,7 +447,10 @@
     }
   },
   "enums": {},
-  "schemas": {},
+  "schemas": {
+    "iam": "iam",
+    "parts": "parts"
+  },
   "sequences": {},
   "roles": {},
   "policies": {},
