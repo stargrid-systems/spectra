@@ -2,7 +2,6 @@
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
-
   modules: [
     "@nuxt/eslint",
     "@nuxt/hints",
@@ -11,9 +10,7 @@ export default defineNuxtConfig({
     "@nuxt/ui",
     "@nuxtjs/i18n",
   ],
-
   css: ["~/assets/css/main.css"],
-
   i18n: {
     locales: [
       { code: "en", language: "en-US", file: "en.json" },
