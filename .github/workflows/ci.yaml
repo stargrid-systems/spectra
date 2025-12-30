@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+env:
+  CI: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prettier check
+        run: npx prettier --check .
+
+      - id: eslint
+        name: ESLint (SARIF)
+        run: npx eslint . --ext .ts,.js,.vue --max-warnings=0 --format sarif -o eslint.sarif
+        continue-on-error: true
+
+      - name: Upload ESLint SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: eslint.sarif
+
+      - name: Nuxt typecheck
+        run: npx nuxt typecheck
+
+      - name: Nuxt tests
+        run: npx nuxt test
+
+      - name: Fail on ESLint errors
+        if: steps.eslint.outcome == 'failure'
+        run: exit 1
