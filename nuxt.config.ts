@@ -1,3 +1,5 @@
+import { version } from "./package.json";
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
@@ -18,5 +20,10 @@ export default defineNuxtConfig({
       { code: "de", language: "de-DE", file: "de.json" },
     ],
     defaultLocale: "en",
+  },
+  runtimeConfig: {
+    public: {
+      appVersion: version,
+    },
   },
 });
