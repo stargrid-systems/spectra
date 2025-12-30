@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@iconify-json/lucide": "1.2.82",
+    "@microsoft/eslint-formatter-sarif": "3.1.0",
     "eslint-config-prettier": "10.1.8",
     "prettier": "3.7.4"
   }
