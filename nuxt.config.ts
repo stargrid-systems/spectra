@@ -9,12 +9,13 @@ export default defineNuxtConfig({
     "@nuxt/test-utils",
     "@nuxt/ui",
     "@nuxtjs/i18n",
+    "nuxt-charts",
   ],
   css: ["~/assets/css/main.css"],
   i18n: {
     locales: [
       { code: "en", language: "en-US", file: "en.json" },
-      { code: "de", language: "de-DE" },
+      { code: "de", language: "de-DE", file: "de.json" },
     ],
     defaultLocale: "en",
   },

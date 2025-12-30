@@ -13,6 +13,50 @@ const links = [
         open.value = false;
       },
     },
+    {
+      label: $t("devices.title"),
+      icon: "i-lucide-network",
+      to: "/devices",
+      onSelect: () => {
+        open.value = false;
+      },
+    },
+  ],
+  [
+    {
+      label: $t("developer.title"),
+      icon: "i-lucide-terminal-square",
+      to: "/developer",
+      onSelect: () => {
+        open.value = false;
+      },
+      children: [
+        {
+          label: $t("developer.logs.title"),
+          icon: "i-lucide-list-tree",
+          to: "/developer/logs",
+          onSelect: () => {
+            open.value = false;
+          },
+        },
+        {
+          label: $t("developer.events.title"),
+          icon: "i-lucide-radio",
+          to: "/developer/events",
+          onSelect: () => {
+            open.value = false;
+          },
+        },
+      ],
+    },
+    {
+      label: $t("settings.title"),
+      icon: "i-lucide-sliders-horizontal",
+      to: "/settings",
+      onSelect: () => {
+        open.value = false;
+      },
+    },
   ],
 ] satisfies NavigationMenuItem[][];
 
@@ -49,6 +93,7 @@ const groups = computed(() => [
         />
 
         <UNavigationMenu
+          v-if="links[1]?.length"
           :collapsed="collapsed"
           :items="links[1]"
           orientation="vertical"
