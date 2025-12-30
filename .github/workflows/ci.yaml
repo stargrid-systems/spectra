@@ -45,7 +45,7 @@ jobs:
         run: npx nuxt typecheck
 
       - name: Nuxt tests
-        run: npx nuxt test
+        run: npx vitest run
 
       - name: Fail on ESLint errors
         if: steps.eslint.outcome == 'failure'
