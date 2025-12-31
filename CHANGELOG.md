@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/stargrid-systems/spectra/compare/v0.1.1...v0.1.2) (2025-12-31)
+
+
+### Bug Fixes
+
+* inline build-and-publish to avoid the GITHUB_TOKEN issue ([91ba276](https://github.com/stargrid-systems/spectra/commit/91ba276a69a7a64a05addb74772d8c55beeda9c2))
+
 ## [0.1.1](https://github.com/stargrid-systems/spectra/compare/v0.1.0...v0.1.1) (2025-12-31)
 
 
