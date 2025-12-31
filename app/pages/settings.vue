@@ -1,5 +1,31 @@
+<script setup lang="ts">
+import type { NavigationMenuItem } from "@nuxt/ui";
+
+const { t } = useI18n();
+const localePath = useLocalePath();
+
+const links = computed(
+  () =>
+    [
+      [
+        {
+          label: t("settings.nav.general"),
+          icon: "i-lucide-sliders-horizontal",
+          to: localePath("/settings"),
+          exact: true,
+        },
+        {
+          label: t("settings.nav.about"),
+          icon: "i-lucide-info",
+          to: localePath("/settings/about"),
+        },
+      ],
+    ] satisfies NavigationMenuItem[][],
+);
+</script>
+
 <template>
-  <UDashboardPanel>
+  <UDashboardPanel id="settings" :ui="{ body: 'lg:py-12' }">
     <template #header>
       <UDashboardNavbar :title="$t('settings.title')" :ui="{ right: 'gap-3' }">
         <template #leading>
@@ -10,27 +36,17 @@
           <NotificationBell />
         </template>
       </UDashboardNavbar>
+
+      <UDashboardToolbar>
+        <UNavigationMenu :items="links" highlight class="-mx-1 flex-1" />
+      </UDashboardToolbar>
     </template>
 
     <template #body>
-      <div class="p-6 space-y-6">
-        <div class="space-y-2">
-          <h2 class="text-2xl font-semibold">{{ $t("settings.title") }}</h2>
-          <p class="text-muted-foreground">{{ $t("settings.description") }}</p>
-        </div>
-
-        <UCard>
-          <template #header>
-            <div class="flex items-center gap-2">
-              <UIcon name="i-lucide-sliders-horizontal" class="size-5" />
-              <span class="font-semibold">{{ $t("settings.quick") }}</span>
-            </div>
-          </template>
-          <div class="space-y-3 text-muted-foreground">
-            <p>{{ $t("settings.placeholder") }}</p>
-            <p>{{ $t("settings.placeholderDetail") }}</p>
-          </div>
-        </UCard>
+      <div
+        class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full lg:max-w-5xl mx-auto px-4"
+      >
+        <NuxtPage />
       </div>
     </template>
   </UDashboardPanel>
