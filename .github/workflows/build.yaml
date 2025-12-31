@@ -2,7 +2,8 @@ name: Build Artifacts
 
 on:
   push:
-    branches: [main]
+    branches:
+    - ci/fix-tags
   workflow_dispatch:
 
 permissions:
