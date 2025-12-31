@@ -12,8 +12,80 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
     steps:
       - name: Run release-please
+        id: release
         uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4
         with:
           release-type: node
+
+  build-and-publish:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      REGISTRY: ghcr.io
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build -- --prerender
+
+      - name: Login to registry
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install ORAS
+        uses: oras-project/setup-oras@22ce207df3b08e061f537244349aac6ae1d214f6 # v1
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}
+          tags: |
+            type=sha,format=long
+            type=semver,pattern={{version}}
+
+      - name: Push to registry
+        env:
+          LABELS: ${{ steps.meta.outputs.labels }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          while IFS= read -r TAG; do
+            [ -z "$TAG" ] && continue
+            echo "Pushing ${TAG}"
+
+            LABEL_ARGS=()
+            while IFS= read -r label; do
+              [ -z "$label" ] && continue
+              LABEL_ARGS+=("--annotation" "$label")
+            done <<< "$LABELS"
+
+            if ((${#LABEL_ARGS[@]})); then
+              oras push "$TAG" \
+                --artifact-type application/vnd.spectra.static \
+                "${LABEL_ARGS[@]}" \
+                .output/public:application/vnd.spectra.static+directory
+            else
+              oras push "$TAG" \
+                --artifact-type application/vnd.spectra.static \
+                .output/public:application/vnd.spectra.static+directory
+            fi
+          done <<< "$TAGS"
