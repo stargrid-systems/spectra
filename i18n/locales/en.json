@@ -1,5 +1,82 @@
 {
   "home": "Home",
   "go-to": "Go to",
-  "notifications": "Notifications"
+  "notifications": "Notifications",
+  "settings": {
+    "title": "Settings",
+    "description": "Adjust eCube preferences, thresholds, and regional options.",
+    "saved": "Your settings have been saved.",
+    "nav": {
+      "general": "General",
+      "about": "About"
+    },
+    "sections": {
+      "dashboard": {
+        "title": "Dashboard",
+        "description": "Personalize your Spectra experience.",
+        "theme": {
+          "label": "Theme",
+          "description": "Choose between light, dark, or system theme.",
+          "system": "System",
+          "light": "Light",
+          "dark": "Dark"
+        },
+        "locale": {
+          "label": "Language",
+          "description": "Select your preferred language."
+        }
+      },
+      "about": {
+        "title": "About",
+        "description": "Build information",
+        "version": "Version"
+      }
+    }
+  },
+  "developer": {
+    "title": "Developer tools",
+    "description": "Low-level tools for inspecting logs, events, and diagnostics.",
+    "logs": {
+      "title": "Logs",
+      "body": "View and filter system logs to trace behaviors and diagnose issues."
+    },
+    "events": {
+      "title": "Events",
+      "body": "Inspect recent system events, BMS signals, and control actions."
+    }
+  },
+  "devices": {
+    "title": "Devices",
+    "description": "Manage and monitor all connected devices in your energy system",
+    "empty": "No devices found",
+    "types": {
+      "meter": "Energy Meter",
+      "ecube": "Battery Management System (eCube)",
+      "inverter": "Inverter"
+    },
+    "status": {
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "details": {
+      "title": "Device Details",
+      "id": "Device ID",
+      "type": "Device Type",
+      "placeholder": "Detailed device information and controls will be available once the EnergyBridge API is integrated."
+    },
+    "meter": {
+      "currentPower": "Current power",
+      "currentPowerLive": "Real-time reading",
+      "consumption": "Power usage",
+      "range": {
+        "1h": "Last hour",
+        "24h": "Last 24 hours",
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "1y": "Last year",
+        "5y": "Last 5 years"
+      },
+      "unitKw": "kW"
+    }
+  }
 }

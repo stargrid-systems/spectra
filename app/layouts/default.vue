@@ -2,13 +2,58 @@
 import type { NavigationMenuItem } from "@nuxt/ui";
 
 const open = ref(false);
+const localePath = useLocalePath();
 
 const links = [
   [
     {
       label: $t("home"),
       icon: "i-lucide-house",
-      to: "/",
+      to: localePath("/"),
+      onSelect: () => {
+        open.value = false;
+      },
+    },
+    {
+      label: $t("devices.title"),
+      icon: "i-lucide-network",
+      to: localePath("/devices"),
+      onSelect: () => {
+        open.value = false;
+      },
+    },
+  ],
+  [
+    {
+      label: $t("developer.title"),
+      icon: "i-lucide-terminal-square",
+      to: localePath("/developer"),
+      onSelect: () => {
+        open.value = false;
+      },
+      children: [
+        {
+          label: $t("developer.logs.title"),
+          icon: "i-lucide-list-tree",
+          to: localePath("/developer/logs"),
+          onSelect: () => {
+            open.value = false;
+          },
+        },
+        {
+          label: $t("developer.events.title"),
+          icon: "i-lucide-radio",
+          to: localePath("/developer/events"),
+          onSelect: () => {
+            open.value = false;
+          },
+        },
+      ],
+    },
+    {
+      label: $t("settings.title"),
+      icon: "i-lucide-sliders-horizontal",
+      to: localePath("/settings"),
       onSelect: () => {
         open.value = false;
       },
@@ -49,6 +94,7 @@ const groups = computed(() => [
         />
 
         <UNavigationMenu
+          v-if="links[1]?.length"
           :collapsed="collapsed"
           :items="links[1]"
           orientation="vertical"

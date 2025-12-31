@@ -1,3 +1,5 @@
+import { version } from "./package.json";
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
@@ -9,13 +11,20 @@ export default defineNuxtConfig({
     "@nuxt/test-utils",
     "@nuxt/ui",
     "@nuxtjs/i18n",
+    "nuxt-charts",
   ],
   css: ["~/assets/css/main.css"],
   i18n: {
+    strategy: "prefix",
+    defaultLocale: "en",
     locales: [
       { code: "en", language: "en-US", file: "en.json" },
-      { code: "de", language: "de-DE" },
+      { code: "de", language: "de-DE", file: "de.json" },
     ],
-    defaultLocale: "en",
+  },
+  runtimeConfig: {
+    public: {
+      appVersion: version,
+    },
   },
 });

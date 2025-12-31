@@ -1,0 +1,82 @@
+{
+  "home": "Startseite",
+  "go-to": "Gehe zu",
+  "notifications": "Benachrichtigungen",
+  "settings": {
+    "title": "Einstellungen",
+    "description": "eCube-Präferenzen, Schwellenwerte und regionale Optionen anpassen.",
+    "saved": "Deine Einstellungen wurden gespeichert.",
+    "nav": {
+      "general": "Allgemein",
+      "about": "Info"
+    },
+    "sections": {
+      "dashboard": {
+        "title": "Dashboard",
+        "description": "Passe deine Spectra-Erfahrung an.",
+        "theme": {
+          "label": "Theme",
+          "description": "Wähle zwischen hellem, dunklem oder System-Theme.",
+          "system": "System",
+          "light": "Hell",
+          "dark": "Dunkel"
+        },
+        "locale": {
+          "label": "Sprache",
+          "description": "Wähle deine bevorzugte Sprache."
+        }
+      },
+      "about": {
+        "title": "Info",
+        "description": "Build-Informationen",
+        "version": "Version"
+      }
+    }
+  },
+  "developer": {
+    "title": "Entwicklertools",
+    "description": "Low-Level-Werkzeuge zum Prüfen von Logs, Events und Diagnosen.",
+    "logs": {
+      "title": "Logs",
+      "body": "System-Logs ansehen und filtern, um Verhalten nachzuvollziehen und Probleme zu diagnostizieren."
+    },
+    "events": {
+      "title": "Events",
+      "body": "Aktuelle System-Events, BMS-Signale und Steueraktionen inspizieren."
+    }
+  },
+  "devices": {
+    "title": "Geräte",
+    "description": "Alle verbundenen Geräte in deinem Energiesystem verwalten und überwachen",
+    "empty": "Keine Geräte gefunden",
+    "types": {
+      "meter": "Energiezähler",
+      "ecube": "Batteriemanagementsystem (eCube)",
+      "inverter": "Wechselrichter"
+    },
+    "status": {
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "details": {
+      "title": "Gerätedetails",
+      "id": "Geräte-ID",
+      "type": "Gerätetyp",
+      "placeholder": "Detaillierte Geräteinformationen und Steuerungen werden verfügbar, sobald die EnergyBridge API integriert ist."
+    },
+    "meter": {
+      "currentPower": "Aktuelle Leistung",
+      "currentPowerLive": "Echtzeitmessung",
+      "consumption": "Leistungsverlauf",
+      "range": {
+        "1h": "Letzte Stunde",
+        "24h": "Letzte 24 Stunden",
+        "7d": "Letzte 7 Tage",
+        "30d": "Letzte 30 Tage",
+        "1y": "Letztes Jahr",
+        "5y": "Letzte 5 Jahre"
+      },
+      "unitKw": "kW"
+    }
+  }
+}
