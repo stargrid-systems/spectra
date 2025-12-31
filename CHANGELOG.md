@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/stargrid-systems/spectra/compare/v0.1.3...v0.1.4) (2025-12-31)
+
+
+### Bug Fixes
+
+* tag images with the release version ([a0d529d](https://github.com/stargrid-systems/spectra/commit/a0d529d772587b7e57a46c6881238781dc547106))
+
 ## [0.1.3](https://github.com/stargrid-systems/spectra/compare/v0.1.2...v0.1.3) (2025-12-31)
 
 
