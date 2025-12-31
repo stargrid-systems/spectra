@@ -5,9 +5,33 @@
   "settings": {
     "title": "Settings",
     "description": "Adjust eCube preferences, thresholds, and regional options.",
-    "quick": "Quick setup",
-    "placeholder": "This area will let you tweak system-wide eCube settings like safety thresholds, time zone, and display units.",
-    "placeholderDetail": "Once EnergyBridge APIs are wired, you'll be able to save changes and sync them to the controller."
+    "saved": "Your settings have been saved.",
+    "nav": {
+      "general": "General",
+      "about": "About"
+    },
+    "sections": {
+      "dashboard": {
+        "title": "Dashboard",
+        "description": "Personalize your Spectra experience.",
+        "theme": {
+          "label": "Theme",
+          "description": "Choose between light, dark, or system theme.",
+          "system": "System",
+          "light": "Light",
+          "dark": "Dark"
+        },
+        "locale": {
+          "label": "Language",
+          "description": "Select your preferred language."
+        }
+      },
+      "about": {
+        "title": "About",
+        "description": "Build information",
+        "version": "Version"
+      }
+    }
   },
   "developer": {
     "title": "Developer tools",

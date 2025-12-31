@@ -5,9 +5,33 @@
   "settings": {
     "title": "Einstellungen",
     "description": "eCube-Präferenzen, Schwellenwerte und regionale Optionen anpassen.",
-    "quick": "Schnellkonfiguration",
-    "placeholder": "Hier kannst du systemweite eCube-Einstellungen wie Sicherheitsgrenzen, Zeitzone und Anzeigeeinheiten anpassen.",
-    "placeholderDetail": "Sobald die EnergyBridge-APIs angebunden sind, kannst du Änderungen speichern und auf den Controller synchronisieren."
+    "saved": "Deine Einstellungen wurden gespeichert.",
+    "nav": {
+      "general": "Allgemein",
+      "about": "Info"
+    },
+    "sections": {
+      "dashboard": {
+        "title": "Dashboard",
+        "description": "Passe deine Spectra-Erfahrung an.",
+        "theme": {
+          "label": "Theme",
+          "description": "Wähle zwischen hellem, dunklem oder System-Theme.",
+          "system": "System",
+          "light": "Hell",
+          "dark": "Dunkel"
+        },
+        "locale": {
+          "label": "Sprache",
+          "description": "Wähle deine bevorzugte Sprache."
+        }
+      },
+      "about": {
+        "title": "Info",
+        "description": "Build-Informationen",
+        "version": "Version"
+      }
+    }
   },
   "developer": {
     "title": "Entwicklertools",
