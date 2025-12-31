@@ -3,7 +3,7 @@ name: Build Artifacts
 on:
   push:
     branches:
-    - ci/fix-tags
+      - ci/fix-tags
   workflow_dispatch:
 
 permissions:
@@ -56,7 +56,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ github.repository }}
           tags: |
             type=sha,format=long
-            type=ref,event=tag
+            type=semver,pattern={{version}}
 
       - name: Push to GHCR with ORAS
         run: |
