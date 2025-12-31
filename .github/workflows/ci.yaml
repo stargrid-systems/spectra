@@ -28,25 +28,24 @@ jobs:
         run: npm ci
 
       - name: Prettier check
+        if: ${{ !cancelled() }}
         run: npx prettier --check .
 
       - id: eslint
         name: ESLint (SARIF)
+        if: ${{ !cancelled() }}
         run: npx eslint . --format @microsoft/eslint-formatter-sarif -o eslint.sarif
-        continue-on-error: true
 
       - name: Upload ESLint SARIF
-        if: always()
+        if: ${{ !cancelled() && steps.eslint.outcome != 'skipped' }}
         uses: github/codeql-action/upload-sarif@5d4e8d1aca955e8d8589aabd499c5cae939e33c7 # v4
         with:
           sarif_file: eslint.sarif
 
       - name: Nuxt typecheck
+        if: ${{ !cancelled() }}
         run: npx nuxt typecheck
 
       - name: Nuxt tests
+        if: ${{ !cancelled() }}
         run: npx vitest run
-
-      - name: Fail on ESLint errors
-        if: steps.eslint.outcome == 'failure'
-        run: exit 1
