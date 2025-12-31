@@ -108,7 +108,7 @@ const formatKw = (value: number) =>
             icon="i-lucide-arrow-left"
             color="neutral"
             variant="ghost"
-            to="/devices"
+            :to="$localePath('/devices')"
           />
         </template>
 
