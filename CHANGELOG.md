@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/stargrid-systems/spectra/compare/v0.1.0...v0.1.1) (2025-12-31)
+
+
+### Bug Fixes
+
+* use metadata-action to determine tags ([#29](https://github.com/stargrid-systems/spectra/issues/29)) ([4da5c4d](https://github.com/stargrid-systems/spectra/commit/4da5c4db96a2cf18ccf1bf21a7f48c6bcb0f39aa))
+
 ## 0.1.0 (2025-12-31)
 
 
