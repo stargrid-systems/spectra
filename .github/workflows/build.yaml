@@ -3,7 +3,7 @@ name: Build Artifacts
 on:
   push:
     branches:
-      - ci/fix-tags
+      - main
     tags:
       - "*"
   workflow_dispatch:
