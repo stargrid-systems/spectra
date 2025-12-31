@@ -15,11 +15,12 @@ export default defineNuxtConfig({
   ],
   css: ["~/assets/css/main.css"],
   i18n: {
+    strategy: "prefix",
+    defaultLocale: "en",
     locales: [
       { code: "en", language: "en-US", file: "en.json" },
       { code: "de", language: "de-DE", file: "de.json" },
     ],
-    defaultLocale: "en",
   },
   runtimeConfig: {
     public: {
