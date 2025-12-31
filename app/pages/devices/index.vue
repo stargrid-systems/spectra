@@ -30,10 +30,6 @@ const deviceConfig = {
   },
 };
 
-const getDeviceRoute = (device: Device) => {
-  return `/devices/${device.type}/${device.id}`;
-};
-
 const getDeviceIcon = (type: Device["type"]) => deviceConfig[type].icon;
 const getDeviceColor = (type: Device["type"]) => deviceConfig[type].color;
 </script>
@@ -63,7 +59,7 @@ const getDeviceColor = (type: Device["type"]) => deviceConfig[type].color;
           <NuxtLink
             v-for="device in devices"
             :key="device.id"
-            :to="getDeviceRoute(device)"
+            :to="$localePath(`/devices/${device.type}/${device.id}`)"
             class="block"
           >
             <UCard

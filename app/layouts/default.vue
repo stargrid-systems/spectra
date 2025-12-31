@@ -2,13 +2,14 @@
 import type { NavigationMenuItem } from "@nuxt/ui";
 
 const open = ref(false);
+const localePath = useLocalePath();
 
 const links = [
   [
     {
       label: $t("home"),
       icon: "i-lucide-house",
-      to: "/",
+      to: localePath("/"),
       onSelect: () => {
         open.value = false;
       },
@@ -16,7 +17,7 @@ const links = [
     {
       label: $t("devices.title"),
       icon: "i-lucide-network",
-      to: "/devices",
+      to: localePath("/devices"),
       onSelect: () => {
         open.value = false;
       },
@@ -26,7 +27,7 @@ const links = [
     {
       label: $t("developer.title"),
       icon: "i-lucide-terminal-square",
-      to: "/developer",
+      to: localePath("/developer"),
       onSelect: () => {
         open.value = false;
       },
@@ -34,7 +35,7 @@ const links = [
         {
           label: $t("developer.logs.title"),
           icon: "i-lucide-list-tree",
-          to: "/developer/logs",
+          to: localePath("/developer/logs"),
           onSelect: () => {
             open.value = false;
           },
@@ -42,7 +43,7 @@ const links = [
         {
           label: $t("developer.events.title"),
           icon: "i-lucide-radio",
-          to: "/developer/events",
+          to: localePath("/developer/events"),
           onSelect: () => {
             open.value = false;
           },
@@ -52,7 +53,7 @@ const links = [
     {
       label: $t("settings.title"),
       icon: "i-lucide-sliders-horizontal",
-      to: "/settings",
+      to: localePath("/settings"),
       onSelect: () => {
         open.value = false;
       },
