@@ -4,7 +4,7 @@ type DataPoint = { label: string; usage: number };
 
 const route = useRoute();
 const deviceId = route.params.id as string;
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 // Mock device - replace with API call later
 const device = ref({
@@ -32,12 +32,12 @@ const timeLabels: Record<TimeRange, (index: number, total: number) => string> =
     "1y": (idx, total) => {
       const date = new Date();
       date.setMonth(date.getMonth() - (total - idx - 1));
-      return date.toLocaleString("en", { month: "short" });
+      return date.toLocaleString(locale.value, { month: "short" });
     },
     "5y": (idx, total) => {
       const date = new Date();
       date.setMonth(date.getMonth() - (total - idx - 1));
-      const month = date.toLocaleString("en", { month: "short" });
+      const month = date.toLocaleString(locale.value, { month: "short" });
       const year = String(date.getFullYear()).slice(-2);
       return `${month} '${year}`;
     },
