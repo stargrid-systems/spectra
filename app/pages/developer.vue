@@ -32,7 +32,7 @@
             <p class="text-muted-foreground">{{ $t("developer.logs.body") }}</p>
             <div class="mt-4">
               <UButton
-                to="/developer/logs"
+                :to="$localePath('/developer/logs')"
                 color="primary"
                 variant="soft"
                 size="sm"
@@ -56,7 +56,7 @@
             </p>
             <div class="mt-4">
               <UButton
-                to="/developer/events"
+                :to="$localePath('/developer/events')"
                 color="primary"
                 variant="soft"
                 size="sm"
