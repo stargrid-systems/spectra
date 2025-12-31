@@ -3,8 +3,6 @@ name: Build Artifacts
 on:
   push:
     branches: [main]
-  release:
-    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -50,13 +48,30 @@ jobs:
       - name: Install ORAS
         uses: oras-project/setup-oras@22ce207df3b08e061f537244349aac6ae1d214f6 # v1
 
+      - name: Docker metadata (tags)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}
+          tags: |
+            type=sha,format=long
+            type=ref,event=tag
+
       - name: Push to GHCR with ORAS
         run: |
-          TAG="${{ github.sha }}"
-          if [ "${{ github.event_name }}" = "release" ]; then
-            TAG="${{ github.ref_name }}"
-          fi
           IMAGE="${REGISTRY}/${{ github.repository }}"
-          oras push "${IMAGE}:${TAG}" \
-            --artifact-type application/vnd.spectra.static \
-            .output/public:application/vnd.spectra.static+directory
+
+          LABEL_ARGS=""
+          while IFS= read -r label; do
+            if [ -n "$label" ]; then
+              LABEL_ARGS+=" --annotation ${label}"
+            fi
+          done <<< "${{ steps.meta.outputs.labels }}"
+
+          for TAG in ${{ steps.meta.outputs.tags }}; do
+            echo "Pushing ${TAG}"
+            oras push "${TAG}" \
+              --artifact-type application/vnd.spectra.static \
+              ${LABEL_ARGS} \
+              .output/public:application/vnd.spectra.static+directory
+          done
