@@ -1,9 +1,0 @@
-{
-  "packages": {
-    ".": {
-      "release-type": "node",
-      "package-name": "spectra",
-      "changelog-path": "CHANGELOG.md"
-    }
-  }
-}
