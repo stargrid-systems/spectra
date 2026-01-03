@@ -27,4 +27,7 @@ export default defineNuxtConfig({
       appVersion: version,
     },
   },
+  nitro: {
+    compressPublicAssets: true,
+  },
 });
