@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/stargrid-systems/spectra/compare/v0.1.4...v0.2.0) (2026-01-03)
+
+
+### Features
+
+* enable precompression for static assets ([b2c04a3](https://github.com/stargrid-systems/spectra/commit/b2c04a381c312a577a6f47dad89354ee865ed759))
+
 ## [0.1.4](https://github.com/stargrid-systems/spectra/compare/v0.1.3...v0.1.4) (2025-12-31)
 
 
