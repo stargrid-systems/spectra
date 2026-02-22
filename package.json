@@ -24,7 +24,7 @@
     "vue-router": "^4.6.3"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "1.2.91",
+    "@iconify-json/lucide": "1.2.92",
     "@microsoft/eslint-formatter-sarif": "3.1.0",
     "@nuxt/test-utils": "3.23.0",
     "@vue/test-utils": "2.4.6",
