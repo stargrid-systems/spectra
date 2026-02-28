@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/stargrid-systems/spectra/compare/v0.2.0...v0.2.1) (2026-02-28)
+
+
+### Bug Fixes
+
+* **deps:** update dependency eslint to v10 ([#80](https://github.com/stargrid-systems/spectra/issues/80)) ([ba2088e](https://github.com/stargrid-systems/spectra/commit/ba2088e0fbc91a35e65ced9603cbe8667bf949f9))
+
 ## [0.2.0](https://github.com/stargrid-systems/spectra/compare/v0.1.4...v0.2.0) (2026-01-03)
 
 
