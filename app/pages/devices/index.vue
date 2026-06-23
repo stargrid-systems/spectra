@@ -18,15 +18,15 @@ const devices = ref<Device[]>([
 const deviceConfig = {
   meter: {
     icon: "i-lucide-gauge",
-    color: "blue" as const,
+    color: "info" as const,
   },
   ecube: {
     icon: "i-lucide-battery",
-    color: "green" as const,
+    color: "success" as const,
   },
   inverter: {
     icon: "i-lucide-zap",
-    color: "amber" as const,
+    color: "warning" as const,
   },
 };
 
