@@ -33,7 +33,7 @@ const device = ref({
     <template #body>
       <div class="p-6">
         <div class="mb-6 flex items-start gap-4">
-          <UAvatar icon="i-lucide-zap" color="amber" size="xl" />
+          <UAvatar icon="i-lucide-zap" color="warning" size="xl" />
           <div>
             <h2 class="text-2xl font-semibold">{{ device.name }}</h2>
             <p class="text-muted-foreground">

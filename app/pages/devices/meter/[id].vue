@@ -121,7 +121,7 @@ const formatKw = (value: number) =>
     <template #body>
       <div class="p-6 space-y-6">
         <div class="flex items-start gap-4">
-          <UAvatar icon="i-lucide-gauge" color="blue" size="xl" />
+          <UAvatar icon="i-lucide-gauge" color="info" size="xl" />
           <div>
             <h2 class="text-2xl font-semibold">{{ device.name }}</h2>
             <p class="text-muted-foreground">{{ $t("devices.types.meter") }}</p>
