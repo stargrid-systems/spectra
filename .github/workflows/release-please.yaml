@@ -47,10 +47,14 @@ jobs:
         run: sudo apt-get install -y squashfs-tools
 
       - name: Archive build output
-        run: mksquashfs $(realpath dist) spectra.squashfs -comp zstd -noappend -repro-time $(git log -1 --format=%ct) -force-uid 0 -force-gid 0 -info
-
-      - name: Verify squashfs
-        run: unsquashfs -s spectra.squashfs
+        run: |
+          dist=$(realpath dist)
+          repro_time=$(git log -1 --format=%ct)
+          mksquashfs "${dist}" spectra.squashfs \
+            -comp zstd -noappend \
+            -mkfs-time "${repro_time}" -all-time "${repro_time}" -root-time "${repro_time}" \
+            -force-uid 0 -force-gid 0 \
+            -info
 
       - name: Upload artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
