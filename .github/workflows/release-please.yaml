@@ -2,7 +2,7 @@ name: Release Please
 
 on:
   push:
-    branches: [main]
+    branches: [main, fix/squashfs-symlinks]
   workflow_dispatch:
 
 permissions:
@@ -47,7 +47,7 @@ jobs:
         run: sudo apt-get install -y squashfs-tools
 
       - name: Archive build output
-        run: mksquashfs $(realpath dist) spectra.squashfs -comp zstd -noappend
+        run: mksquashfs $(realpath dist) spectra.squashfs -comp zstd -noappend -repro-time $(git log -1 --format=%ct) -force-uid 0 -force-gid 0 -info
 
       - name: Verify squashfs
         run: unsquashfs -s spectra.squashfs
