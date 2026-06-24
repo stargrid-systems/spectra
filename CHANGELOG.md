@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/stargrid-systems/spectra/compare/v0.3.0...v0.3.1) (2026-06-24)
+
+
+### Bug Fixes
+
+* **ci:** follow symlinks when building squashfs ([#143](https://github.com/stargrid-systems/spectra/issues/143)) ([a16b14f](https://github.com/stargrid-systems/spectra/commit/a16b14f4b8301da970359adf55e67d196a9b895f))
+
 ## [0.3.0](https://github.com/stargrid-systems/spectra/compare/v0.2.0...v0.3.0) (2026-06-24)
 
 
