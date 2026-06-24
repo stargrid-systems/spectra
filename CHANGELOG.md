@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/stargrid-systems/spectra/compare/v0.2.0...v0.3.0) (2026-06-24)
+
+
+### Features
+
+* **ci:** bundle squashfs image instead of tar ([#141](https://github.com/stargrid-systems/spectra/issues/141)) ([cb0fd1d](https://github.com/stargrid-systems/spectra/commit/cb0fd1dce30ccb363e855b2ba2e36ffcf5e9807e))
+
+
+### Bug Fixes
+
+* **deps:** update dependency eslint to v10 ([#80](https://github.com/stargrid-systems/spectra/issues/80)) ([ba2088e](https://github.com/stargrid-systems/spectra/commit/ba2088e0fbc91a35e65ced9603cbe8667bf949f9))
+
 ## [0.2.0](https://github.com/stargrid-systems/spectra/compare/v0.1.4...v0.2.0) (2026-01-03)
 
 
