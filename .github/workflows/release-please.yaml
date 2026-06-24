@@ -47,7 +47,7 @@ jobs:
         run: sudo apt-get install -y squashfs-tools
 
       - name: Archive build output
-        run: mksquashfs dist spectra.squashfs -comp zstd -noappend -dereference
+        run: mksquashfs $(realpath dist) spectra.squashfs -comp zstd -noappend
 
       - name: Verify squashfs
         run: unsquashfs -s spectra.squashfs
