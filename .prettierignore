@@ -1,1 +1,5 @@
 CHANGELOG.md
+
+# Generated files
+openapi/openapi.json
+app/utils/api/generated.ts

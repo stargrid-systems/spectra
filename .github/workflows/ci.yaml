@@ -29,12 +29,12 @@ jobs:
 
       - name: Prettier check
         if: ${{ !cancelled() }}
-        run: npx prettier --check .
+        run: npm run format:check
 
       - id: eslint
         name: ESLint (SARIF)
         if: ${{ !cancelled() }}
-        run: npx eslint . --format @microsoft/eslint-formatter-sarif -o eslint.sarif
+        run: npm run lint:ci
 
       - name: Upload ESLint SARIF
         if: ${{ !cancelled() && steps.eslint.outcome != 'skipped' }}
@@ -42,10 +42,10 @@ jobs:
         with:
           sarif_file: eslint.sarif
 
-      - name: Nuxt typecheck
+      - name: Typecheck
         if: ${{ !cancelled() }}
-        run: npx nuxt typecheck
+        run: npm run typecheck
 
-      - name: Nuxt tests
+      - name: Tests
         if: ${{ !cancelled() }}
-        run: npx vitest run
+        run: npm run test
