@@ -1,60 +1,26 @@
 <script setup lang="ts">
-interface Device {
-  id: string;
-  type: "meter" | "ecube" | "inverter";
-  name: string;
-}
+import { deviceConfig } from "~/utils/devices";
 
-// Mock data - replace with API calls to EnergyBridge later
-const devices = ref<Device[]>([
-  { id: "1", type: "meter", name: "Main Energy Meter" },
-  { id: "2", type: "meter", name: "Solar Production Meter" },
-  { id: "3", type: "ecube", name: "Battery Storage eCube" },
-  { id: "4", type: "inverter", name: "Solar Inverter 1" },
-  { id: "5", type: "inverter", name: "Solar Inverter 2" },
-]);
-
-// Device type configuration
-const deviceConfig = {
-  meter: {
-    icon: "i-lucide-gauge",
-    color: "info" as const,
-  },
-  ecube: {
-    icon: "i-lucide-battery",
-    color: "success" as const,
-  },
-  inverter: {
-    icon: "i-lucide-zap",
-    color: "warning" as const,
-  },
-};
-
-const getDeviceIcon = (type: Device["type"]) => deviceConfig[type].icon;
-const getDeviceColor = (type: Device["type"]) => deviceConfig[type].color;
+const { data: devices, status, error } = useDevices();
 </script>
 
 <template>
-  <UDashboardPanel>
-    <template #header>
-      <UDashboardNavbar :title="$t('devices.title')" :ui="{ right: 'gap-3' }">
-        <template #leading>
-          <UDashboardSidebarCollapse />
-        </template>
+  <AppPage :title="$t('devices.title')">
+    <div class="p-6">
+      <div class="mb-6">
+        <h2 class="text-2xl font-semibold mb-2">{{ $t("devices.title") }}</h2>
+        <p class="text-muted-foreground">{{ $t("devices.description") }}</p>
+      </div>
 
-        <template #right>
-          <NotificationBell />
-        </template>
-      </UDashboardNavbar>
-    </template>
+      <div v-if="status === 'pending'" class="flex justify-center py-12">
+        <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin text-muted-foreground" />
+      </div>
 
-    <template #body>
-      <div class="p-6">
-        <div class="mb-6">
-          <h2 class="text-2xl font-semibold mb-2">{{ $t("devices.title") }}</h2>
-          <p class="text-muted-foreground">{{ $t("devices.description") }}</p>
-        </div>
+      <div v-else-if="error" class="text-center py-12 text-error">
+        <p>{{ $t("devices.error") }}</p>
+      </div>
 
+      <template v-else>
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <NuxtLink
             v-for="device in devices"
@@ -68,8 +34,8 @@ const getDeviceColor = (type: Device["type"]) => deviceConfig[type].color;
             >
               <div class="flex items-start gap-4">
                 <UAvatar
-                  :icon="getDeviceIcon(device.type)"
-                  :color="getDeviceColor(device.type)"
+                  :icon="deviceConfig[device.type].icon"
+                  :color="deviceConfig[device.type].color"
                   size="lg"
                 />
                 <div class="flex-1 min-w-0">
@@ -82,24 +48,19 @@ const getDeviceColor = (type: Device["type"]) => deviceConfig[type].color;
                 </div>
               </div>
 
-              <div
-                class="flex items-center gap-2 text-sm text-muted-foreground"
-              >
+              <div class="flex items-center gap-2 text-sm text-muted-foreground">
                 <UIcon name="i-lucide-circle-dot" class="size-4" />
-                <span>{{ $t("devices.status.online") }}</span>
+                <span>{{ $t(`devices.status.${device.status}`) }}</span>
               </div>
             </UCard>
           </NuxtLink>
         </div>
 
-        <div v-if="devices.length === 0" class="text-center py-12">
-          <UIcon
-            name="i-lucide-inbox"
-            class="size-12 mx-auto mb-4 text-muted-foreground"
-          />
+        <div v-if="devices?.length === 0" class="text-center py-12">
+          <UIcon name="i-lucide-inbox" class="size-12 mx-auto mb-4 text-muted-foreground" />
           <p class="text-muted-foreground">{{ $t("devices.empty") }}</p>
         </div>
-      </div>
-    </template>
-  </UDashboardPanel>
+      </template>
+    </div>
+  </AppPage>
 </template>
