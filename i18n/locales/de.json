@@ -29,7 +29,9 @@
       "about": {
         "title": "Info",
         "description": "Build-Informationen",
-        "version": "Version"
+        "version": "Version",
+        "spectraVersion": "Spectra-Version",
+        "apertureVersion": "Aperture-Version"
       }
     }
   },
@@ -49,6 +51,7 @@
     "title": "Geräte",
     "description": "Alle verbundenen Geräte in deinem Energiesystem verwalten und überwachen",
     "empty": "Keine Geräte gefunden",
+    "error": "Geräte konnten nicht geladen werden",
     "types": {
       "meter": "Energiezähler",
       "ecube": "Batteriemanagementsystem (eCube)",
@@ -62,7 +65,7 @@
       "title": "Gerätedetails",
       "id": "Geräte-ID",
       "type": "Gerätetyp",
-      "placeholder": "Detaillierte Geräteinformationen und Steuerungen werden verfügbar, sobald die EnergyBridge API integriert ist."
+      "placeholder": "Detaillierte Geräteinformationen und Steuerungen werden verfügbar, sobald die aperture API integriert ist."
     },
     "meter": {
       "currentPower": "Aktuelle Leistung",

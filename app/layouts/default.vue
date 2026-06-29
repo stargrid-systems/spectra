@@ -1,71 +1,62 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from "@nuxt/ui";
-
 const open = ref(false);
+const { t } = useI18n();
 const localePath = useLocalePath();
 
-const links = [
+const closeSidebar = () => {
+  open.value = false;
+};
+
+const links = computed(() => [
   [
     {
-      label: $t("home"),
+      label: t("home"),
       icon: "i-lucide-house",
       to: localePath("/"),
-      onSelect: () => {
-        open.value = false;
-      },
+      onSelect: closeSidebar,
     },
     {
-      label: $t("devices.title"),
+      label: t("devices.title"),
       icon: "i-lucide-network",
       to: localePath("/devices"),
-      onSelect: () => {
-        open.value = false;
-      },
+      onSelect: closeSidebar,
     },
   ],
   [
     {
-      label: $t("developer.title"),
+      label: t("developer.title"),
       icon: "i-lucide-terminal-square",
       to: localePath("/developer"),
-      onSelect: () => {
-        open.value = false;
-      },
+      onSelect: closeSidebar,
       children: [
         {
-          label: $t("developer.logs.title"),
+          label: t("developer.logs.title"),
           icon: "i-lucide-list-tree",
           to: localePath("/developer/logs"),
-          onSelect: () => {
-            open.value = false;
-          },
+          onSelect: closeSidebar,
         },
         {
-          label: $t("developer.events.title"),
+          label: t("developer.events.title"),
           icon: "i-lucide-radio",
           to: localePath("/developer/events"),
-          onSelect: () => {
-            open.value = false;
-          },
+          onSelect: closeSidebar,
         },
       ],
     },
     {
-      label: $t("settings.title"),
+      label: t("settings.title"),
       icon: "i-lucide-sliders-horizontal",
       to: localePath("/settings"),
-      onSelect: () => {
-        open.value = false;
-      },
+      onSelect: closeSidebar,
     },
   ],
-] satisfies NavigationMenuItem[][];
+]);
 
 const groups = computed(() => [
   {
     id: "links",
-    label: $t("go-to"),
-    items: links.flat(),
+    label: t("go-to"),
+    items: links.value.flat(),
   },
 ]);
 </script>
@@ -80,10 +71,7 @@ const groups = computed(() => [
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
       <template #default="{ collapsed }">
-        <UDashboardSearchButton
-          :collapsed="collapsed"
-          class="bg-transparent ring-default"
-        />
+        <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default" />
 
         <UNavigationMenu
           :collapsed="collapsed"
