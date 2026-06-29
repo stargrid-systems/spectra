@@ -11,6 +11,12 @@ useHead({
     lang,
     dir,
   },
+  titleTemplate: "%s - Spectra",
+});
+
+useSeoMeta({
+  title: "Spectra",
+  description: "Universal UI for the eCube energy storage system",
 });
 </script>
 
