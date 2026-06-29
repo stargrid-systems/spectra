@@ -43,5 +43,11 @@ export default defineNuxtConfig({
       crawlLinks: true,
       failOnError: false,
     },
+    devProxy: {
+      "/api": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+      },
+    },
   },
 });
