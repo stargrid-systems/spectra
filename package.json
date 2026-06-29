@@ -12,7 +12,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "openapi:generate": "node scripts/patch-openapi.mjs && openapi-typescript openapi/openapi.json -o app/utils/api/generated.ts",
+    "openapi:generate": "openapi-typescript openapi/openapi.json -o app/utils/api/generated.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:ci": "eslint . --format @microsoft/eslint-formatter-sarif -o eslint.sarif",
