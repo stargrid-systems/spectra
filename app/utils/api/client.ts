@@ -1,0 +1,43 @@
+import type {
+  ArtifactPage,
+  ArtifactSummary,
+  ArtifactVersion,
+  ArtifactVersionPage,
+  DownloadPage,
+  ListArtifactsParams,
+  ListDownloadsParams,
+  ListVersionsParams,
+  VersionResponse,
+} from "./types";
+
+const BASE = "/api/v1";
+
+export const apertureApi = {
+  getVersion: () => $fetch<VersionResponse>(`${BASE}/version`),
+
+  listArtifacts: (params?: ListArtifactsParams) =>
+    $fetch<ArtifactPage>(`${BASE}/artifacts`, { query: params }),
+
+  getArtifact: (key: string) =>
+    $fetch<ArtifactSummary>(`${BASE}/artifacts/${encodeURIComponent(key)}`),
+
+  listVersions: (key: string, params?: ListVersionsParams) =>
+    $fetch<ArtifactVersionPage>(`${BASE}/artifacts/${encodeURIComponent(key)}/versions`, {
+      query: params,
+    }),
+
+  getVersionDetail: (key: string, digest: string) =>
+    $fetch<ArtifactVersion>(
+      `${BASE}/artifacts/${encodeURIComponent(key)}/versions/${encodeURIComponent(digest)}`,
+    ),
+
+  deleteVersion: async (key: string, digest: string): Promise<void> => {
+    await $fetch(
+      `${BASE}/artifacts/${encodeURIComponent(key)}/versions/${encodeURIComponent(digest)}`,
+      { method: "DELETE" },
+    );
+  },
+
+  listDownloads: (params?: ListDownloadsParams) =>
+    $fetch<DownloadPage>(`${BASE}/downloads`, { query: params }),
+};
