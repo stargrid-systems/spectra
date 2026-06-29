@@ -44,7 +44,44 @@
     "description": "Low-Level-Werkzeuge zum Prüfen von Logs, Events und Diagnosen.",
     "logs": {
       "title": "Logs",
-      "body": "System-Logs ansehen und filtern, um Verhalten nachzuvollziehen und Probleme zu diagnostizieren."
+      "body": "System-Logs ansehen und filtern, um Verhalten nachzuvollziehen und Probleme zu diagnostizieren.",
+      "filters": {
+        "level": "Level",
+        "target": "Ziel",
+        "search": "Nachrichten durchsuchen",
+        "timeRange": "Zeitbereich",
+        "fields": "Feldfilter",
+        "fieldKey": "Schluessel",
+        "fieldValue": "Wert",
+        "addField": "Filter hinzufuegen",
+        "removeField": "Entfernen",
+        "clear": "Filter zuruecksetzen"
+      },
+      "levels": {
+        "trace": "Trace",
+        "debug": "Debug",
+        "info": "Info",
+        "warn": "Warn",
+        "error": "Error"
+      },
+      "timeRanges": {
+        "5m": "Letzte 5 Minuten",
+        "1h": "Letzte Stunde",
+        "24h": "Letzte 24 Stunden",
+        "7d": "Letzte 7 Tage",
+        "all": "Gesamte Zeit"
+      },
+      "empty": "Keine Log-Ereignisse gefunden",
+      "error": "Logs konnten nicht geladen werden",
+      "columns": {
+        "timestamp": "Zeit",
+        "level": "Level",
+        "target": "Ziel",
+        "message": "Nachricht"
+      },
+      "fields": "Strukturierte Felder",
+      "noFields": "Keine strukturierten Felder",
+      "spanId": "Span"
     },
     "events": {
       "title": "Events",

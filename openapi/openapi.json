@@ -335,6 +335,277 @@
         }
       }
     },
+    "/api/v1/logs": {
+      "get": {
+        "summary": "Lists log events with optional filtering.",
+        "operationId": "list_logs",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum rows to return. Defaults to 50.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Cursor from a page's `next_cursor` or `prev_cursor`.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort direction. Defaults to descending (newest first).",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrderParam"
+            }
+          },
+          {
+            "name": "min_level",
+            "in": "query",
+            "description": "Only events at this severity or higher.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LevelResponse"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "description": "Only events whose target starts with this prefix.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Full-text search on the message field.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "span_id",
+            "in": "query",
+            "description": "Only events belonging to this span.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "description": "Only events at or after this time (RFC 3339).",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "until",
+            "in": "query",
+            "description": "Only events at or before this time (RFC 3339).",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Structured field filter as a JSON object, e.g. `{\"key\":\"value\"}`.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Log events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_LogEventResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/logs/spans": {
+      "get": {
+        "summary": "Lists tracing spans with optional filtering.",
+        "operationId": "list_spans",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum rows to return. Defaults to 50.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Cursor from a page's `next_cursor` or `prev_cursor`.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort direction. Defaults to descending (newest first).",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrderParam"
+            }
+          },
+          {
+            "name": "min_level",
+            "in": "query",
+            "description": "Only spans at this severity or higher.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LevelResponse"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "description": "Only spans whose target starts with this prefix.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "description": "Only spans started at or after this time (RFC 3339).",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "until",
+            "in": "query",
+            "description": "Only spans started at or before this time (RFC 3339).",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Spans",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_LogSpanResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/logs/spans/{id}": {
+      "get": {
+        "summary": "Returns a single span with its events.",
+        "operationId": "get_span",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Span id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Span with events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogSpanDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown span"
+          }
+        }
+      }
+    },
+    "/api/v1/logs/targets": {
+      "get": {
+        "summary": "Lists distinct log targets for autocomplete.",
+        "operationId": "list_log_targets",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Only targets starting with this prefix.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Target names",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/version": {
       "get": {
         "summary": "Returns version information about the gateway.",
@@ -561,6 +832,16 @@
           }
         }
       },
+      "DownloadStatusParam": {
+        "type": "string",
+        "description": "Filter for download status.",
+        "enum": [
+          "running",
+          "succeeded",
+          "failed",
+          "interrupted"
+        ]
+      },
       "DownloadStatusResponse": {
         "type": "string",
         "description": "Lifecycle state of a download attempt.",
@@ -569,6 +850,180 @@
           "succeeded",
           "failed",
           "interrupted"
+        ]
+      },
+      "LevelResponse": {
+        "type": "string",
+        "description": "Severity level of a log event or span.",
+        "enum": [
+          "trace",
+          "debug",
+          "info",
+          "warn",
+          "error"
+        ]
+      },
+      "LogEventResponse": {
+        "type": "object",
+        "description": "A single log event, returned by `GET /api/v1/logs`.",
+        "required": [
+          "id",
+          "level",
+          "target",
+          "timestamp"
+        ],
+        "properties": {
+          "fields": {
+            "description": "All structured fields as a JSON object, if any."
+          },
+          "file": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Source file, if available."
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Event id."
+          },
+          "level": {
+            "$ref": "#/components/schemas/LevelResponse",
+            "description": "Severity level."
+          },
+          "line": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Source line, if available."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Human-readable message, if any."
+          },
+          "span_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Span this event belongs to, if any."
+          },
+          "target": {
+            "type": "string",
+            "description": "Module path that emitted the event."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the event was emitted."
+          }
+        }
+      },
+      "LogSpanDetailResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LogSpanResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "events"
+            ],
+            "properties": {
+              "events": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/LogEventResponse"
+                },
+                "description": "Events belonging to this span, ordered by timestamp."
+              }
+            }
+          }
+        ],
+        "description": "A span with its child events, returned by `GET /api/v1/logs/spans/{id}`."
+      },
+      "LogSpanResponse": {
+        "type": "object",
+        "description": "A tracing span, returned by `GET /api/v1/logs/spans`.",
+        "required": [
+          "id",
+          "name",
+          "level",
+          "target",
+          "started_at"
+        ],
+        "properties": {
+          "ended_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the span ended, if it did."
+          },
+          "fields": {
+            "description": "Span fields as a JSON object, if any."
+          },
+          "file": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Source file, if available."
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Span id."
+          },
+          "level": {
+            "$ref": "#/components/schemas/LevelResponse",
+            "description": "Severity level."
+          },
+          "line": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Source line, if available."
+          },
+          "name": {
+            "type": "string",
+            "description": "Span name."
+          },
+          "parent_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Parent span id, if any."
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the span started."
+          },
+          "target": {
+            "type": "string",
+            "description": "Module path that created the span."
+          }
+        }
+      },
+      "OrderParam": {
+        "type": "string",
+        "description": "Sort direction shared by list endpoints.",
+        "enum": [
+          "asc",
+          "desc"
         ]
       },
       "Page_ArtifactSummaryResponse": {
@@ -833,6 +1288,192 @@
           }
         }
       },
+      "Page_LogEventResponse": {
+        "type": "object",
+        "description": "A page of results plus the cursors for the neighbouring pages.",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "A single log event, returned by `GET /api/v1/logs`.",
+              "required": [
+                "id",
+                "level",
+                "target",
+                "timestamp"
+              ],
+              "properties": {
+                "fields": {
+                  "description": "All structured fields as a JSON object, if any."
+                },
+                "file": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Source file, if available."
+                },
+                "id": {
+                  "type": "integer",
+                  "format": "int64",
+                  "description": "Event id."
+                },
+                "level": {
+                  "$ref": "#/components/schemas/LevelResponse",
+                  "description": "Severity level."
+                },
+                "line": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "int64",
+                  "description": "Source line, if available."
+                },
+                "message": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Human-readable message, if any."
+                },
+                "span_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "int64",
+                  "description": "Span this event belongs to, if any."
+                },
+                "target": {
+                  "type": "string",
+                  "description": "Module path that emitted the event."
+                },
+                "timestamp": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "When the event was emitted."
+                }
+              }
+            },
+            "description": "The rows in this page."
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
+          },
+          "prev_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
+          }
+        }
+      },
+      "Page_LogSpanResponse": {
+        "type": "object",
+        "description": "A page of results plus the cursors for the neighbouring pages.",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "A tracing span, returned by `GET /api/v1/logs/spans`.",
+              "required": [
+                "id",
+                "name",
+                "level",
+                "target",
+                "started_at"
+              ],
+              "properties": {
+                "ended_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time",
+                  "description": "When the span ended, if it did."
+                },
+                "fields": {
+                  "description": "Span fields as a JSON object, if any."
+                },
+                "file": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Source file, if available."
+                },
+                "id": {
+                  "type": "integer",
+                  "format": "int64",
+                  "description": "Span id."
+                },
+                "level": {
+                  "$ref": "#/components/schemas/LevelResponse",
+                  "description": "Severity level."
+                },
+                "line": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "int64",
+                  "description": "Source line, if available."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Span name."
+                },
+                "parent_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "int64",
+                  "description": "Parent span id, if any."
+                },
+                "started_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "When the span started."
+                },
+                "target": {
+                  "type": "string",
+                  "description": "Module path that created the span."
+                }
+              }
+            },
+            "description": "The rows in this page."
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
+          },
+          "prev_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
+          }
+        }
+      },
       "VersionResponse": {
         "type": "object",
         "description": "Version information returned by `GET /api/v1/version`.",
@@ -846,31 +1487,13 @@
           }
         }
       },
-      "OrderParam": {
-        "type": "string",
-        "enum": [
-          "asc",
-          "desc"
-        ],
-        "description": "Sort direction shared by list endpoints."
-      },
       "VersionSortParam": {
         "type": "string",
+        "description": "Field a version listing is sorted by.",
         "enum": [
           "downloaded_at",
           "size_bytes"
-        ],
-        "description": "Field a version listing is sorted by."
-      },
-      "DownloadStatusParam": {
-        "type": "string",
-        "enum": [
-          "running",
-          "succeeded",
-          "failed",
-          "interrupted"
-        ],
-        "description": "Filter for download status."
+        ]
       }
     }
   }

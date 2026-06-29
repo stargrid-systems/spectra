@@ -6,7 +6,13 @@ import type {
   DownloadPage,
   ListArtifactsParams,
   ListDownloadsParams,
+  ListLogSpansParams,
+  ListLogTargetsParams,
+  ListLogsParams,
   ListVersionsParams,
+  LogEventPage,
+  LogSpanDetail,
+  LogSpanPage,
   VersionResponse,
 } from "./types";
 
@@ -40,4 +46,15 @@ export const apertureApi = {
 
   listDownloads: (params?: ListDownloadsParams) =>
     $fetch<DownloadPage>(`${BASE}/downloads`, { query: params }),
+
+  listLogs: (params?: ListLogsParams) =>
+    $fetch<LogEventPage>(`${BASE}/logs`, { query: params }),
+
+  listLogTargets: (params?: ListLogTargetsParams) =>
+    $fetch<string[]>(`${BASE}/logs/targets`, { query: params }),
+
+  listSpans: (params?: ListLogSpansParams) =>
+    $fetch<LogSpanPage>(`${BASE}/logs/spans`, { query: params }),
+
+  getSpan: (id: number) => $fetch<LogSpanDetail>(`${BASE}/logs/spans/${id}`),
 };
