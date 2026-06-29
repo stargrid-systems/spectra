@@ -1,4 +1,8 @@
 {
+  "app": {
+    "name": "Spectra",
+    "description": "Universelle Benutzeroberfläche für das eCube-Energiespeichersystem"
+  },
   "home": "Startseite",
   "go-to": "Gehe zu",
   "notifications": "Benachrichtigungen",
