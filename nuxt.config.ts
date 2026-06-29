@@ -17,6 +17,7 @@ export default defineNuxtConfig({
   i18n: {
     strategy: "prefix",
     defaultLocale: "en",
+    detectBrowserLanguage: false,
     locales: [
       { code: "en", language: "en-US", file: "en.json" },
       { code: "de", language: "de-DE", file: "de.json" },
@@ -29,5 +30,9 @@ export default defineNuxtConfig({
   },
   nitro: {
     compressPublicAssets: true,
+    prerender: {
+      crawlLinks: true,
+      failOnError: false,
+    },
   },
 });
