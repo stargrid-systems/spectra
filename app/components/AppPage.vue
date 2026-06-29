@@ -1,9 +1,13 @@
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
   title: string;
   backTo?: string;
   bodyClass?: string;
 }>();
+
+useHead({
+  title: computed(() => props.title),
+});
 </script>
 
 <template>

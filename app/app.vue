@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import * as locales from "@nuxt/ui/locale";
 
-const { locale } = useI18n();
+const { t, locale } = useI18n();
 
 const lang = computed(() => locales[locale.value].code);
 const dir = computed(() => locales[locale.value].dir);
@@ -11,12 +11,11 @@ useHead({
     lang,
     dir,
   },
-  titleTemplate: "%s - Spectra",
+  titleTemplate: (title) => (title ? `${title} - ${t("app.name")}` : t("app.name")),
 });
 
 useSeoMeta({
-  title: "Spectra",
-  description: "Universal UI for the eCube energy storage system",
+  description: computed(() => t("app.description")),
 });
 </script>
 
