@@ -65,7 +65,13 @@ export function useLogsFilters() {
     spanId: undefined,
   });
 
+  let skipRouteWatch = false;
+
   function readFromRoute() {
+    if (skipRouteWatch) {
+      skipRouteWatch = false;
+      return;
+    }
     const q = route.query;
     filters.level = (q[QUERY_KEYS.level] as string) || DEFAULT_LEVEL;
     filters.target = (q[QUERY_KEYS.target] as string) || undefined;
@@ -88,6 +94,7 @@ export function useLogsFilters() {
     if (filters.spanId !== undefined) query[QUERY_KEYS.spanId] = String(filters.spanId);
     const fieldsJson = encodeFields(filters.fieldFilters);
     if (fieldsJson) query[QUERY_KEYS.fields] = fieldsJson;
+    skipRouteWatch = true;
     router.replace({ query });
   }
 

@@ -244,20 +244,22 @@ function retry() {
   <AppPage :title="$t('developer.logs.title')">
     <template #toolbar>
       <div class="flex flex-wrap items-end gap-3 px-4 py-3 border-b border-default">
-        <UButtonGroup size="sm">
+        <div class="flex gap-1">
           <UButton
+            size="sm"
             :variant="filters.view === 'events' ? 'solid' : 'ghost'"
             color="primary"
             :label="$t('developer.logs.views.events')"
             @click="() => { filters.view = 'events'; }"
           />
           <UButton
+            size="sm"
             :variant="filters.view === 'spans' ? 'solid' : 'ghost'"
             color="primary"
             :label="$t('developer.logs.views.spans')"
             @click="() => { filters.view = 'spans'; }"
           />
-        </UButtonGroup>
+        </div>
 
         <UFormField :label="$t('developer.logs.filters.level')" size="sm">
           <USelect
