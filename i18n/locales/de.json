@@ -55,7 +55,12 @@
         "fieldValue": "Wert",
         "addField": "Filter hinzufuegen",
         "removeField": "Entfernen",
-        "clear": "Filter zuruecksetzen"
+        "clear": "Filter zuruecksetzen",
+        "bootOnly": "Nur dieser Boot"
+      },
+      "views": {
+        "events": "Ereignisse",
+        "spans": "Spans"
       },
       "levels": {
         "trace": "Trace",
@@ -66,13 +71,28 @@
       },
       "timeRanges": {
         "5m": "Letzte 5 Minuten",
+        "15m": "Letzte 15 Minuten",
         "1h": "Letzte Stunde",
+        "6h": "Letzte 6 Stunden",
+        "12h": "Letzte 12 Stunden",
         "24h": "Letzte 24 Stunden",
         "7d": "Letzte 7 Tage",
+        "30d": "Letzte 30 Tage",
         "all": "Gesamte Zeit"
       },
+      "timeRange": {
+        "relative": "Relativ",
+        "absolute": "Absolut",
+        "from": "Von",
+        "to": "Bis",
+        "apply": "Anwenden"
+      },
       "empty": "Keine Log-Ereignisse gefunden",
+      "emptySpans": "Keine Spans gefunden",
       "error": "Logs konnten nicht geladen werden",
+      "retry": "Erneut versuchen",
+      "noMore": "Keine weiteren Ereignisse",
+      "loadingMore": "Lade weitere...",
       "columns": {
         "timestamp": "Zeit",
         "level": "Level",
@@ -81,6 +101,8 @@
       },
       "fields": "Strukturierte Felder",
       "noFields": "Keine strukturierten Felder",
+      "events": "Ereignisse",
+      "noEvents": "Keine Ereignisse in diesem Span",
       "spanId": "Span"
     },
     "events": {

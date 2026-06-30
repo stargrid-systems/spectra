@@ -55,7 +55,12 @@
         "fieldValue": "Value",
         "addField": "Add filter",
         "removeField": "Remove",
-        "clear": "Clear filters"
+        "clear": "Clear filters",
+        "bootOnly": "This boot only"
+      },
+      "views": {
+        "events": "Events",
+        "spans": "Spans"
       },
       "levels": {
         "trace": "Trace",
@@ -66,13 +71,28 @@
       },
       "timeRanges": {
         "5m": "Last 5 minutes",
+        "15m": "Last 15 minutes",
         "1h": "Last hour",
+        "6h": "Last 6 hours",
+        "12h": "Last 12 hours",
         "24h": "Last 24 hours",
         "7d": "Last 7 days",
+        "30d": "Last 30 days",
         "all": "All time"
       },
+      "timeRange": {
+        "relative": "Relative",
+        "absolute": "Absolute",
+        "from": "From",
+        "to": "To",
+        "apply": "Apply"
+      },
       "empty": "No log events found",
+      "emptySpans": "No spans found",
       "error": "Failed to load logs",
+      "retry": "Retry",
+      "noMore": "No more events",
+      "loadingMore": "Loading more...",
       "columns": {
         "timestamp": "Time",
         "level": "Level",
@@ -81,6 +101,8 @@
       },
       "fields": "Structured fields",
       "noFields": "No structured fields",
+      "events": "Events",
+      "noEvents": "No events in this span",
       "spanId": "Span"
     },
     "events": {
