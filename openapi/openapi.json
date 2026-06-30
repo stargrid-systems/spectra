@@ -17,7 +17,7 @@
     "/api/v1/artifacts": {
       "get": {
         "summary": "Lists stored artifact keys, each with its newest version.",
-        "operationId": "list_artifacts",
+        "operationId": "listArtifacts",
         "parameters": [
           {
             "name": "limit",
@@ -77,7 +77,7 @@
     "/api/v1/artifacts/{key}": {
       "get": {
         "summary": "Returns one artifact key with its newest version.",
-        "operationId": "get_artifact",
+        "operationId": "getArtifact",
         "parameters": [
           {
             "name": "key",
@@ -109,7 +109,7 @@
     "/api/v1/artifacts/{key}/versions": {
       "get": {
         "summary": "Lists the stored versions of an artifact.",
-        "operationId": "list_versions",
+        "operationId": "listArtifactVersions",
         "parameters": [
           {
             "name": "key",
@@ -196,7 +196,7 @@
     "/api/v1/artifacts/{key}/versions/{digest}": {
       "get": {
         "summary": "Returns one stored version.",
-        "operationId": "get_version",
+        "operationId": "getArtifactVersion",
         "parameters": [
           {
             "name": "key",
@@ -235,7 +235,7 @@
       },
       "delete": {
         "summary": "Evicts one stored version and its blob, if no other version needs it.",
-        "operationId": "delete_version",
+        "operationId": "deleteArtifactVersion",
         "parameters": [
           {
             "name": "key",
@@ -269,7 +269,7 @@
     "/api/v1/downloads": {
       "get": {
         "summary": "Lists download attempts, optionally filtered by status and artifact key.\nRunning attempts carry live byte progress.",
-        "operationId": "list_downloads",
+        "operationId": "listDownloads",
         "parameters": [
           {
             "name": "limit",
@@ -338,7 +338,7 @@
     "/api/v1/logs": {
       "get": {
         "summary": "Lists log events with optional filtering.",
-        "operationId": "list_logs",
+        "operationId": "listLogs",
         "parameters": [
           {
             "name": "limit",
@@ -455,7 +455,7 @@
     "/api/v1/logs/spans": {
       "get": {
         "summary": "Lists tracing spans with optional filtering.",
-        "operationId": "list_spans",
+        "operationId": "listSpans",
         "parameters": [
           {
             "name": "limit",
@@ -525,6 +525,25 @@
               "type": "string",
               "format": "date-time"
             }
+          },
+          {
+            "name": "parent_id",
+            "in": "query",
+            "description": "Only direct children of this span id.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "parent_null",
+            "in": "query",
+            "description": "When true, only root spans (no parent) are returned.",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -544,7 +563,7 @@
     "/api/v1/logs/spans/{id}": {
       "get": {
         "summary": "Returns a single span with its events.",
-        "operationId": "get_span",
+        "operationId": "getSpan",
         "parameters": [
           {
             "name": "id",
@@ -577,7 +596,7 @@
     "/api/v1/logs/targets": {
       "get": {
         "summary": "Lists distinct log targets for autocomplete.",
-        "operationId": "list_log_targets",
+        "operationId": "listLogTargets",
         "parameters": [
           {
             "name": "q",
@@ -609,7 +628,7 @@
     "/api/v1/version": {
       "get": {
         "summary": "Returns version information about the gateway.",
-        "operationId": "get_gateway_version",
+        "operationId": "getGatewayVersion",
         "responses": {
           "200": {
             "description": "Gateway version",
@@ -629,7 +648,7 @@
     "schemas": {
       "ArtifactSummaryResponse": {
         "type": "object",
-        "description": "A distinct artifact key with its newest version, for `GET /api/v1/artifacts`.",
+        "description": "A distinct artifact key with its newest version, for `GET\n/api/v1/artifacts`.",
         "required": [
           "key",
           "version_count",
@@ -1037,7 +1056,7 @@
             "type": "array",
             "items": {
               "type": "object",
-              "description": "A distinct artifact key with its newest version, for `GET /api/v1/artifacts`.",
+              "description": "A distinct artifact key with its newest version, for `GET\n/api/v1/artifacts`.",
               "required": [
                 "key",
                 "version_count",
@@ -1478,12 +1497,17 @@
         "type": "object",
         "description": "Version information returned by `GET /api/v1/version`.",
         "required": [
-          "aperture"
+          "aperture",
+          "boot_id"
         ],
         "properties": {
           "aperture": {
             "type": "string",
             "description": "Version of the Aperture gateway."
+          },
+          "boot_id": {
+            "type": "string",
+            "description": "Unique id of this gateway boot session."
           }
         }
       },

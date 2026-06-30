@@ -22,11 +22,13 @@ export type DownloadPage = Schemas["Page_DownloadResponse"];
 export type LogEventPage = Schemas["Page_LogEventResponse"];
 export type LogSpanPage = Schemas["Page_LogSpanResponse"];
 
-export type ListArtifactsParams = NonNullable<operations["list_artifacts"]["parameters"]["query"]>;
-export type ListVersionsParams = NonNullable<operations["list_versions"]["parameters"]["query"]>;
-export type ListDownloadsParams = NonNullable<operations["list_downloads"]["parameters"]["query"]>;
-export type ListLogsParams = NonNullable<operations["list_logs"]["parameters"]["query"]>;
-export type ListLogSpansParams = NonNullable<operations["list_spans"]["parameters"]["query"]>;
+export type ListArtifactsParams = NonNullable<operations["listArtifacts"]["parameters"]["query"]>;
+export type ListVersionsParams = NonNullable<
+  operations["listArtifactVersions"]["parameters"]["query"]
+>;
+export type ListDownloadsParams = NonNullable<operations["listDownloads"]["parameters"]["query"]>;
+export type ListLogsParams = NonNullable<operations["listLogs"]["parameters"]["query"]>;
+export type ListLogSpansParams = NonNullable<operations["listSpans"]["parameters"]["query"]>;
 export type ListLogTargetsParams = NonNullable<
-  operations["list_log_targets"]["parameters"]["query"]
+  operations["listLogTargets"]["parameters"]["query"]
 >;
