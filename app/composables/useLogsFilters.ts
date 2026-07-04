@@ -12,7 +12,7 @@ export interface LogsFilters {
   target: string | undefined;
   search: string | undefined;
   timeRange: string | undefined;
-  bootOnly: boolean;
+  bootId: string | undefined;
   fieldFilters: FieldFilter[];
   view: LogView;
   spanId: number | undefined;
@@ -23,9 +23,9 @@ const QUERY_KEYS = {
   target: "target",
   search: "q",
   timeRange: "range",
-  bootOnly: "boot",
+  boot: "boot",
   view: "view",
-  spanId: "span",
+  span: "span",
   fields: "fields",
 } as const;
 
@@ -59,7 +59,7 @@ export function useLogsFilters() {
     target: undefined,
     search: undefined,
     timeRange: undefined,
-    bootOnly: false,
+    bootId: undefined,
     fieldFilters: [],
     view: "events",
     spanId: undefined,
@@ -77,9 +77,9 @@ export function useLogsFilters() {
     filters.target = (q[QUERY_KEYS.target] as string) || undefined;
     filters.search = (q[QUERY_KEYS.search] as string) || undefined;
     filters.timeRange = (q[QUERY_KEYS.timeRange] as string) || undefined;
-    filters.bootOnly = q[QUERY_KEYS.bootOnly] === "1" || q[QUERY_KEYS.bootOnly] === "true";
+    filters.bootId = (q[QUERY_KEYS.boot] as string) || undefined;
     filters.view = (q[QUERY_KEYS.view] as LogView) === "spans" ? "spans" : "events";
-    filters.spanId = q[QUERY_KEYS.spanId] ? Number(q[QUERY_KEYS.spanId]) : undefined;
+    filters.spanId = q[QUERY_KEYS.span] ? Number(q[QUERY_KEYS.span]) : undefined;
     filters.fieldFilters = parseFields((q[QUERY_KEYS.fields] as string) || "");
   }
 
@@ -89,9 +89,9 @@ export function useLogsFilters() {
     if (filters.target) query[QUERY_KEYS.target] = filters.target;
     if (filters.search) query[QUERY_KEYS.search] = filters.search;
     if (filters.timeRange) query[QUERY_KEYS.timeRange] = filters.timeRange;
-    if (filters.bootOnly) query[QUERY_KEYS.bootOnly] = "1";
+    if (filters.bootId) query[QUERY_KEYS.boot] = filters.bootId;
     if (filters.view === "spans") query[QUERY_KEYS.view] = "spans";
-    if (filters.spanId !== undefined) query[QUERY_KEYS.spanId] = String(filters.spanId);
+    if (filters.spanId !== undefined) query[QUERY_KEYS.span] = String(filters.spanId);
     const fieldsJson = encodeFields(filters.fieldFilters);
     if (fieldsJson) query[QUERY_KEYS.fields] = fieldsJson;
     skipRouteWatch = true;
@@ -111,16 +111,7 @@ export function useLogsFilters() {
   return { filters };
 }
 
-export function useBootId() {
-  return useAsyncData("boot-id", () => apertureApi.getVersion(), {
-    server: false,
-  });
-}
-
-export function logsParamsFromFilters(
-  filters: LogsFilters,
-  bootId: string | undefined,
-): ListLogsParams | undefined {
+export function logsParamsFromFilters(filters: LogsFilters): ListLogsParams | undefined {
   const p: ListLogsParams = {};
   if (filters.level) p.min_level = filters.level as ListLogsParams["min_level"];
   if (filters.target) p.target = filters.target;
@@ -131,8 +122,8 @@ export function logsParamsFromFilters(
   for (const f of filters.fieldFilters) {
     if (f.key && f.value) fields[f.key] = f.value;
   }
-  if (filters.bootOnly && bootId) {
-    fields.boot_id = bootId;
+  if (filters.bootId) {
+    fields.boot_id = filters.bootId;
   }
   if (Object.keys(fields).length > 0) {
     p.fields = JSON.stringify(fields);
@@ -144,5 +135,6 @@ export function spansParamsFromFilters(filters: LogsFilters): ListLogSpansParams
   const p: ListLogSpansParams = {};
   if (filters.level) p.min_level = filters.level as ListLogSpansParams["min_level"];
   if (filters.target) p.target = filters.target;
+  if (filters.spanId !== undefined) p.parent_id = filters.spanId;
   return Object.keys(p).length > 0 ? p : undefined;
 }

@@ -1,4 +1,5 @@
 import type {
+  BootList,
   ListLogSpansParams,
   ListLogsParams,
   LogEventPage,
@@ -13,18 +14,20 @@ export function useLogs(params?: () => ListLogsParams | undefined) {
 }
 
 export function useLogTargets(params?: () => { q?: string } | undefined) {
-  return useAsyncData<string[]>(
-    "log-targets",
-    () => apertureApi.listLogTargets(params?.()),
-    {
-      server: false,
-    },
-  );
+  return useAsyncData<string[]>("log-targets", () => apertureApi.listLogTargets(params?.()), {
+    server: false,
+  });
 }
 
 export function useSpans(params?: () => ListLogSpansParams | undefined) {
   return useAsyncData<LogSpanPage>("spans", () => apertureApi.listSpans(params?.()), {
     server: false,
     watch: params ? [params] : undefined,
+  });
+}
+
+export function useBoots() {
+  return useAsyncData<BootList>("log-boots", () => apertureApi.listLogBoots(), {
+    server: false,
   });
 }

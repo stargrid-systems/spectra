@@ -3,6 +3,7 @@ import type {
   ArtifactSummary,
   ArtifactVersion,
   ArtifactVersionPage,
+  BootList,
   DownloadPage,
   ListArtifactsParams,
   ListDownloadsParams,
@@ -47,11 +48,12 @@ export const apertureApi = {
   listDownloads: (params?: ListDownloadsParams) =>
     $fetch<DownloadPage>(`${BASE}/downloads`, { query: params }),
 
-  listLogs: (params?: ListLogsParams) =>
-    $fetch<LogEventPage>(`${BASE}/logs`, { query: params }),
+  listLogs: (params?: ListLogsParams) => $fetch<LogEventPage>(`${BASE}/logs`, { query: params }),
 
   listLogTargets: (params?: ListLogTargetsParams) =>
     $fetch<string[]>(`${BASE}/logs/targets`, { query: params }),
+
+  listLogBoots: () => $fetch<BootList>(`${BASE}/logs/boots`),
 
   listSpans: (params?: ListLogSpansParams) =>
     $fetch<LogSpanPage>(`${BASE}/logs/spans`, { query: params }),

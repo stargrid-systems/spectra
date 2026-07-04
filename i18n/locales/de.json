@@ -41,23 +41,31 @@
   },
   "developer": {
     "title": "Entwicklertools",
-    "description": "Low-Level-Werkzeuge zum Prüfen von Logs, Events und Diagnosen.",
+    "description": "Low-Level-Werkzeuge zum Prüfen von Logs und Diagnosen.",
     "logs": {
       "title": "Logs",
       "body": "System-Logs ansehen und filtern, um Verhalten nachzuvollziehen und Probleme zu diagnostizieren.",
       "filters": {
         "level": "Level",
         "target": "Ziel",
-        "search": "Nachrichten durchsuchen",
+        "targetAll": "Alle Ziele",
+        "search": "Nachricht, Ziel oder Felder durchsuchen",
         "timeRange": "Zeitbereich",
         "fields": "Feldfilter",
         "fieldKey": "Schluessel",
         "fieldValue": "Wert",
-        "addField": "Filter hinzufuegen",
+        "addField": "Feldfilter hinzufuegen",
         "removeField": "Entfernen",
+        "hideFields": "Feldfilter ausblenden",
         "clear": "Filter zuruecksetzen",
         "bootOnly": "Nur dieser Boot"
       },
+      "bootSelect": {
+        "allBoots": "Alle Boots",
+        "current": "aktuell",
+        "empty": "Keine Boots aufgezeichnet"
+      },
+      "inlineFields": "Strukturierte Felder inline",
       "views": {
         "events": "Ereignisse",
         "spans": "Spans"
@@ -92,6 +100,7 @@
       "error": "Logs konnten nicht geladen werden",
       "retry": "Erneut versuchen",
       "noMore": "Keine weiteren Ereignisse",
+      "running": "läuft",
       "loadingMore": "Lade weitere...",
       "columns": {
         "timestamp": "Zeit",
@@ -101,13 +110,14 @@
       },
       "fields": "Strukturierte Felder",
       "noFields": "Keine strukturierten Felder",
+      "spanChain": "Span-Kette",
+      "noSpan": "Kein Span",
+      "loadingSpan": "Lade Span...",
+      "spanFocus": "Fokussierter Span",
+      "showAllSpans": "Alle Spans anzeigen",
       "events": "Ereignisse",
       "noEvents": "Keine Ereignisse in diesem Span",
       "spanId": "Span"
-    },
-    "events": {
-      "title": "Events",
-      "body": "Aktuelle System-Events, BMS-Signale und Steueraktionen inspizieren."
     }
   },
   "devices": {

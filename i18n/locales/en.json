@@ -41,23 +41,31 @@
   },
   "developer": {
     "title": "Developer tools",
-    "description": "Low-level tools for inspecting logs, events, and diagnostics.",
+    "description": "Low-level tools for inspecting logs and diagnostics.",
     "logs": {
       "title": "Logs",
       "body": "View and filter system logs to trace behaviors and diagnose issues.",
       "filters": {
         "level": "Level",
         "target": "Target",
-        "search": "Search messages",
+        "targetAll": "All targets",
+        "search": "Search message, target, or fields",
         "timeRange": "Time range",
         "fields": "Field filter",
         "fieldKey": "Key",
         "fieldValue": "Value",
-        "addField": "Add filter",
+        "addField": "Add field filter",
         "removeField": "Remove",
+        "hideFields": "Hide field filter",
         "clear": "Clear filters",
         "bootOnly": "This boot only"
       },
+      "bootSelect": {
+        "allBoots": "All boots",
+        "current": "current",
+        "empty": "No boots recorded"
+      },
+      "inlineFields": "Inline structured fields",
       "views": {
         "events": "Events",
         "spans": "Spans"
@@ -92,6 +100,7 @@
       "error": "Failed to load logs",
       "retry": "Retry",
       "noMore": "No more events",
+      "running": "running",
       "loadingMore": "Loading more...",
       "columns": {
         "timestamp": "Time",
@@ -101,13 +110,14 @@
       },
       "fields": "Structured fields",
       "noFields": "No structured fields",
+      "spanChain": "Span chain",
+      "noSpan": "No span",
+      "loadingSpan": "Loading span...",
+      "spanFocus": "Focused span",
+      "showAllSpans": "Show all spans",
       "events": "Events",
       "noEvents": "No events in this span",
       "spanId": "Span"
-    },
-    "events": {
-      "title": "Events",
-      "body": "Inspect recent system events, BMS signals, and control actions."
     }
   },
   "devices": {

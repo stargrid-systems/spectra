@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import type { ListLogsParams, LogEvent, LogSpan } from "~/utils/api/types";
-import { useBootId, useLogsFilters } from "~/composables/useLogsFilters";
+import type { BootResponse, ListLogsParams, LogEvent, LogSpan } from "~/utils/api/types";
+import {
+  useLogsFilters,
+  logsParamsFromFilters,
+  spansParamsFromFilters,
+} from "~/composables/useLogsFilters";
 
-const { t: _t } = useI18n();
+const { t } = useI18n();
 
 const { filters } = useLogsFilters();
-
-const { data: versionData } = useBootId();
-const bootId = computed(() => versionData.value?.boot_id);
 
 const since = ref<string | undefined>(undefined);
 const until = ref<string | undefined>(undefined);
@@ -32,51 +33,37 @@ const computedSince = computed(() => {
   return new Date(Date.now() - ms).toISOString();
 });
 
-const fieldsJson = computed(() => {
-  const fields: Record<string, string> = {};
-  for (const f of filters.fieldFilters) {
-    if (f.key && f.value) fields[f.key] = f.value;
-  }
-  if (filters.bootOnly && bootId.value) {
-    fields.boot_id = bootId.value;
-  }
-  return Object.keys(fields).length > 0 ? JSON.stringify(fields) : undefined;
-});
-
 const logsParams = computed<ListLogsParams | undefined>(() => {
-  const p: ListLogsParams = {};
-  if (filters.level) p.min_level = filters.level as ListLogsParams["min_level"];
-  if (filters.target) p.target = filters.target;
-  if (filters.search) p.q = filters.search;
-  if (filters.spanId !== undefined) p.span_id = filters.spanId;
+  const p = logsParamsFromFilters(filters) ?? ({} as ListLogsParams);
   if (computedSince.value) p.since = computedSince.value;
   if (until.value) p.until = until.value;
-  if (fieldsJson.value) p.fields = fieldsJson.value;
   return Object.keys(p).length > 0 ? p : undefined;
 });
 
 const { data, status, error, refresh } = useLogs(() => logsParams.value);
 
-const { data: spansData, status: spansStatus, error: spansError, refresh: refreshSpans } = useSpans(
-  () => {
-    const p: NonNullable<Parameters<typeof apertureApi.listSpans>[0]> = {};
-    if (filters.level) p.min_level = filters.level as "trace" | "debug" | "info" | "warn" | "error";
-    if (filters.target) p.target = filters.target;
-    return Object.keys(p).length > 0 ? p : undefined;
-  },
-);
+const spansParams = computed(() => spansParamsFromFilters(filters));
+const {
+  data: spansData,
+  status: spansStatus,
+  error: spansError,
+  refresh: refreshSpans,
+} = useSpans(() => spansParams.value);
 
 const { data: targetOptions } = useLogTargets();
+const { data: bootsData } = useBoots();
+
+const boots = computed<BootResponse[]>(() => bootsData.value ?? []);
+
+const inlineFields = ref(false);
+const showFieldFilter = ref(filters.fieldFilters.length > 0);
 
 const newFieldKey = ref("");
 const newFieldValue = ref("");
 
 function addFieldFilter() {
   if (newFieldKey.value && newFieldValue.value) {
-    filters.fieldFilters.push({
-      key: newFieldKey.value,
-      value: newFieldValue.value,
-    });
+    filters.fieldFilters.push({ key: newFieldKey.value, value: newFieldValue.value });
     newFieldKey.value = "";
     newFieldValue.value = "";
   }
@@ -91,14 +78,17 @@ function clearFilters() {
   filters.target = undefined;
   filters.search = undefined;
   filters.timeRange = undefined;
-  filters.bootOnly = false;
+  filters.bootId = undefined;
   filters.fieldFilters = [];
   filters.spanId = undefined;
   since.value = undefined;
   until.value = undefined;
 }
 
-const levelColors: Record<string, "error" | "primary" | "secondary" | "success" | "info" | "warning" | "neutral"> = {
+const levelColors: Record<
+  string,
+  "error" | "primary" | "secondary" | "success" | "info" | "warning" | "neutral"
+> = {
   trace: "neutral",
   debug: "info",
   info: "primary",
@@ -106,19 +96,66 @@ const levelColors: Record<string, "error" | "primary" | "secondary" | "success" 
   error: "error",
 };
 
+const levelOptions = computed(() => [
+  { label: t("developer.logs.levels.trace"), value: "trace" },
+  { label: t("developer.logs.levels.debug"), value: "debug" },
+  { label: t("developer.logs.levels.info"), value: "info" },
+  { label: t("developer.logs.levels.warn"), value: "warn" },
+  { label: t("developer.logs.levels.error"), value: "error" },
+]);
+
+const expandedRows = ref<Set<number>>(new Set());
+
+function toggleRow(event: LogEvent) {
+  if (expandedRows.value.has(event.id)) {
+    expandedRows.value.delete(event.id);
+    return;
+  }
+  expandedRows.value.add(event.id);
+  if (event.fields) {
+    pendingEventIds.value.add(event.id);
+    void loadEventSpanChain(event);
+  }
+}
+
 function formatTime(ts: string): string {
   return new Date(ts).toLocaleTimeString();
 }
 
-const expandedRows = ref<Set<number>>(new Set());
-
-function toggleRow(id: number) {
-  if (expandedRows.value.has(id)) {
-    expandedRows.value.delete(id);
-  } else {
-    expandedRows.value.add(id);
+function asFields(value: unknown): Record<string, unknown> | undefined {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
   }
+  return undefined;
 }
+
+function formatFieldsInline(fields: unknown): string {
+  const f = asFields(fields);
+  if (!f) return "";
+  const parts: string[] = [];
+  for (const [key, value] of Object.entries(f)) {
+    if (key === "message" || key === "boot_id") continue;
+    parts.push(`${key}=${formatValue(value)}`);
+  }
+  return parts.join("  ");
+}
+
+function formatValue(value: unknown): string {
+  if (value === null) return "null";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return JSON.stringify(value);
+}
+
+function sortedFields(fields: unknown): { key: string; value: unknown }[] {
+  const f = asFields(fields);
+  if (!f) return [];
+  return Object.entries(f)
+    .filter(([key]) => key !== "boot_id" && key !== "message")
+    .map(([key, value]) => ({ key, value }));
+}
+
+// Events: infinite scroll accumulation.
 
 const allItems = ref<LogEvent[]>([]);
 const nextCursor = ref<string | null | undefined>(undefined);
@@ -134,14 +171,13 @@ watch(logsParams, () => {
 });
 
 watch(data, (newData) => {
-  if (newData) {
-    if (allItems.value.length === 0) {
-      allItems.value = newData.items;
-    } else {
-      allItems.value = [...allItems.value, ...newData.items];
-    }
-    nextCursor.value = newData.next_cursor;
+  if (!newData) return;
+  if (allItems.value.length === 0) {
+    allItems.value = newData.items;
+  } else {
+    allItems.value = [...allItems.value, ...newData.items];
   }
+  nextCursor.value = newData.next_cursor;
 });
 
 const sentinel = ref<HTMLElement | null>(null);
@@ -164,7 +200,7 @@ onMounted(() => {
   observer = new IntersectionObserver(
     (entries) => {
       if (entries[0]?.isIntersecting) {
-        loadMore();
+        void loadMore();
       }
     },
     { rootMargin: "100px" },
@@ -178,20 +214,82 @@ onUnmounted(() => {
   observer?.disconnect();
 });
 
+// Span chain (event -> span -> ancestors) loaded on expand, cached by event id and
+// span id.
+
+const spanCache = ref<Map<number, LogSpan>>(new Map());
+const eventChainCache = ref<Map<number, LogSpan[]>>(new Map());
+const pendingEventIds = ref<Set<number>>(new Set());
+
+async function loadSpanIntoCache(id: number): Promise<LogSpan | null> {
+  const cached = spanCache.value.get(id);
+  if (cached) return cached;
+  try {
+    const detail = await apertureApi.getSpan(id);
+    const { events: _events, ...span } = detail;
+    void _events;
+    spanCache.value.set(id, span);
+    return span;
+  } catch {
+    return null;
+  }
+}
+
+async function loadEventSpanChain(event: LogEvent) {
+  if (!event.span_id) {
+    pendingEventIds.value.delete(event.id);
+    return;
+  }
+  const chain: LogSpan[] = [];
+  let currentId: number | undefined = event.span_id;
+  const visited = new Set<number>();
+  while (currentId && !visited.has(currentId)) {
+    visited.add(currentId);
+    const span = await loadSpanIntoCache(currentId);
+    if (!span) break;
+    chain.unshift(span);
+    currentId = span.parent_id ?? undefined;
+  }
+  eventChainCache.value.set(event.id, chain);
+  pendingEventIds.value.delete(event.id);
+}
+
+function focusSpan(spanId: number) {
+  filters.spanId = spanId;
+  filters.view = "spans";
+}
+
+// Spans view.
+
 const spans = computed<LogSpan[]>(() => spansData.value?.items ?? []);
+
+const focusedSpanDetail = computed<LogSpan | undefined>(() =>
+  filters.spanId ? spanCache.value.get(filters.spanId) : undefined,
+);
+
+watch(
+  () => filters.spanId,
+  async (id) => {
+    if (!id) return;
+    if (!spanCache.value.has(id)) {
+      await loadSpanIntoCache(id);
+    }
+  },
+  { immediate: true },
+);
 
 const expandedSpans = ref<Set<number>>(new Set());
 
-function toggleSpan(id: number) {
-  if (expandedSpans.value.has(id)) {
-    expandedSpans.value.delete(id);
-  } else {
-    expandedSpans.value.add(id);
-    if (!spanEventsCache.value.has(id)) {
-      apertureApi.getSpan(id).then((detail) => {
-        spanEventsCache.value.set(id, detail.events ?? []);
-      });
-    }
+function toggleSpan(span: LogSpan) {
+  if (expandedSpans.value.has(span.id)) {
+    expandedSpans.value.delete(span.id);
+    return;
+  }
+  expandedSpans.value.add(span.id);
+  if (!spanEventsCache.value.has(span.id)) {
+    apertureApi.getSpan(span.id).then((detail) => {
+      spanEventsCache.value.set(span.id, detail.events ?? []);
+    });
   }
 }
 
@@ -209,91 +307,86 @@ const spanDepth = computed(() => {
       if (parent) depth = computeDepth(parent, visited) + 1;
     }
     depths.set(span.id, depth);
-    return depth;
+    return depths.get(span.id)!;
   }
-  for (const s of spans.value) computeDepth(s);
+  for (const s of spans.value) computeDepth(s, new Set());
   return depths;
 });
 
-function formatDuration(span: LogSpan): string {
-  if (!span.ended_at) return "";
-  const start = new Date(span.started_at).getTime();
-  const end = new Date(span.ended_at).getTime();
+function formatDuration(startedAt: string, endedAt?: string | null): string {
+  if (!endedAt) return t("developer.logs.running");
+  const start = new Date(startedAt).getTime();
+  const end = new Date(endedAt).getTime();
   const ms = end - start;
   if (ms < 1000) return `${ms}ms`;
   if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-  return `${(ms / 60000).toFixed(1)}m`;
+  if (ms < 3_600_000) return `${(ms / 60000).toFixed(1)}m`;
+  return `${(ms / 3_600_000).toFixed(1)}h`;
 }
 
-function selectSpan(spanId: number) {
-  filters.spanId = spanId;
-  filters.view = "events";
+function formatBootLabel(boot: BootResponse): string {
+  const start = new Date(boot.first_seen).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const dur = formatDuration(boot.first_seen, boot.last_seen);
+  return `${start}  (${dur})`;
+}
+
+const bootPreview = computed(() => {
+  if (!filters.bootId) return t("developer.logs.bootSelect.allBoots");
+  const boot = boots.value.find((b) => b.boot_id === filters.bootId);
+  if (!boot) return t("developer.logs.bootSelect.allBoots");
+  return formatBootLabel(boot);
+});
+
+const bootMenuOpen = ref(false);
+
+function selectBoot(bootId: string | undefined) {
+  filters.bootId = bootId;
+  bootMenuOpen.value = false;
 }
 
 function retry() {
   if (filters.view === "events") {
     resetItems();
-    refresh();
+    void refresh();
   } else {
-    refreshSpans();
+    void refreshSpans();
   }
+}
+
+function showAllSpans() {
+  filters.spanId = undefined;
 }
 </script>
 
 <template>
   <AppPage :title="$t('developer.logs.title')">
     <template #toolbar>
-      <div class="flex flex-wrap items-end gap-3 px-4 py-3 border-b border-default">
-        <div class="flex gap-1">
-          <UButton
-            size="sm"
-            :variant="filters.view === 'events' ? 'solid' : 'ghost'"
-            color="primary"
-            :label="$t('developer.logs.views.events')"
-            @click="() => { filters.view = 'events'; }"
-          />
-          <UButton
-            size="sm"
-            :variant="filters.view === 'spans' ? 'solid' : 'ghost'"
-            color="primary"
-            :label="$t('developer.logs.views.spans')"
-            @click="() => { filters.view = 'spans'; }"
-          />
-        </div>
+      <div class="flex items-center justify-between gap-3 px-4 py-2 border-b border-default">
+        <UTabs
+          v-model="filters.view"
+          :items="[
+            { label: $t('developer.logs.views.events'), value: 'events' },
+            { label: $t('developer.logs.views.spans'), value: 'spans' },
+          ]"
+          size="sm"
+          :content="false"
+        />
+        <UCheckbox v-model="inlineFields" :label="$t('developer.logs.inlineFields')" size="sm" />
+      </div>
 
-        <UFormField :label="$t('developer.logs.filters.level')" size="sm">
-          <USelect
-            v-model="filters.level"
-            :items="[
-              { label: $t('developer.logs.levels.trace'), value: 'trace' },
-              { label: $t('developer.logs.levels.debug'), value: 'debug' },
-              { label: $t('developer.logs.levels.info'), value: 'info' },
-              { label: $t('developer.logs.levels.warn'), value: 'warn' },
-              { label: $t('developer.logs.levels.error'), value: 'error' },
-            ]"
-            :placeholder="$t('developer.logs.filters.level')"
-            class="w-32"
-          />
-        </UFormField>
-
-        <UFormField :label="$t('developer.logs.filters.target')" size="sm">
-          <USelectMenu
-            v-model="filters.target"
-            :items="targetOptions ?? []"
-            :search-input="{ placeholder: $t('developer.logs.filters.target') }"
-            searchable
-            class="w-64"
-          />
-        </UFormField>
-
-        <UFormField v-if="filters.view === 'events'" :label="$t('developer.logs.filters.search')" size="sm">
-          <UInput
-            v-model="filters.search"
-            :placeholder="$t('developer.logs.filters.search')"
-            icon="i-lucide-search"
-            class="w-48"
-          />
-        </UFormField>
+      <div class="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-default">
+        <UInput
+          v-model="filters.search"
+          :placeholder="$t('developer.logs.filters.search')"
+          icon="i-lucide-search"
+          size="sm"
+          class="w-56"
+        />
 
         <TimeRangePicker
           :model-value="filters.timeRange"
@@ -304,70 +397,143 @@ function retry() {
           @update:until="(v) => (until = v)"
         />
 
-        <UCheckbox
-          :model-value="filters.bootOnly"
-          :label="$t('developer.logs.filters.bootOnly')"
-          @update:model-value="(v) => { filters.bootOnly = v === true; }"
-        />
+        <UPopover v-model:open="bootMenuOpen" :popper="{ placement: 'bottom-start' }">
+          <UButton
+            size="sm"
+            color="neutral"
+            :variant="filters.bootId ? 'soft' : 'outline'"
+            icon="i-lucide-power"
+            :label="bootPreview"
+            class="max-w-72 truncate"
+          />
+          <template #content>
+            <div class="w-80 py-1">
+              <button
+                type="button"
+                class="w-full text-start px-3 py-2 text-sm hover:bg-elevated/50"
+                @click="selectBoot(undefined)"
+              >
+                {{ $t("developer.logs.bootSelect.allBoots") }}
+              </button>
+              <div
+                v-for="item in boots"
+                :key="item.boot_id"
+                class="w-full text-start px-3 py-2 hover:bg-elevated/50 cursor-pointer flex items-center justify-between gap-2"
+                :class="item.boot_id === filters.bootId ? 'bg-elevated/40' : ''"
+                @click="selectBoot(item.boot_id)"
+              >
+                <div class="min-w-0 flex flex-col">
+                  <span class="text-sm truncate">{{ formatBootLabel(item) }}</span>
+                  <span class="text-xs text-muted-foreground">
+                    {{ item.event_count }} {{ $t("developer.logs.events") }}
+                  </span>
+                </div>
+                <UBadge
+                  v-if="item.is_current"
+                  color="primary"
+                  variant="subtle"
+                  size="sm"
+                  :label="$t('developer.logs.bootSelect.current')"
+                />
+              </div>
+              <div v-if="!boots.length" class="px-3 py-2 text-xs text-muted-foreground">
+                {{ $t("developer.logs.bootSelect.empty") }}
+              </div>
+            </div>
+          </template>
+        </UPopover>
+
+        <USelect v-model="filters.level" :items="levelOptions" size="sm" class="w-32" />
+
+        <USelectMenu
+          v-model="filters.target"
+          :items="(targetOptions ?? []).map((target) => ({ label: target, value: target }))"
+          :placeholder="$t('developer.logs.filters.targetAll')"
+          searchable
+          size="sm"
+          class="w-60"
+          value-key="value"
+        >
+          <template #item="{ item }">
+            <span class="font-mono text-xs">{{ (item as { label: string }).label }}</span>
+          </template>
+        </USelectMenu>
+
+        <UPopover :popper="{ placement: 'bottom-start' }">
+          <UButton
+            size="sm"
+            color="neutral"
+            :variant="showFieldFilter || filters.fieldFilters.length ? 'soft' : 'outline'"
+            icon="i-lucide-sliders-horizontal"
+            :label="$t('developer.logs.filters.addField')"
+          />
+          <template #content>
+            <div class="w-80 p-3 space-y-3">
+              <div class="flex items-center gap-2">
+                <UInput
+                  v-model="newFieldKey"
+                  :placeholder="$t('developer.logs.filters.fieldKey')"
+                  size="sm"
+                  class="flex-1"
+                />
+                <UInput
+                  v-model="newFieldValue"
+                  :placeholder="$t('developer.logs.filters.fieldValue')"
+                  size="sm"
+                  class="flex-1"
+                  @keyup.enter="addFieldFilter"
+                />
+                <UButton icon="i-lucide-plus" size="sm" variant="soft" @click="addFieldFilter" />
+              </div>
+              <div v-if="filters.fieldFilters.length" class="flex flex-wrap gap-1">
+                <UBadge
+                  v-for="(f, idx) in filters.fieldFilters"
+                  :key="idx"
+                  variant="subtle"
+                  class="gap-1 font-mono"
+                >
+                  <span>{{ f.key }}={{ f.value }}</span>
+                  <UButton
+                    icon="i-lucide-x"
+                    size="xs"
+                    variant="link"
+                    @click="removeFieldFilter(idx)"
+                  />
+                </UBadge>
+              </div>
+              <UButton
+                v-if="filters.fieldFilters.length"
+                size="xs"
+                color="neutral"
+                variant="ghost"
+                block
+                :label="$t('developer.logs.filters.hideFields')"
+                @click="
+                  () => {
+                    showFieldFilter = false;
+                  }
+                "
+              />
+            </div>
+          </template>
+        </UPopover>
 
         <UButton
           variant="ghost"
           color="neutral"
           icon="i-lucide-x"
           size="sm"
+          :label="$t('developer.logs.filters.clear')"
           @click="clearFilters"
-        >
-          {{ $t("developer.logs.filters.clear") }}
-        </UButton>
-      </div>
-
-      <div v-if="filters.view === 'events'" class="flex flex-wrap items-end gap-3 px-4 py-3 border-b border-default">
-        <UFormField :label="$t('developer.logs.filters.fields')" size="sm">
-          <div class="flex items-center gap-2">
-            <UInput
-              v-model="newFieldKey"
-              :placeholder="$t('developer.logs.filters.fieldKey')"
-              class="w-32"
-            />
-            <UInput
-              v-model="newFieldValue"
-              :placeholder="$t('developer.logs.filters.fieldValue')"
-              class="w-32"
-              @keyup.enter="addFieldFilter"
-            />
-            <UButton
-              icon="i-lucide-plus"
-              size="sm"
-              variant="soft"
-              @click="addFieldFilter"
-            />
-          </div>
-        </UFormField>
-
-        <UBadge
-          v-for="(f, idx) in filters.fieldFilters"
-          :key="idx"
-          variant="subtle"
-          class="gap-1"
-        >
-          <span>{{ f.key }}={{ f.value }}</span>
-          <UButton
-            icon="i-lucide-x"
-            size="xs"
-            variant="link"
-            @click="removeFieldFilter(idx)"
-          />
-        </UBadge>
+        />
       </div>
     </template>
 
     <div class="p-4">
-      <!-- Events view -->
       <template v-if="filters.view === 'events'">
         <div v-if="status === 'pending' && allItems.length === 0" class="flex justify-center py-12">
           <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin text-muted-foreground" />
         </div>
-
         <div v-else-if="error" class="text-center py-12 text-error">
           <p>{{ $t("developer.logs.error") }}</p>
           <UButton
@@ -379,11 +545,9 @@ function retry() {
             @click="retry"
           />
         </div>
-
         <div v-else-if="allItems.length === 0" class="text-center py-12 text-muted-foreground">
           <p>{{ $t("developer.logs.empty") }}</p>
         </div>
-
         <div v-else class="space-y-1">
           <div
             v-for="event in allItems"
@@ -392,7 +556,7 @@ function retry() {
           >
             <div
               class="flex items-start gap-3 px-3 py-2 cursor-pointer"
-              @click="() => { toggleRow(event.id); }"
+              @click="() => toggleRow(event)"
             >
               <div class="flex-shrink-0 w-20 text-xs text-muted-foreground font-mono pt-0.5">
                 {{ formatTime(event.timestamp) }}
@@ -405,39 +569,95 @@ function retry() {
               >
                 {{ event.level }}
               </UBadge>
-              <div class="flex-shrink-0 w-48 text-xs text-muted-foreground truncate pt-0.5">
-                {{ event.target }}
+              <div class="flex-1 min-w-0 text-sm pt-0.5">
+                <span>{{ event.message }}</span>
+                <span
+                  v-if="inlineFields && event.fields"
+                  class="text-muted-foreground font-mono text-xs ms-2"
+                >
+                  {{ formatFieldsInline(event.fields) }}
+                </span>
               </div>
-              <div class="flex-1 text-sm pt-0.5">
-                {{ event.message }}
-              </div>
-              <UButton
-                v-if="event.span_id"
-                size="xs"
-                variant="link"
-                class="flex-shrink-0 pt-0.5"
-                @click.stop="() => { selectSpan(event.span_id!); }"
-              >
-                {{ $t("developer.logs.spanId") }}: {{ event.span_id }}
-              </UButton>
               <UIcon
                 v-if="event.fields"
-                :name="expandedRows.has(event.id) ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
+                :name="
+                  expandedRows.has(event.id) ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'
+                "
                 class="size-4 text-muted-foreground flex-shrink-0 pt-0.5"
               />
             </div>
 
             <div
-              v-if="expandedRows.has(event.id) && event.fields"
-              class="px-3 pb-3 pt-1 border-t border-default bg-elevated/25"
+              v-if="expandedRows.has(event.id)"
+              class="px-3 pb-3 pt-1 border-t border-default bg-elevated/25 space-y-3"
             >
-              <div class="text-xs font-semibold text-muted-foreground mb-2">
-                {{ $t("developer.logs.fields") }}
+              <div>
+                <div class="text-xs font-semibold text-muted-foreground mb-1">
+                  {{ $t("developer.logs.fields") }}
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                  <div
+                    v-for="entry in sortedFields(event.fields ?? {})"
+                    :key="entry.key"
+                    class="flex gap-2"
+                  >
+                    <span class="text-muted-foreground">{{ entry.key }}:</span>
+                    <span>{{ formatValue(entry.value) }}</span>
+                  </div>
+                  <div
+                    v-if="sortedFields(event.fields ?? {}).length === 0"
+                    class="text-muted-foreground col-span-2"
+                  >
+                    {{ $t("developer.logs.noFields") }}
+                  </div>
+                </div>
               </div>
-              <div class="grid grid-cols-2 gap-2 text-xs font-mono">
-                <div v-for="(value, key) in event.fields" :key="String(key)" class="flex gap-2">
-                  <span class="text-muted-foreground">{{ key }}:</span>
-                  <span>{{ value }}</span>
+
+              <div>
+                <div class="text-xs font-semibold text-muted-foreground mb-1">
+                  {{ $t("developer.logs.spanChain") }}
+                </div>
+                <div
+                  v-if="event.span_id === null || event.span_id === undefined"
+                  class="text-xs text-muted-foreground"
+                >
+                  {{ $t("developer.logs.noSpan") }}
+                </div>
+                <div
+                  v-else-if="pendingEventIds.has(event.id)"
+                  class="flex items-center gap-2 text-xs text-muted-foreground"
+                >
+                  <UIcon name="i-lucide-loader-circle" class="size-3.5 animate-spin" />
+                  <span>{{ $t("developer.logs.loadingSpan") }}</span>
+                </div>
+                <div
+                  v-else-if="
+                    eventChainCache.get(event.id) && eventChainCache.get(event.id)!.length > 0
+                  "
+                  class="flex flex-wrap items-center gap-1 text-xs"
+                >
+                  <template
+                    v-for="(span, idx) in eventChainCache.get(event.id) ?? []"
+                    :key="span.id"
+                  >
+                    <UButton
+                      size="xs"
+                      variant="link"
+                      color="primary"
+                      class="font-mono px-1"
+                      @click.stop="focusSpan(span.id)"
+                    >
+                      {{ span.name }}
+                    </UButton>
+                    <UIcon
+                      v-if="idx < (eventChainCache.get(event.id)?.length ?? 0) - 1"
+                      name="i-lucide-chevron-right"
+                      class="size-3 text-muted-foreground"
+                    />
+                  </template>
+                </div>
+                <div v-else class="text-xs text-muted-foreground">
+                  {{ $t("developer.logs.noSpan") }}
                 </div>
               </div>
             </div>
@@ -445,20 +665,39 @@ function retry() {
 
           <div ref="sentinel" class="h-4" />
           <div v-if="isLoadingMore" class="flex justify-center py-4">
-            <UIcon name="i-lucide-loader-circle" class="size-5 animate-spin text-muted-foreground" />
+            <UIcon
+              name="i-lucide-loader-circle"
+              class="size-5 animate-spin text-muted-foreground"
+            />
           </div>
-          <div v-if="!nextCursor && allItems.length > 0" class="text-center py-4 text-xs text-muted-foreground">
+          <div
+            v-if="!nextCursor && allItems.length > 0"
+            class="text-center py-4 text-xs text-muted-foreground"
+          >
             {{ $t("developer.logs.noMore") }}
           </div>
         </div>
       </template>
 
-      <!-- Spans view -->
       <template v-else>
+        <div v-if="filters.spanId" class="mb-3 flex items-center gap-2">
+          <UBadge color="primary" variant="subtle" size="sm">
+            {{ $t("developer.logs.spanFocus") }}
+          </UBadge>
+          <span class="text-sm font-mono">{{ focusedSpanDetail?.name ?? "..." }}</span>
+          <UButton
+            size="xs"
+            color="neutral"
+            variant="ghost"
+            icon="i-lucide-x"
+            :label="$t('developer.logs.showAllSpans')"
+            @click="showAllSpans"
+          />
+        </div>
+
         <div v-if="spansStatus === 'pending'" class="flex justify-center py-12">
           <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin text-muted-foreground" />
         </div>
-
         <div v-else-if="spansError" class="text-center py-12 text-error">
           <p>{{ $t("developer.logs.error") }}</p>
           <UButton
@@ -470,11 +709,12 @@ function retry() {
             @click="retry"
           />
         </div>
-
-        <div v-else-if="spans.length === 0" class="text-center py-12 text-muted-foreground">
+        <div
+          v-else-if="spans.length === 0 && !filters.spanId"
+          class="text-center py-12 text-muted-foreground"
+        >
           <p>{{ $t("developer.logs.emptySpans") }}</p>
         </div>
-
         <div v-else class="space-y-1">
           <div
             v-for="span in spans"
@@ -484,10 +724,12 @@ function retry() {
             <div
               class="flex items-start gap-3 px-3 py-2 cursor-pointer"
               :style="{ paddingLeft: `${(spanDepth.get(span.id) ?? 0) * 20 + 12}px` }"
-              @click="() => { toggleSpan(span.id); }"
+              @click="() => toggleSpan(span)"
             >
               <UIcon
-                :name="expandedSpans.has(span.id) ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
+                :name="
+                  expandedSpans.has(span.id) ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'
+                "
                 class="size-4 text-muted-foreground flex-shrink-0 pt-0.5"
               />
               <UBadge
@@ -508,7 +750,7 @@ function retry() {
                 {{ formatTime(span.started_at) }}
               </div>
               <div class="flex-shrink-0 w-16 text-xs text-muted-foreground pt-0.5">
-                {{ formatDuration(span) }}
+                {{ formatDuration(span.started_at, span.ended_at) }}
               </div>
             </div>
 
@@ -537,7 +779,9 @@ function retry() {
                     :key="event.id"
                     class="flex items-start gap-2 text-xs"
                   >
-                    <span class="text-muted-foreground font-mono">{{ formatTime(event.timestamp) }}</span>
+                    <span class="text-muted-foreground font-mono">{{
+                      formatTime(event.timestamp)
+                    }}</span>
                     <UBadge
                       :color="levelColors[event.level] ?? 'neutral'"
                       variant="subtle"
@@ -548,7 +792,10 @@ function retry() {
                     </UBadge>
                     <span>{{ event.message }}</span>
                   </div>
-                  <div v-if="spanEventsCache.get(span.id)?.length === 0" class="text-xs text-muted-foreground">
+                  <div
+                    v-if="spanEventsCache.get(span.id)?.length === 0"
+                    class="text-xs text-muted-foreground"
+                  >
                     {{ $t("developer.logs.noEvents") }}
                   </div>
                 </div>

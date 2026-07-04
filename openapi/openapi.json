@@ -452,6 +452,27 @@
         }
       }
     },
+    "/api/v1/logs/boots": {
+      "get": {
+        "summary": "Lists distinct boot sessions, newest first.",
+        "operationId": "listLogBoots",
+        "responses": {
+          "200": {
+            "description": "Boot sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BootResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/logs/spans": {
       "get": {
         "summary": "Lists tracing spans with optional filtering.",
@@ -748,6 +769,42 @@
               "null"
             ],
             "description": "Human-readable version, if known."
+          }
+        }
+      },
+      "BootResponse": {
+        "type": "object",
+        "description": "One boot session observed in the log store, returned by\n`GET /api/v1/logs/boots`.",
+        "required": [
+          "boot_id",
+          "first_seen",
+          "last_seen",
+          "event_count",
+          "is_current"
+        ],
+        "properties": {
+          "boot_id": {
+            "type": "string",
+            "description": "Unique boot id (UUID)."
+          },
+          "event_count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of events recorded so far in this boot."
+          },
+          "first_seen": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the earliest event in this boot."
+          },
+          "is_current": {
+            "type": "boolean",
+            "description": "True if this is the currently running gateway boot."
+          },
+          "last_seen": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the latest event in this boot."
           }
         }
       },
