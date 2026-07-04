@@ -117,7 +117,9 @@
       "showAllSpans": "Alle Spans anzeigen",
       "events": "Ereignisse",
       "noEvents": "Keine Ereignisse in diesem Span",
-      "spanId": "Span"
+      "spanId": "Span",
+      "childSpans": "Untergeordnete Spans",
+      "noChildSpans": "Keine untergeordneten Spans"
     }
   },
   "devices": {

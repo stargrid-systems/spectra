@@ -383,10 +383,13 @@
           {
             "name": "target",
             "in": "query",
-            "description": "Only events whose target starts with this prefix.",
+            "description": "Only events whose target starts with any of these (comma-separated)\nprefixes. Example: `aperture,aperture_http`.",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -521,10 +524,13 @@
           {
             "name": "target",
             "in": "query",
-            "description": "Only spans whose target starts with this prefix.",
+            "description": "Only spans whose target starts with any of these (comma-separated)\nprefixes. Example: `aperture,aperture_storage`.",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -564,6 +570,15 @@
             "required": false,
             "schema": {
               "type": "boolean"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Structured field filter as a JSON object, e.g. `{\"key\":\"value\"}`.",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ],

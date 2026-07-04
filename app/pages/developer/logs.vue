@@ -17,6 +17,10 @@ const { data: targetOptions } = useLogTargets();
 const { data: bootsData } = useBoots();
 const boots = computed<BootResponse[]>(() => bootsData.value ?? []);
 
+const targetItems = computed(() =>
+  (targetOptions.value ?? []).map((target) => ({ label: target, value: target })),
+);
+
 const inlineFields = ref(true);
 const showFieldFilter = ref(filters.fieldFilters.length > 0);
 
@@ -37,7 +41,7 @@ function removeFieldFilter(idx: number) {
 
 function clearFilters() {
   filters.level = "info";
-  filters.target = undefined;
+  filters.target = [];
   filters.search = undefined;
   filters.timeRange = undefined;
   filters.bootId = undefined;
@@ -159,23 +163,6 @@ provide(useLogsContextKey, logsContext);
       </div>
 
       <div class="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-default">
-        <UInput
-          v-model="filters.search"
-          :placeholder="$t('developer.logs.filters.search')"
-          icon="i-lucide-search"
-          size="sm"
-          class="w-56"
-        />
-
-        <TimeRangePicker
-          :model-value="filters.timeRange"
-          :since="since"
-          :until="until"
-          @update:model-value="(v) => (filters.timeRange = v)"
-          @update:since="(v) => (since = v)"
-          @update:until="(v) => (until = v)"
-        />
-
         <UPopover v-model:open="bootMenuOpen" :popper="{ placement: 'bottom-start' }">
           <UButton
             size="sm"
@@ -222,21 +209,47 @@ provide(useLogsContextKey, logsContext);
           </template>
         </UPopover>
 
+        <TimeRangePicker
+          :model-value="filters.timeRange"
+          :since="since"
+          :until="until"
+          @update:model-value="(v) => (filters.timeRange = v)"
+          @update:since="(v) => (since = v)"
+          @update:until="(v) => (until = v)"
+        />
+
         <USelect v-model="filters.level" :items="levelOptions" size="sm" class="w-32" />
 
         <USelectMenu
           v-model="filters.target"
-          :items="(targetOptions ?? []).map((target) => ({ label: target, value: target }))"
+          multiple
+          :items="targetItems"
           :placeholder="$t('developer.logs.filters.targetAll')"
           searchable
           size="sm"
           class="w-60"
           value-key="value"
         >
+          <template #leading>
+            <span v-if="filters.target.length === 0" class="text-muted-foreground text-xs">
+              {{ $t("developer.logs.filters.targetAll") }}
+            </span>
+            <span v-else class="font-mono text-xs truncate">
+              {{ filters.target.join(", ") }}
+            </span>
+          </template>
           <template #item="{ item }">
             <span class="font-mono text-xs">{{ (item as { label: string }).label }}</span>
           </template>
         </USelectMenu>
+
+        <UInput
+          v-model="filters.search"
+          :placeholder="$t('developer.logs.filters.search')"
+          icon="i-lucide-search"
+          size="sm"
+          class="w-56"
+        />
 
         <UPopover :popper="{ placement: 'bottom-start' }">
           <UButton

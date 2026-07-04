@@ -1,4 +1,4 @@
-import type { ListLogSpansParams, ListLogsParams } from "~/utils/api/types";
+import type { ListLogsParams } from "~/utils/api/types";
 
 export interface FieldFilter {
   key: string;
@@ -7,7 +7,7 @@ export interface FieldFilter {
 
 export interface LogsFilters {
   level: string | undefined;
-  target: string | undefined;
+  target: string[];
   search: string | undefined;
   timeRange: string | undefined;
   bootId: string | undefined;
@@ -30,7 +30,7 @@ const QUERY_KEYS = {
 
 const DEFAULT_LEVEL = "info";
 
-function parseFields(value: string): FieldFilter[] {
+export function parseFields(value: string): FieldFilter[] {
   if (!value) return [];
   try {
     const obj = JSON.parse(value) as Record<string, string>;
@@ -40,7 +40,7 @@ function parseFields(value: string): FieldFilter[] {
   }
 }
 
-function encodeFields(filters: FieldFilter[]): string | undefined {
+export function encodeFields(filters: FieldFilter[]): string | undefined {
   if (filters.length === 0) return undefined;
   const obj: Record<string, string> = {};
   for (const f of filters) {
@@ -49,25 +49,28 @@ function encodeFields(filters: FieldFilter[]): string | undefined {
   return Object.keys(obj).length > 0 ? JSON.stringify(obj) : undefined;
 }
 
-function parseExpand(values: unknown): { events: number[]; spans: number[] } {
+export function parseExpand(values: unknown): { events: number[]; spans: number[] } {
   if (typeof document === "undefined") return { events: [], spans: [] };
   const events: number[] = [];
   const spans: number[] = [];
   const arr = Array.isArray(values) ? values : values ? [values] : [];
   for (const v of arr) {
     if (typeof v !== "string") continue;
-    if (v.startsWith("e-")) {
-      const n = Number(v.slice(2));
-      if (Number.isFinite(n)) events.push(n);
-    } else if (v.startsWith("s-")) {
-      const n = Number(v.slice(2));
-      if (Number.isFinite(n)) spans.push(n);
-    }
+    let prefix: "e" | "s" | null = null;
+    if (v.startsWith("e-")) prefix = "e";
+    else if (v.startsWith("s-")) prefix = "s";
+    if (!prefix) continue;
+    const rest = v.slice(2);
+    if (!rest) continue;
+    const n = Number(rest);
+    if (!Number.isFinite(n)) continue;
+    if (prefix === "e") events.push(n);
+    else spans.push(n);
   }
   return { events, spans };
 }
 
-function encodeExpand(events: number[], spans: number[]): string[] {
+export function encodeExpand(events: number[], spans: number[]): string[] {
   return [...events.map((e) => `e-${e}`), ...spans.map((s) => `s-${s}`)];
 }
 
@@ -77,7 +80,7 @@ export function useLogsFilters() {
 
   const filters = reactive<LogsFilters>({
     level: DEFAULT_LEVEL,
-    target: undefined,
+    target: [],
     search: undefined,
     timeRange: undefined,
     bootId: undefined,
@@ -96,7 +99,12 @@ export function useLogsFilters() {
     }
     const q = route.query;
     filters.level = (q[QUERY_KEYS.level] as string) || DEFAULT_LEVEL;
-    filters.target = (q[QUERY_KEYS.target] as string) || undefined;
+    const targetRaw = q[QUERY_KEYS.target];
+    filters.target = Array.isArray(targetRaw)
+      ? targetRaw.filter((t): t is string => typeof t === "string")
+      : targetRaw
+        ? [targetRaw as string]
+        : [];
     filters.search = (q[QUERY_KEYS.search] as string) || undefined;
     filters.timeRange = (q[QUERY_KEYS.timeRange] as string) || undefined;
     filters.bootId = (q[QUERY_KEYS.boot] as string) || undefined;
@@ -110,7 +118,7 @@ export function useLogsFilters() {
   function writeToRoute() {
     const query: Record<string, string | string[]> = {};
     if (filters.level && filters.level !== DEFAULT_LEVEL) query[QUERY_KEYS.level] = filters.level;
-    if (filters.target) query[QUERY_KEYS.target] = filters.target;
+    if (filters.target.length) query[QUERY_KEYS.target] = filters.target;
     if (filters.search) query[QUERY_KEYS.search] = filters.search;
     if (filters.timeRange) query[QUERY_KEYS.timeRange] = filters.timeRange;
     if (filters.bootId) query[QUERY_KEYS.boot] = filters.bootId;
@@ -149,7 +157,8 @@ export function useLogsFilters() {
 export function logsParamsFromFilters(filters: LogsFilters): ListLogsParams | undefined {
   const p: ListLogsParams = {};
   if (filters.level) p.min_level = filters.level as ListLogsParams["min_level"];
-  if (filters.target) p.target = filters.target;
+  if (filters.target.length)
+    p.target = filters.target.join(",") as unknown as ListLogsParams["target"];
   if (filters.search) p.q = filters.search;
   if (filters.spanId !== undefined) p.span_id = filters.spanId;
 
@@ -166,10 +175,13 @@ export function logsParamsFromFilters(filters: LogsFilters): ListLogsParams | un
   return Object.keys(p).length > 0 ? p : undefined;
 }
 
-export function spansParamsFromFilters(filters: LogsFilters): ListLogSpansParams | undefined {
-  const p: ListLogSpansParams = {};
-  if (filters.level) p.min_level = filters.level as ListLogSpansParams["min_level"];
-  if (filters.target) p.target = filters.target;
-  if (filters.spanId !== undefined) p.parent_id = filters.spanId;
-  return Object.keys(p).length > 0 ? p : undefined;
+export function fieldFiltersJson(filters: LogsFilters): string | undefined {
+  const fields: Record<string, string> = {};
+  for (const f of filters.fieldFilters) {
+    if (f.key && f.value) fields[f.key] = f.value;
+  }
+  if (filters.bootId) {
+    fields.boot_id = filters.bootId;
+  }
+  return Object.keys(fields).length > 0 ? JSON.stringify(fields) : undefined;
 }

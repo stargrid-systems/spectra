@@ -4,7 +4,6 @@ import { useInfiniteScroll } from "@vueuse/core";
 import { useLogsContext } from "~/composables/useLogsContext";
 import { logsParamsFromFilters } from "~/composables/useLogsFilters";
 
-const { t } = useI18n();
 const ctx = useLogsContext();
 const { filters, inlineFields, since, until, levelColors, focusSpan } = ctx;
 
@@ -184,7 +183,9 @@ async function loadEventSpanChain(event: LogEvent) {
           class="flex items-start gap-3 px-3 py-2 cursor-pointer"
           @click="() => toggleRow(event)"
         >
-          <div class="flex-shrink-0 w-28 text-xs text-muted-foreground font-mono pt-0.5">
+          <div
+            class="flex-shrink-0 w-32 text-xs text-muted-foreground font-mono pt-0.5 whitespace-nowrap"
+          >
             {{ formatTimestamp(event.timestamp) }}
           </div>
           <UBadge
@@ -195,6 +196,12 @@ async function loadEventSpanChain(event: LogEvent) {
           >
             {{ event.level }}
           </UBadge>
+          <div
+            class="flex-shrink-0 w-44 text-xs text-muted-foreground truncate pt-0.5"
+            :title="event.target"
+          >
+            {{ event.target }}
+          </div>
           <div class="flex-1 min-w-0 text-sm pt-0.5">
             <span>{{ event.message }}</span>
             <span
@@ -206,9 +213,7 @@ async function loadEventSpanChain(event: LogEvent) {
           </div>
           <UIcon
             v-if="event.fields"
-            :name="
-              expandedRows.has(event.id) ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'
-            "
+            :name="expandedRows.has(event.id) ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
             class="size-4 text-muted-foreground flex-shrink-0 pt-0.5"
           />
         </div>
@@ -257,15 +262,10 @@ async function loadEventSpanChain(event: LogEvent) {
               <span>{{ $t("developer.logs.loadingSpan") }}</span>
             </div>
             <div
-              v-else-if="
-                eventChainCache.get(event.id) && eventChainCache.get(event.id)!.length > 0
-              "
+              v-else-if="eventChainCache.get(event.id) && eventChainCache.get(event.id)!.length > 0"
               class="flex flex-wrap items-center gap-1 text-xs"
             >
-              <template
-                v-for="(span, idx) in eventChainCache.get(event.id) ?? []"
-                :key="span.id"
-              >
+              <template v-for="(span, idx) in eventChainCache.get(event.id) ?? []" :key="span.id">
                 <UButton
                   size="xs"
                   variant="link"
