@@ -1,61 +1,23 @@
 <script setup lang="ts">
-import type { BootResponse, ListLogsParams, LogEvent, LogSpan } from "~/utils/api/types";
-import {
-  useLogsFilters,
-  logsParamsFromFilters,
-  spansParamsFromFilters,
-} from "~/composables/useLogsFilters";
+import type { BootResponse } from "~/utils/api/types";
+import { useLogsFilters } from "~/composables/useLogsFilters";
+import { useLogsContextKey } from "~/composables/useLogsContext";
 
 const { t } = useI18n();
+const route = useRoute();
+const router = useRouter();
+const localePath = useLocalePath();
 
 const { filters } = useLogsFilters();
 
 const since = ref<string | undefined>(undefined);
 const until = ref<string | undefined>(undefined);
 
-const timeRangeMillis: Record<string, number> = {
-  "5m": 5 * 60 * 1000,
-  "15m": 15 * 60 * 1000,
-  "1h": 60 * 60 * 1000,
-  "6h": 6 * 60 * 60 * 1000,
-  "12h": 12 * 60 * 60 * 1000,
-  "24h": 24 * 60 * 60 * 1000,
-  "7d": 7 * 24 * 60 * 60 * 1000,
-  "30d": 30 * 24 * 60 * 60 * 1000,
-};
-
-const computedSince = computed(() => {
-  if (since.value) return since.value;
-  const range = filters.timeRange;
-  if (!range || range === "all") return undefined;
-  const ms = timeRangeMillis[range];
-  if (!ms) return undefined;
-  return new Date(Date.now() - ms).toISOString();
-});
-
-const logsParams = computed<ListLogsParams | undefined>(() => {
-  const p = logsParamsFromFilters(filters) ?? ({} as ListLogsParams);
-  if (computedSince.value) p.since = computedSince.value;
-  if (until.value) p.until = until.value;
-  return Object.keys(p).length > 0 ? p : undefined;
-});
-
-const { data, status, error, refresh } = useLogs(() => logsParams.value);
-
-const spansParams = computed(() => spansParamsFromFilters(filters));
-const {
-  data: spansData,
-  status: spansStatus,
-  error: spansError,
-  refresh: refreshSpans,
-} = useSpans(() => spansParams.value);
-
 const { data: targetOptions } = useLogTargets();
 const { data: bootsData } = useBoots();
-
 const boots = computed<BootResponse[]>(() => bootsData.value ?? []);
 
-const inlineFields = ref(false);
+const inlineFields = ref(true);
 const showFieldFilter = ref(filters.fieldFilters.length > 0);
 
 const newFieldKey = ref("");
@@ -81,6 +43,8 @@ function clearFilters() {
   filters.bootId = undefined;
   filters.fieldFilters = [];
   filters.spanId = undefined;
+  filters.expandEvent = [];
+  filters.expandSpan = [];
   since.value = undefined;
   until.value = undefined;
 }
@@ -103,215 +67,6 @@ const levelOptions = computed(() => [
   { label: t("developer.logs.levels.warn"), value: "warn" },
   { label: t("developer.logs.levels.error"), value: "error" },
 ]);
-
-const expandedRows = ref<Set<number>>(new Set());
-
-function toggleRow(event: LogEvent) {
-  if (expandedRows.value.has(event.id)) {
-    expandedRows.value.delete(event.id);
-    return;
-  }
-  expandedRows.value.add(event.id);
-  if (event.fields) {
-    pendingEventIds.value.add(event.id);
-    void loadEventSpanChain(event);
-  }
-}
-
-function formatTime(ts: string): string {
-  return new Date(ts).toLocaleTimeString();
-}
-
-function asFields(value: unknown): Record<string, unknown> | undefined {
-  if (value && typeof value === "object" && !Array.isArray(value)) {
-    return value as Record<string, unknown>;
-  }
-  return undefined;
-}
-
-function formatFieldsInline(fields: unknown): string {
-  const f = asFields(fields);
-  if (!f) return "";
-  const parts: string[] = [];
-  for (const [key, value] of Object.entries(f)) {
-    if (key === "message" || key === "boot_id") continue;
-    parts.push(`${key}=${formatValue(value)}`);
-  }
-  return parts.join("  ");
-}
-
-function formatValue(value: unknown): string {
-  if (value === null) return "null";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return JSON.stringify(value);
-}
-
-function sortedFields(fields: unknown): { key: string; value: unknown }[] {
-  const f = asFields(fields);
-  if (!f) return [];
-  return Object.entries(f)
-    .filter(([key]) => key !== "boot_id" && key !== "message")
-    .map(([key, value]) => ({ key, value }));
-}
-
-// Events: infinite scroll accumulation.
-
-const allItems = ref<LogEvent[]>([]);
-const nextCursor = ref<string | null | undefined>(undefined);
-const isLoadingMore = ref(false);
-
-function resetItems() {
-  allItems.value = [];
-  nextCursor.value = null;
-}
-
-watch(logsParams, () => {
-  resetItems();
-});
-
-watch(data, (newData) => {
-  if (!newData) return;
-  if (allItems.value.length === 0) {
-    allItems.value = newData.items;
-  } else {
-    allItems.value = [...allItems.value, ...newData.items];
-  }
-  nextCursor.value = newData.next_cursor;
-});
-
-const sentinel = ref<HTMLElement | null>(null);
-let observer: IntersectionObserver | null = null;
-
-async function loadMore() {
-  if (!nextCursor.value || isLoadingMore.value || status.value === "pending") return;
-  isLoadingMore.value = true;
-  try {
-    const params = { ...logsParams.value, cursor: nextCursor.value };
-    const result = await apertureApi.listLogs(params);
-    allItems.value = [...allItems.value, ...result.items];
-    nextCursor.value = result.next_cursor;
-  } finally {
-    isLoadingMore.value = false;
-  }
-}
-
-onMounted(() => {
-  observer = new IntersectionObserver(
-    (entries) => {
-      if (entries[0]?.isIntersecting) {
-        void loadMore();
-      }
-    },
-    { rootMargin: "100px" },
-  );
-  if (sentinel.value) {
-    observer.observe(sentinel.value);
-  }
-});
-
-onUnmounted(() => {
-  observer?.disconnect();
-});
-
-// Span chain (event -> span -> ancestors) loaded on expand, cached by event id and
-// span id.
-
-const spanCache = ref<Map<number, LogSpan>>(new Map());
-const eventChainCache = ref<Map<number, LogSpan[]>>(new Map());
-const pendingEventIds = ref<Set<number>>(new Set());
-
-async function loadSpanIntoCache(id: number): Promise<LogSpan | null> {
-  const cached = spanCache.value.get(id);
-  if (cached) return cached;
-  try {
-    const detail = await apertureApi.getSpan(id);
-    const { events: _events, ...span } = detail;
-    void _events;
-    spanCache.value.set(id, span);
-    return span;
-  } catch {
-    return null;
-  }
-}
-
-async function loadEventSpanChain(event: LogEvent) {
-  if (!event.span_id) {
-    pendingEventIds.value.delete(event.id);
-    return;
-  }
-  const chain: LogSpan[] = [];
-  let currentId: number | undefined = event.span_id;
-  const visited = new Set<number>();
-  while (currentId && !visited.has(currentId)) {
-    visited.add(currentId);
-    const span = await loadSpanIntoCache(currentId);
-    if (!span) break;
-    chain.unshift(span);
-    currentId = span.parent_id ?? undefined;
-  }
-  eventChainCache.value.set(event.id, chain);
-  pendingEventIds.value.delete(event.id);
-}
-
-function focusSpan(spanId: number) {
-  filters.spanId = spanId;
-  filters.view = "spans";
-}
-
-// Spans view.
-
-const spans = computed<LogSpan[]>(() => spansData.value?.items ?? []);
-
-const focusedSpanDetail = computed<LogSpan | undefined>(() =>
-  filters.spanId ? spanCache.value.get(filters.spanId) : undefined,
-);
-
-watch(
-  () => filters.spanId,
-  async (id) => {
-    if (!id) return;
-    if (!spanCache.value.has(id)) {
-      await loadSpanIntoCache(id);
-    }
-  },
-  { immediate: true },
-);
-
-const expandedSpans = ref<Set<number>>(new Set());
-
-function toggleSpan(span: LogSpan) {
-  if (expandedSpans.value.has(span.id)) {
-    expandedSpans.value.delete(span.id);
-    return;
-  }
-  expandedSpans.value.add(span.id);
-  if (!spanEventsCache.value.has(span.id)) {
-    apertureApi.getSpan(span.id).then((detail) => {
-      spanEventsCache.value.set(span.id, detail.events ?? []);
-    });
-  }
-}
-
-const spanEventsCache = ref<Map<number, LogEvent[]>>(new Map());
-
-const spanDepth = computed(() => {
-  const depths = new Map<number, number>();
-  function computeDepth(span: LogSpan, visited: Set<number> = new Set()): number {
-    if (depths.has(span.id)) return depths.get(span.id)!;
-    if (visited.has(span.id)) return 0;
-    visited.add(span.id);
-    let depth = 0;
-    if (span.parent_id !== null && span.parent_id !== undefined) {
-      const parent = spans.value.find((s) => s.id === span.parent_id);
-      if (parent) depth = computeDepth(parent, visited) + 1;
-    }
-    depths.set(span.id, depth);
-    return depths.get(span.id)!;
-  }
-  for (const s of spans.value) computeDepth(s, new Set());
-  return depths;
-});
 
 function formatDuration(startedAt: string, endedAt?: string | null): string {
   if (!endedAt) return t("developer.logs.running");
@@ -349,26 +104,50 @@ function selectBoot(bootId: string | undefined) {
   bootMenuOpen.value = false;
 }
 
-function retry() {
-  if (filters.view === "events") {
-    resetItems();
-    void refresh();
-  } else {
-    void refreshSpans();
-  }
+function focusSpan(spanId: number) {
+  filters.spanId = spanId;
+  void router.push(localePath("/developer/logs/spans"));
 }
 
 function showAllSpans() {
   filters.spanId = undefined;
 }
+
+const activeTab = computed({
+  get() {
+    if (route.path.endsWith("/spans")) return "spans";
+    return "events";
+  },
+  set(value: string | number) {
+    void router.replace({
+      path: localePath(value === "spans" ? "/developer/logs/spans" : "/developer/logs/events"),
+      query: route.query,
+    });
+  },
+});
+
+const logsContext = {
+  filters,
+  inlineFields,
+  since,
+  until,
+  boots,
+  targetOptions,
+  levelColors,
+  formatDuration,
+  focusSpan,
+  showAllSpans,
+};
+
+provide(useLogsContextKey, logsContext);
 </script>
 
 <template>
-  <AppPage :title="$t('developer.logs.title')">
+  <AppPage :title="$t('developer.logs.title')" body-class="!overflow-hidden">
     <template #toolbar>
       <div class="flex items-center justify-between gap-3 px-4 py-2 border-b border-default">
         <UTabs
-          v-model="filters.view"
+          v-model="activeTab"
           :items="[
             { label: $t('developer.logs.views.events'), value: 'events' },
             { label: $t('developer.logs.views.spans'), value: 'spans' },
@@ -529,281 +308,6 @@ function showAllSpans() {
       </div>
     </template>
 
-    <div class="p-4">
-      <template v-if="filters.view === 'events'">
-        <div v-if="status === 'pending' && allItems.length === 0" class="flex justify-center py-12">
-          <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin text-muted-foreground" />
-        </div>
-        <div v-else-if="error" class="text-center py-12 text-error">
-          <p>{{ $t("developer.logs.error") }}</p>
-          <UButton
-            variant="soft"
-            color="primary"
-            size="sm"
-            :label="$t('developer.logs.retry')"
-            class="mt-2"
-            @click="retry"
-          />
-        </div>
-        <div v-else-if="allItems.length === 0" class="text-center py-12 text-muted-foreground">
-          <p>{{ $t("developer.logs.empty") }}</p>
-        </div>
-        <div v-else class="space-y-1">
-          <div
-            v-for="event in allItems"
-            :key="event.id"
-            class="border border-default rounded-lg hover:bg-elevated/50 transition-colors"
-          >
-            <div
-              class="flex items-start gap-3 px-3 py-2 cursor-pointer"
-              @click="() => toggleRow(event)"
-            >
-              <div class="flex-shrink-0 w-20 text-xs text-muted-foreground font-mono pt-0.5">
-                {{ formatTime(event.timestamp) }}
-              </div>
-              <UBadge
-                :color="levelColors[event.level] ?? 'neutral'"
-                variant="subtle"
-                size="sm"
-                class="flex-shrink-0 font-mono"
-              >
-                {{ event.level }}
-              </UBadge>
-              <div class="flex-1 min-w-0 text-sm pt-0.5">
-                <span>{{ event.message }}</span>
-                <span
-                  v-if="inlineFields && event.fields"
-                  class="text-muted-foreground font-mono text-xs ms-2"
-                >
-                  {{ formatFieldsInline(event.fields) }}
-                </span>
-              </div>
-              <UIcon
-                v-if="event.fields"
-                :name="
-                  expandedRows.has(event.id) ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'
-                "
-                class="size-4 text-muted-foreground flex-shrink-0 pt-0.5"
-              />
-            </div>
-
-            <div
-              v-if="expandedRows.has(event.id)"
-              class="px-3 pb-3 pt-1 border-t border-default bg-elevated/25 space-y-3"
-            >
-              <div>
-                <div class="text-xs font-semibold text-muted-foreground mb-1">
-                  {{ $t("developer.logs.fields") }}
-                </div>
-                <div class="grid grid-cols-2 gap-2 text-xs font-mono">
-                  <div
-                    v-for="entry in sortedFields(event.fields ?? {})"
-                    :key="entry.key"
-                    class="flex gap-2"
-                  >
-                    <span class="text-muted-foreground">{{ entry.key }}:</span>
-                    <span>{{ formatValue(entry.value) }}</span>
-                  </div>
-                  <div
-                    v-if="sortedFields(event.fields ?? {}).length === 0"
-                    class="text-muted-foreground col-span-2"
-                  >
-                    {{ $t("developer.logs.noFields") }}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div class="text-xs font-semibold text-muted-foreground mb-1">
-                  {{ $t("developer.logs.spanChain") }}
-                </div>
-                <div
-                  v-if="event.span_id === null || event.span_id === undefined"
-                  class="text-xs text-muted-foreground"
-                >
-                  {{ $t("developer.logs.noSpan") }}
-                </div>
-                <div
-                  v-else-if="pendingEventIds.has(event.id)"
-                  class="flex items-center gap-2 text-xs text-muted-foreground"
-                >
-                  <UIcon name="i-lucide-loader-circle" class="size-3.5 animate-spin" />
-                  <span>{{ $t("developer.logs.loadingSpan") }}</span>
-                </div>
-                <div
-                  v-else-if="
-                    eventChainCache.get(event.id) && eventChainCache.get(event.id)!.length > 0
-                  "
-                  class="flex flex-wrap items-center gap-1 text-xs"
-                >
-                  <template
-                    v-for="(span, idx) in eventChainCache.get(event.id) ?? []"
-                    :key="span.id"
-                  >
-                    <UButton
-                      size="xs"
-                      variant="link"
-                      color="primary"
-                      class="font-mono px-1"
-                      @click.stop="focusSpan(span.id)"
-                    >
-                      {{ span.name }}
-                    </UButton>
-                    <UIcon
-                      v-if="idx < (eventChainCache.get(event.id)?.length ?? 0) - 1"
-                      name="i-lucide-chevron-right"
-                      class="size-3 text-muted-foreground"
-                    />
-                  </template>
-                </div>
-                <div v-else class="text-xs text-muted-foreground">
-                  {{ $t("developer.logs.noSpan") }}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div ref="sentinel" class="h-4" />
-          <div v-if="isLoadingMore" class="flex justify-center py-4">
-            <UIcon
-              name="i-lucide-loader-circle"
-              class="size-5 animate-spin text-muted-foreground"
-            />
-          </div>
-          <div
-            v-if="!nextCursor && allItems.length > 0"
-            class="text-center py-4 text-xs text-muted-foreground"
-          >
-            {{ $t("developer.logs.noMore") }}
-          </div>
-        </div>
-      </template>
-
-      <template v-else>
-        <div v-if="filters.spanId" class="mb-3 flex items-center gap-2">
-          <UBadge color="primary" variant="subtle" size="sm">
-            {{ $t("developer.logs.spanFocus") }}
-          </UBadge>
-          <span class="text-sm font-mono">{{ focusedSpanDetail?.name ?? "..." }}</span>
-          <UButton
-            size="xs"
-            color="neutral"
-            variant="ghost"
-            icon="i-lucide-x"
-            :label="$t('developer.logs.showAllSpans')"
-            @click="showAllSpans"
-          />
-        </div>
-
-        <div v-if="spansStatus === 'pending'" class="flex justify-center py-12">
-          <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin text-muted-foreground" />
-        </div>
-        <div v-else-if="spansError" class="text-center py-12 text-error">
-          <p>{{ $t("developer.logs.error") }}</p>
-          <UButton
-            variant="soft"
-            color="primary"
-            size="sm"
-            :label="$t('developer.logs.retry')"
-            class="mt-2"
-            @click="retry"
-          />
-        </div>
-        <div
-          v-else-if="spans.length === 0 && !filters.spanId"
-          class="text-center py-12 text-muted-foreground"
-        >
-          <p>{{ $t("developer.logs.emptySpans") }}</p>
-        </div>
-        <div v-else class="space-y-1">
-          <div
-            v-for="span in spans"
-            :key="span.id"
-            class="border border-default rounded-lg hover:bg-elevated/50 transition-colors"
-          >
-            <div
-              class="flex items-start gap-3 px-3 py-2 cursor-pointer"
-              :style="{ paddingLeft: `${(spanDepth.get(span.id) ?? 0) * 20 + 12}px` }"
-              @click="() => toggleSpan(span)"
-            >
-              <UIcon
-                :name="
-                  expandedSpans.has(span.id) ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'
-                "
-                class="size-4 text-muted-foreground flex-shrink-0 pt-0.5"
-              />
-              <UBadge
-                :color="levelColors[span.level] ?? 'neutral'"
-                variant="subtle"
-                size="sm"
-                class="flex-shrink-0 font-mono"
-              >
-                {{ span.level }}
-              </UBadge>
-              <div class="flex-shrink-0 w-40 text-sm font-mono pt-0.5">
-                {{ span.name }}
-              </div>
-              <div class="flex-shrink-0 w-40 text-xs text-muted-foreground truncate pt-0.5">
-                {{ span.target }}
-              </div>
-              <div class="flex-shrink-0 w-20 text-xs text-muted-foreground font-mono pt-0.5">
-                {{ formatTime(span.started_at) }}
-              </div>
-              <div class="flex-shrink-0 w-16 text-xs text-muted-foreground pt-0.5">
-                {{ formatDuration(span.started_at, span.ended_at) }}
-              </div>
-            </div>
-
-            <div
-              v-if="expandedSpans.has(span.id)"
-              class="px-3 pb-3 pt-1 border-t border-default bg-elevated/25"
-            >
-              <div v-if="span.fields" class="mb-2">
-                <div class="text-xs font-semibold text-muted-foreground mb-1">
-                  {{ $t("developer.logs.fields") }}
-                </div>
-                <div class="grid grid-cols-2 gap-2 text-xs font-mono">
-                  <div v-for="(value, key) in span.fields" :key="String(key)" class="flex gap-2">
-                    <span class="text-muted-foreground">{{ key }}:</span>
-                    <span>{{ value }}</span>
-                  </div>
-                </div>
-              </div>
-              <div v-if="spanEventsCache.has(span.id)">
-                <div class="text-xs font-semibold text-muted-foreground mb-1">
-                  {{ $t("developer.logs.events") }}
-                </div>
-                <div class="space-y-1">
-                  <div
-                    v-for="event in spanEventsCache.get(span.id)"
-                    :key="event.id"
-                    class="flex items-start gap-2 text-xs"
-                  >
-                    <span class="text-muted-foreground font-mono">{{
-                      formatTime(event.timestamp)
-                    }}</span>
-                    <UBadge
-                      :color="levelColors[event.level] ?? 'neutral'"
-                      variant="subtle"
-                      size="xs"
-                      class="font-mono"
-                    >
-                      {{ event.level }}
-                    </UBadge>
-                    <span>{{ event.message }}</span>
-                  </div>
-                  <div
-                    v-if="spanEventsCache.get(span.id)?.length === 0"
-                    class="text-xs text-muted-foreground"
-                  >
-                    {{ $t("developer.logs.noEvents") }}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </template>
-    </div>
+    <NuxtPage />
   </AppPage>
 </template>

@@ -1,7 +1,5 @@
 import type { ListLogSpansParams, ListLogsParams } from "~/utils/api/types";
 
-export type LogView = "events" | "spans";
-
 export interface FieldFilter {
   key: string;
   value: string;
@@ -14,8 +12,9 @@ export interface LogsFilters {
   timeRange: string | undefined;
   bootId: string | undefined;
   fieldFilters: FieldFilter[];
-  view: LogView;
   spanId: number | undefined;
+  expandEvent: number[];
+  expandSpan: number[];
 }
 
 const QUERY_KEYS = {
@@ -24,10 +23,12 @@ const QUERY_KEYS = {
   search: "q",
   timeRange: "range",
   boot: "boot",
-  view: "view",
   span: "span",
   fields: "fields",
+  expand: "expand",
 } as const;
+
+const DEFAULT_LEVEL = "info";
 
 function parseFields(value: string): FieldFilter[] {
   if (!value) return [];
@@ -48,11 +49,31 @@ function encodeFields(filters: FieldFilter[]): string | undefined {
   return Object.keys(obj).length > 0 ? JSON.stringify(obj) : undefined;
 }
 
+function parseExpand(values: unknown): { events: number[]; spans: number[] } {
+  if (typeof document === "undefined") return { events: [], spans: [] };
+  const events: number[] = [];
+  const spans: number[] = [];
+  const arr = Array.isArray(values) ? values : values ? [values] : [];
+  for (const v of arr) {
+    if (typeof v !== "string") continue;
+    if (v.startsWith("e-")) {
+      const n = Number(v.slice(2));
+      if (Number.isFinite(n)) events.push(n);
+    } else if (v.startsWith("s-")) {
+      const n = Number(v.slice(2));
+      if (Number.isFinite(n)) spans.push(n);
+    }
+  }
+  return { events, spans };
+}
+
+function encodeExpand(events: number[], spans: number[]): string[] {
+  return [...events.map((e) => `e-${e}`), ...spans.map((s) => `s-${s}`)];
+}
+
 export function useLogsFilters() {
   const route = useRoute();
   const router = useRouter();
-
-  const DEFAULT_LEVEL = "info";
 
   const filters = reactive<LogsFilters>({
     level: DEFAULT_LEVEL,
@@ -61,8 +82,9 @@ export function useLogsFilters() {
     timeRange: undefined,
     bootId: undefined,
     fieldFilters: [],
-    view: "events",
     spanId: undefined,
+    expandEvent: [],
+    expandSpan: [],
   });
 
   let skipRouteWatch = false;
@@ -78,22 +100,25 @@ export function useLogsFilters() {
     filters.search = (q[QUERY_KEYS.search] as string) || undefined;
     filters.timeRange = (q[QUERY_KEYS.timeRange] as string) || undefined;
     filters.bootId = (q[QUERY_KEYS.boot] as string) || undefined;
-    filters.view = (q[QUERY_KEYS.view] as LogView) === "spans" ? "spans" : "events";
     filters.spanId = q[QUERY_KEYS.span] ? Number(q[QUERY_KEYS.span]) : undefined;
     filters.fieldFilters = parseFields((q[QUERY_KEYS.fields] as string) || "");
+    const exp = parseExpand(q[QUERY_KEYS.expand]);
+    filters.expandEvent = exp.events;
+    filters.expandSpan = exp.spans;
   }
 
   function writeToRoute() {
-    const query: Record<string, string> = {};
+    const query: Record<string, string | string[]> = {};
     if (filters.level && filters.level !== DEFAULT_LEVEL) query[QUERY_KEYS.level] = filters.level;
     if (filters.target) query[QUERY_KEYS.target] = filters.target;
     if (filters.search) query[QUERY_KEYS.search] = filters.search;
     if (filters.timeRange) query[QUERY_KEYS.timeRange] = filters.timeRange;
     if (filters.bootId) query[QUERY_KEYS.boot] = filters.bootId;
-    if (filters.view === "spans") query[QUERY_KEYS.view] = "spans";
     if (filters.spanId !== undefined) query[QUERY_KEYS.span] = String(filters.spanId);
     const fieldsJson = encodeFields(filters.fieldFilters);
     if (fieldsJson) query[QUERY_KEYS.fields] = fieldsJson;
+    const expandValues = encodeExpand(filters.expandEvent, filters.expandSpan);
+    if (expandValues.length) query[QUERY_KEYS.expand] = expandValues;
     skipRouteWatch = true;
     router.replace({ query });
   }
@@ -101,7 +126,17 @@ export function useLogsFilters() {
   readFromRoute();
 
   watch(
-    () => ({ ...filters, fieldFilters: [...filters.fieldFilters] }),
+    () => ({
+      level: filters.level,
+      target: filters.target,
+      search: filters.search,
+      timeRange: filters.timeRange,
+      bootId: filters.bootId,
+      spanId: filters.spanId,
+      fieldFilters: [...filters.fieldFilters],
+      expandEvent: [...filters.expandEvent],
+      expandSpan: [...filters.expandSpan],
+    }),
     () => writeToRoute(),
     { deep: true },
   );
