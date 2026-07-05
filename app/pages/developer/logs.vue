@@ -224,7 +224,6 @@ provide(useLogsContextKey, logsContext);
           v-model="filters.target"
           multiple
           :items="targetItems"
-          :placeholder="$t('developer.logs.filters.targetAll')"
           searchable
           size="sm"
           class="w-60"
