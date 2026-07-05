@@ -4,9 +4,7 @@ import type {
   ArtifactVersion,
   ArtifactVersionPage,
   BootList,
-  DownloadPage,
   ListArtifactsParams,
-  ListDownloadsParams,
   ListLogSpansParams,
   ListLogTargetsParams,
   ListLogsParams,
@@ -44,9 +42,6 @@ export const apertureApi = {
       { method: "DELETE" },
     );
   },
-
-  listDownloads: (params?: ListDownloadsParams) =>
-    $fetch<DownloadPage>(`${BASE}/downloads`, { query: params }),
 
   listLogs: (params?: ListLogsParams) => $fetch<LogEventPage>(`${BASE}/logs`, { query: params }),
 

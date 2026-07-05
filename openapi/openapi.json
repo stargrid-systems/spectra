@@ -266,75 +266,6 @@
         }
       }
     },
-    "/api/v1/downloads": {
-      "get": {
-        "summary": "Lists download attempts, optionally filtered by status and artifact key.\nRunning attempts carry live byte progress.",
-        "operationId": "listDownloads",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "Maximum rows to return. Defaults to 50.",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 50,
-              "maximum": 200,
-              "minimum": 1
-            }
-          },
-          {
-            "name": "cursor",
-            "in": "query",
-            "description": "Cursor from a page's `next_cursor` or `prev_cursor`.",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "order",
-            "in": "query",
-            "description": "Sort direction.",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/OrderParam"
-            }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "description": "Only attempts in this state.",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/DownloadStatusParam"
-            }
-          },
-          {
-            "name": "key",
-            "in": "query",
-            "description": "Only attempts for this artifact key.",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Downloads",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Page_DownloadResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/logs": {
       "get": {
         "summary": "Lists log events with optional filtering.",
@@ -383,7 +314,7 @@
           {
             "name": "target",
             "in": "query",
-            "description": "Only events whose target starts with any of these (comma-separated)\nprefixes. Example: `aperture,aperture_http`.",
+            "description": "Only events whose target is one of these (comma-separated). Example:\n`aperture,aperture_http`.",
             "required": false,
             "schema": {
               "type": "array",
@@ -524,7 +455,7 @@
           {
             "name": "target",
             "in": "query",
-            "description": "Only spans whose target starts with any of these (comma-separated)\nprefixes. Example: `aperture,aperture_storage`.",
+            "description": "Only spans whose target is one of these (comma-separated). Example:\n`aperture,aperture_storage`.",
             "required": false,
             "schema": {
               "type": "array",
@@ -657,6 +588,245 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/task-definitions": {
+      "get": {
+        "summary": "Lists the registered task kinds with their capabilities and JSON Schemas.",
+        "operationId": "listTaskDefinitions",
+        "responses": {
+          "200": {
+            "description": "Task definitions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskDefinitionResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tasks": {
+      "get": {
+        "summary": "Lists task invocations, optionally filtered by status, kind, and parent.\nRunning tasks carry live progress.",
+        "operationId": "listTasks",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum rows to return. Defaults to 50.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Cursor from a page's `next_cursor` or `prev_cursor`.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort direction.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrderParam"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Only tasks in this state, or the `active`/`finished` groups.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/TaskStatusParam"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "description": "Only tasks of this kind.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "parent",
+            "in": "query",
+            "description": "Only children of this task.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "root",
+            "in": "query",
+            "description": "Only top-level tasks (no parent). Ignored when `parent` is set.",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "input_path",
+            "in": "query",
+            "description": "Only tasks whose input JSON has `input_value` at this path, for example\n`key` or `source.reference`. Requires `input_value`.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "input_value",
+            "in": "query",
+            "description": "The value the field at `input_path` must equal.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "output_path",
+            "in": "query",
+            "description": "Only tasks whose output JSON has `output_value` at this path. Requires\n`output_value`.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "output_value",
+            "in": "query",
+            "description": "The value the field at `output_path` must equal.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tasks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_TaskResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a task of the given kind and starts it. The body input is validated\nagainst the kind's input schema.",
+        "operationId": "createTask",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Task created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unknown kind or invalid input"
+          }
+        }
+      }
+    },
+    "/api/v1/tasks/{id}": {
+      "get": {
+        "summary": "Returns one task invocation.",
+        "operationId": "getTask",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Task id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown task"
+          }
+        }
+      }
+    },
+    "/api/v1/tasks/{id}/cancel": {
+      "post": {
+        "summary": "Requests cooperative cancellation of a running task.",
+        "operationId": "cancelTask",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Task id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Cancellation requested"
+          },
+          "404": {
+            "description": "Unknown task"
+          },
+          "409": {
+            "description": "Task kind cannot be cancelled"
+          },
+          "410": {
+            "description": "Task has already finished"
           }
         }
       }
@@ -824,125 +994,122 @@
           }
         }
       },
-      "DownloadProgressResponse": {
+      "CreateTaskInput": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "input"
+            ],
+            "properties": {
+              "input": {
+                "$ref": "#/components/schemas/DownloadInput"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "download"
+                ]
+              }
+            }
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind"
+        }
+      },
+      "CreateTaskRequest": {
         "type": "object",
-        "description": "Live byte progress of a running download.",
+        "description": "Body for `POST /api/v1/tasks`.",
         "required": [
-          "done_bytes"
+          "kind",
+          "input"
         ],
         "properties": {
-          "done_bytes": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Bytes transferred so far.",
-            "minimum": 0
+          "input": {
+            "description": "The task input, matching the kind's input schema."
           },
-          "total_bytes": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64",
-            "description": "Expected total bytes, if known.",
-            "minimum": 0
+          "kind": {
+            "type": "string",
+            "description": "The kind of task to create."
           }
         }
       },
-      "DownloadResponse": {
+      "DownloadInput": {
         "type": "object",
-        "description": "One download attempt, returned by `GET /api/v1/downloads`.",
+        "description": "Input for a download task: what to fetch and where from.",
         "required": [
-          "id",
           "key",
-          "source",
-          "status",
-          "started_at"
+          "source"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Logical key to record the artifact under."
+          },
+          "source": {
+            "$ref": "#/components/schemas/DownloadSource",
+            "description": "Where and how to fetch it from."
+          }
+        }
+      },
+      "DownloadOutput": {
+        "type": "object",
+        "description": "Output of a download task: the stored version that resulted.",
+        "required": [
+          "digest",
+          "size_bytes"
         ],
         "properties": {
           "digest": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Resolved content digest, if it got that far."
-          },
-          "error": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Failure detail, if any."
-          },
-          "finished_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time",
-            "description": "When it finished, if it did."
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Attempt id."
-          },
-          "key": {
             "type": "string",
-            "description": "Logical artifact key."
-          },
-          "progress": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/DownloadProgressResponse",
-                "description": "Live byte progress, present only while running."
-              }
-            ]
+            "description": "Content digest of the stored blob."
           },
           "size_bytes": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Stored blob size in bytes.",
+            "minimum": 0
+          },
+          "version": {
             "type": [
-              "integer",
+              "string",
               "null"
             ],
-            "format": "int64",
-            "description": "Bytes transferred, recorded on completion."
-          },
-          "source": {
-            "type": "string",
-            "description": "Where it was fetched from."
-          },
-          "started_at": {
-            "type": "string",
-            "format": "date-time",
-            "description": "When the attempt started."
-          },
-          "status": {
-            "$ref": "#/components/schemas/DownloadStatusResponse",
-            "description": "Lifecycle state."
+            "description": "Human-readable version, if known."
           }
         }
       },
-      "DownloadStatusParam": {
-        "type": "string",
-        "description": "Filter for download status.",
-        "enum": [
-          "running",
-          "succeeded",
-          "failed",
-          "interrupted"
-        ]
-      },
-      "DownloadStatusResponse": {
-        "type": "string",
-        "description": "Lifecycle state of a download attempt.",
-        "enum": [
-          "running",
-          "succeeded",
-          "failed",
-          "interrupted"
-        ]
+      "DownloadSource": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "A layer of an OCI image.",
+            "required": [
+              "reference",
+              "media_type",
+              "type"
+            ],
+            "properties": {
+              "media_type": {
+                "type": "string",
+                "description": "The media type of the layer to pull."
+              },
+              "reference": {
+                "type": "string",
+                "description": "The image reference, for example `ghcr.io/org/image:tag`."
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "oci"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "Where a download fetches from."
       },
       "LevelResponse": {
         "type": "string",
@@ -1277,109 +1444,6 @@
           }
         }
       },
-      "Page_DownloadResponse": {
-        "type": "object",
-        "description": "A page of results plus the cursors for the neighbouring pages.",
-        "required": [
-          "items"
-        ],
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "description": "One download attempt, returned by `GET /api/v1/downloads`.",
-              "required": [
-                "id",
-                "key",
-                "source",
-                "status",
-                "started_at"
-              ],
-              "properties": {
-                "digest": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "description": "Resolved content digest, if it got that far."
-                },
-                "error": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "description": "Failure detail, if any."
-                },
-                "finished_at": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "format": "date-time",
-                  "description": "When it finished, if it did."
-                },
-                "id": {
-                  "type": "integer",
-                  "format": "int64",
-                  "description": "Attempt id."
-                },
-                "key": {
-                  "type": "string",
-                  "description": "Logical artifact key."
-                },
-                "progress": {
-                  "oneOf": [
-                    {
-                      "type": "null"
-                    },
-                    {
-                      "$ref": "#/components/schemas/DownloadProgressResponse",
-                      "description": "Live byte progress, present only while running."
-                    }
-                  ]
-                },
-                "size_bytes": {
-                  "type": [
-                    "integer",
-                    "null"
-                  ],
-                  "format": "int64",
-                  "description": "Bytes transferred, recorded on completion."
-                },
-                "source": {
-                  "type": "string",
-                  "description": "Where it was fetched from."
-                },
-                "started_at": {
-                  "type": "string",
-                  "format": "date-time",
-                  "description": "When the attempt started."
-                },
-                "status": {
-                  "$ref": "#/components/schemas/DownloadStatusResponse",
-                  "description": "Lifecycle state."
-                }
-              }
-            },
-            "description": "The rows in this page."
-          },
-          "next_cursor": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
-          },
-          "prev_cursor": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
-          }
-        }
-      },
       "Page_LogEventResponse": {
         "type": "object",
         "description": "A page of results plus the cursors for the neighbouring pages.",
@@ -1565,6 +1629,307 @@
             "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
           }
         }
+      },
+      "Page_TaskResponse": {
+        "type": "object",
+        "description": "A page of results plus the cursors for the neighbouring pages.",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "One task invocation, returned by the task endpoints.",
+              "required": [
+                "id",
+                "kind",
+                "status",
+                "input",
+                "created_at"
+              ],
+              "properties": {
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "When the invocation was recorded."
+                },
+                "error": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Failure detail, if any."
+                },
+                "finished_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time",
+                  "description": "When it finished, if it did."
+                },
+                "id": {
+                  "type": "integer",
+                  "format": "int64",
+                  "description": "Invocation id."
+                },
+                "input": {
+                  "description": "The input the task was created with."
+                },
+                "kind": {
+                  "type": "string",
+                  "description": "The kind of task."
+                },
+                "output": {
+                  "description": "The output, once the task succeeds."
+                },
+                "parent_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "int64",
+                  "description": "The parent invocation, if this task was spawned by another."
+                },
+                "progress": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ProgressResponse",
+                      "description": "Live progress, present only while running."
+                    }
+                  ]
+                },
+                "started_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time",
+                  "description": "When it started running, if it did."
+                },
+                "status": {
+                  "$ref": "#/components/schemas/TaskStatusResponse",
+                  "description": "Lifecycle state."
+                }
+              }
+            },
+            "description": "The rows in this page."
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
+          },
+          "prev_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
+          }
+        }
+      },
+      "ProgressMessageResponse": {
+        "type": "object",
+        "description": "A localizable progress message: a translation key and its arguments.",
+        "required": [
+          "key",
+          "args"
+        ],
+        "properties": {
+          "args": {
+            "type": "object",
+            "description": "Arguments to interpolate into the resolved message.",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "key": {
+            "type": "string",
+            "description": "Translation key for the current step."
+          }
+        }
+      },
+      "ProgressResponse": {
+        "type": "object",
+        "description": "Live progress of a running task.",
+        "properties": {
+          "done": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Units of work completed so far.",
+            "minimum": 0
+          },
+          "message": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ProgressMessageResponse",
+                "description": "A localizable description of the current step."
+              }
+            ]
+          },
+          "total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Total units of work expected, if known.",
+            "minimum": 0
+          }
+        }
+      },
+      "TaskDefinitionResponse": {
+        "type": "object",
+        "description": "A registered task kind, with its capabilities and JSON Schemas.",
+        "required": [
+          "kind",
+          "cancellable",
+          "resumable",
+          "input_schema",
+          "output_schema"
+        ],
+        "properties": {
+          "cancellable": {
+            "type": "boolean",
+            "description": "Whether the kind can be cancelled."
+          },
+          "input_schema": {
+            "description": "JSON Schema of the kind's input."
+          },
+          "kind": {
+            "type": "string",
+            "description": "The kind string."
+          },
+          "output_schema": {
+            "description": "JSON Schema of the kind's output."
+          },
+          "resumable": {
+            "type": "boolean",
+            "description": "Whether the kind is safe to interrupt across a restart."
+          }
+        }
+      },
+      "TaskResponse": {
+        "type": "object",
+        "description": "One task invocation, returned by the task endpoints.",
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "input",
+          "created_at"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the invocation was recorded."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Failure detail, if any."
+          },
+          "finished_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When it finished, if it did."
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Invocation id."
+          },
+          "input": {
+            "description": "The input the task was created with."
+          },
+          "kind": {
+            "type": "string",
+            "description": "The kind of task."
+          },
+          "output": {
+            "description": "The output, once the task succeeds."
+          },
+          "parent_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "The parent invocation, if this task was spawned by another."
+          },
+          "progress": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ProgressResponse",
+                "description": "Live progress, present only while running."
+              }
+            ]
+          },
+          "started_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When it started running, if it did."
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatusResponse",
+            "description": "Lifecycle state."
+          }
+        }
+      },
+      "TaskStatusParam": {
+        "type": "string",
+        "description": "Filter for task status, including the `active` and `finished` groups.",
+        "enum": [
+          "active",
+          "finished",
+          "pending",
+          "running",
+          "succeeded",
+          "failed",
+          "cancelled",
+          "interrupted"
+        ]
+      },
+      "TaskStatusResponse": {
+        "type": "string",
+        "description": "Lifecycle state of a task invocation.",
+        "enum": [
+          "pending",
+          "running",
+          "succeeded",
+          "failed",
+          "cancelled",
+          "interrupted"
+        ]
       },
       "VersionResponse": {
         "type": "object",
