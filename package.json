@@ -32,7 +32,7 @@
     "vue": "^3.5.38"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "1.2.114",
+    "@iconify-json/lucide": "1.2.115",
     "@microsoft/eslint-formatter-sarif": "3.1.0",
     "@nuxt/eslint": "^1.16.0",
     "@nuxt/test-utils": "4.0.3",
@@ -42,7 +42,7 @@
     "happy-dom": "20.10.6",
     "openapi-typescript": "^7.13.0",
     "playwright-core": "1.61.1",
-    "prettier": "3.8.4",
+    "prettier": "3.9.4",
     "typescript": "^6.0.3",
     "vitest": "4.1.9"
   }

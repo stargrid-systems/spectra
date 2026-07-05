@@ -4,6 +4,15 @@ import { version } from "./package.json";
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
+  app: {
+    head: {
+      link: [
+        { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+        { rel: "icon", type: "image/png", href: "/favicon.png" },
+        { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+      ],
+    },
+  },
   modules: [
     "@nuxt/eslint",
     "@nuxt/hints",
