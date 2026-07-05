@@ -1156,8 +1156,9 @@
               "integer",
               "null"
             ],
-            "format": "int64",
-            "description": "Source line, if available."
+            "format": "int32",
+            "description": "Source line, if available.",
+            "minimum": 0
           },
           "message": {
             "type": [
@@ -1251,8 +1252,9 @@
               "integer",
               "null"
             ],
-            "format": "int64",
-            "description": "Source line, if available."
+            "format": "int32",
+            "description": "Source line, if available.",
+            "minimum": 0
           },
           "name": {
             "type": "string",
@@ -1487,8 +1489,9 @@
                     "integer",
                     "null"
                   ],
-                  "format": "int64",
-                  "description": "Source line, if available."
+                  "format": "int32",
+                  "description": "Source line, if available.",
+                  "minimum": 0
                 },
                 "message": {
                   "type": [
@@ -1586,8 +1589,9 @@
                     "integer",
                     "null"
                   ],
-                  "format": "int64",
-                  "description": "Source line, if available."
+                  "format": "int32",
+                  "description": "Source line, if available.",
+                  "minimum": 0
                 },
                 "name": {
                   "type": "string",
