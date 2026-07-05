@@ -107,7 +107,9 @@
         "timestamp": "Zeit",
         "level": "Level",
         "target": "Ziel",
-        "message": "Nachricht"
+        "message": "Nachricht",
+        "duration": "Dauer",
+        "name": "Span"
       },
       "fields": "Strukturierte Felder",
       "noFields": "Keine strukturierten Felder",

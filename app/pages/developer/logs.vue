@@ -155,7 +155,7 @@ provide(useLogsContextKey, logsContext);
 <template>
   <AppPage :title="$t('developer.logs.title')" body-class="!overflow-hidden">
     <template #toolbar>
-      <div class="flex items-center justify-between gap-3 px-4 py-2 border-b border-default">
+      <div class="flex items-center gap-3 px-4 py-2 border-b border-default">
         <UTabs
           v-model="activeTab"
           :items="[
@@ -165,7 +165,6 @@ provide(useLogsContextKey, logsContext);
           size="sm"
           :content="false"
         />
-        <UCheckbox v-model="inlineFields" :label="$t('developer.logs.inlineFields')" size="sm" />
       </div>
 
       <div class="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-default">
@@ -327,6 +326,8 @@ provide(useLogsContextKey, logsContext);
             </div>
           </template>
         </UPopover>
+
+        <UCheckbox v-model="inlineFields" :label="$t('developer.logs.inlineFields')" size="sm" />
 
         <UButton
           variant="ghost"

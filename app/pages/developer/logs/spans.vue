@@ -180,6 +180,18 @@ watch(ctx.refreshTrigger, () => {
     </div>
     <template v-else>
       <div
+        class="flex items-center gap-3 px-3 py-1.5 text-xs font-semibold text-muted-foreground border-b border-default sticky top-0 bg-default z-10"
+      >
+        <div class="w-4 flex-shrink-0"></div>
+        <div class="w-32 flex-shrink-0">{{ $t("developer.logs.columns.timestamp") }}</div>
+        <div class="w-16 flex-shrink-0">{{ $t("developer.logs.columns.level") }}</div>
+        <div class="w-44 flex-shrink-0">{{ $t("developer.logs.columns.target") }}</div>
+        <div class="w-20 flex-shrink-0 text-right">
+          {{ $t("developer.logs.columns.duration") }}
+        </div>
+        <div class="flex-1 min-w-0">{{ $t("developer.logs.columns.name") }}</div>
+      </div>
+      <div
         v-for="span in rootSpans"
         :key="span.id"
         class="border border-default rounded-lg hover:bg-elevated/50 transition-colors"
@@ -203,21 +215,25 @@ watch(ctx.refreshTrigger, () => {
           >
             {{ formatTimestamp(span.started_at) }}
           </div>
-          <UBadge
-            :color="levelColors[span.level] ?? 'neutral'"
-            variant="subtle"
-            size="sm"
-            class="flex-shrink-0 font-mono"
-          >
-            {{ span.level }}
-          </UBadge>
+          <div class="flex-shrink-0 w-16">
+            <UBadge
+              :color="levelColors[span.level] ?? 'neutral'"
+              variant="subtle"
+              size="sm"
+              class="font-mono"
+            >
+              {{ span.level }}
+            </UBadge>
+          </div>
           <div
             class="flex-shrink-0 w-44 text-xs text-muted-foreground truncate pt-0.5"
             :title="span.target"
           >
             {{ span.target }}
           </div>
-          <div class="flex-shrink-0 w-20 text-xs text-muted-foreground pt-0.5">
+          <div
+            class="flex-shrink-0 w-20 text-xs text-muted-foreground pt-0.5 text-right tabular-nums"
+          >
             {{ ctx.formatDuration(span.started_at, span.ended_at) }}
           </div>
           <div class="flex-1 min-w-0 text-sm font-mono pt-0.5">

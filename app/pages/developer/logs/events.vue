@@ -180,6 +180,15 @@ async function loadEventSpanChain(event: LogEvent) {
     </div>
     <template v-else>
       <div
+        class="flex items-center gap-3 px-3 py-1.5 text-xs font-semibold text-muted-foreground border-b border-default sticky top-0 bg-default z-10"
+      >
+        <div class="w-32 flex-shrink-0">{{ $t("developer.logs.columns.timestamp") }}</div>
+        <div class="w-16 flex-shrink-0">{{ $t("developer.logs.columns.level") }}</div>
+        <div class="w-44 flex-shrink-0">{{ $t("developer.logs.columns.target") }}</div>
+        <div class="flex-1 min-w-0">{{ $t("developer.logs.columns.message") }}</div>
+        <div class="w-4 flex-shrink-0"></div>
+      </div>
+      <div
         v-for="event in allItems"
         :key="event.id"
         class="border border-default rounded-lg hover:bg-elevated/50 transition-colors"
@@ -193,14 +202,16 @@ async function loadEventSpanChain(event: LogEvent) {
           >
             {{ formatTimestamp(event.timestamp) }}
           </div>
-          <UBadge
-            :color="levelColors[event.level] ?? 'neutral'"
-            variant="subtle"
-            size="sm"
-            class="flex-shrink-0 font-mono"
-          >
-            {{ event.level }}
-          </UBadge>
+          <div class="flex-shrink-0 w-16">
+            <UBadge
+              :color="levelColors[event.level] ?? 'neutral'"
+              variant="subtle"
+              size="sm"
+              class="font-mono"
+            >
+              {{ event.level }}
+            </UBadge>
+          </div>
           <div
             class="flex-shrink-0 w-44 text-xs text-muted-foreground truncate pt-0.5"
             :title="event.target"
