@@ -66,6 +66,7 @@
         "empty": "No boots recorded"
       },
       "inlineFields": "Inline structured fields",
+      "refresh": "Refresh",
       "views": {
         "events": "Events",
         "spans": "Spans"

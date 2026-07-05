@@ -19,6 +19,7 @@ export interface LogsContext {
   formatDuration: (startedAt: string, endedAt?: string | null) => string;
   focusSpan: (spanId: number) => void;
   showAllSpans: () => void;
+  refreshTrigger: Ref<number>;
 }
 
 export const useLogsContextKey = Symbol() as InjectionKey<LogsContext>;

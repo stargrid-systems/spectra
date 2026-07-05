@@ -113,6 +113,11 @@ function retry() {
   void refresh();
 }
 
+watch(ctx.refreshTrigger, () => {
+  resetItems();
+  void refresh();
+});
+
 // Span chain (event -> span -> ancestors) loaded on expand, cached by event id and
 // span id.
 

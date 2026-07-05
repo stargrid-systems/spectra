@@ -135,6 +135,10 @@ const focusedSpanDetail = computed<LogSpan | undefined>(() =>
 function retry() {
   void refreshSpans();
 }
+
+watch(ctx.refreshTrigger, () => {
+  void refreshSpans();
+});
 </script>
 
 <template>

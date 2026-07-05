@@ -23,6 +23,11 @@ const targetItems = computed(() =>
 
 const inlineFields = ref(true);
 const showFieldFilter = ref(filters.fieldFilters.length > 0);
+const refreshTrigger = ref(0);
+
+function triggerRefresh() {
+  refreshTrigger.value++;
+}
 
 const newFieldKey = ref("");
 const newFieldValue = ref("");
@@ -141,6 +146,7 @@ const logsContext = {
   formatDuration,
   focusSpan,
   showAllSpans,
+  refreshTrigger,
 };
 
 provide(useLogsContextKey, logsContext);
@@ -229,16 +235,29 @@ provide(useLogsContextKey, logsContext);
           class="w-60"
           value-key="value"
         >
-          <template #leading>
-            <span v-if="filters.target.length === 0" class="text-muted-foreground text-xs">
+          <template #default="{ modelValue }">
+            <span
+              v-if="!(modelValue as string[])?.length"
+              class="text-muted-foreground text-xs truncate"
+            >
               {{ $t("developer.logs.filters.targetAll") }}
             </span>
             <span v-else class="font-mono text-xs truncate">
-              {{ filters.target.join(", ") }}
+              {{ (modelValue as string[]).join(", ") }}
             </span>
           </template>
           <template #item="{ item }">
-            <span class="font-mono text-xs">{{ (item as { label: string }).label }}</span>
+            <div class="flex items-center gap-2 w-full">
+              <UIcon
+                v-if="filters.target.includes((item as { value: string }).value)"
+                name="i-lucide-check"
+                class="text-primary shrink-0 size-3.5"
+              />
+              <span v-else class="size-3.5 shrink-0" />
+              <span class="font-mono text-xs truncate">{{
+                (item as { label: string }).label
+              }}</span>
+            </div>
           </template>
         </USelectMenu>
 
@@ -308,6 +327,15 @@ provide(useLogsContextKey, logsContext);
             </div>
           </template>
         </UPopover>
+
+        <UButton
+          variant="ghost"
+          color="neutral"
+          icon="i-lucide-refresh-cw"
+          size="sm"
+          :label="$t('developer.logs.refresh')"
+          @click="triggerRefresh"
+        />
 
         <UButton
           variant="ghost"

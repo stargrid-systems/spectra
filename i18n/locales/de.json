@@ -66,6 +66,7 @@
         "empty": "Keine Boots aufgezeichnet"
       },
       "inlineFields": "Strukturierte Felder inline",
+      "refresh": "Aktualisieren",
       "views": {
         "events": "Ereignisse",
         "spans": "Spans"
