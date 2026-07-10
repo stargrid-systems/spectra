@@ -17,7 +17,7 @@ export interface LogsContext {
     "error" | "primary" | "secondary" | "success" | "info" | "warning" | "neutral"
   >;
   formatDuration: (startedAt: string, endedAt?: string | null) => string;
-  focusSpan: (spanId: number) => void;
+  focusSpan: (spanId: string) => void;
   showAllSpans: () => void;
   refreshTrigger: Ref<number>;
 }
@@ -61,7 +61,7 @@ export function formatFieldsInline(fields: unknown): string {
   if (!f) return "";
   const parts: string[] = [];
   for (const [key, value] of Object.entries(f)) {
-    if (key === "message" || key === "boot_id") continue;
+    if (key === "message") continue;
     parts.push(`${key}=${formatValue(value)}`);
   }
   return parts.join("  ");
@@ -71,6 +71,6 @@ export function sortedFields(fields: unknown): { key: string; value: unknown }[]
   const f = asFields(fields);
   if (!f) return [];
   return Object.entries(f)
-    .filter(([key]) => key !== "boot_id" && key !== "message")
+    .filter(([key]) => key !== "message")
     .map(([key, value]) => ({ key, value }));
 }

@@ -44,10 +44,8 @@ describe("formatFieldsInline", () => {
     expect(formatFieldsInline({})).toBe("");
   });
 
-  it("skips message and boot_id", () => {
-    expect(formatFieldsInline({ message: "m", boot_id: "B", addr: "1.2.3.4" })).toBe(
-      "addr=1.2.3.4",
-    );
+  it("skips message", () => {
+    expect(formatFieldsInline({ message: "m", addr: "1.2.3.4" })).toBe("addr=1.2.3.4");
   });
 
   it("joins with double spaces", () => {
@@ -56,8 +54,8 @@ describe("formatFieldsInline", () => {
 });
 
 describe("sortedFields", () => {
-  it("filters out boot_id and message", () => {
-    const sorted = sortedFields({ boot_id: "B", message: "m", addr: "1" });
+  it("filters out message", () => {
+    const sorted = sortedFields({ message: "m", addr: "1" });
     expect(sorted).toEqual([{ key: "addr", value: "1" }]);
   });
 

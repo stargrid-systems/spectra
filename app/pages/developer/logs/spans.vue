@@ -36,6 +36,7 @@ const spansParams = computed<ListLogSpansParams | undefined>(() => {
   } else {
     base.parent_null = true;
   }
+  if (filters.bootId) base.boot_id = filters.bootId;
   if (computedSince.value) base.since = computedSince.value;
   if (until.value) base.until = until.value;
   const fieldsJson = fieldFiltersJson(filters);
@@ -53,16 +54,15 @@ const {
 const rootSpans = computed<LogSpan[]>(() => spansData.value?.items ?? []);
 
 // Shared span detail cache (span id -> bare span info without events).
-const spanCache = ref<Map<number, LogSpan>>(new Map());
+const spanCache = ref<Map<string, LogSpan>>(new Map());
 watch(rootSpans, (rows) => {
   for (const s of rows) spanCache.value.set(s.id, s);
 });
 
-// Children cache: span id -> child spans.
-const childrenCache = ref<Map<number, LogSpan[]>>(new Map());
-const loadingChildren = ref<Set<number>>(new Set());
+const childrenCache = ref<Map<string, LogSpan[]>>(new Map());
+const loadingChildren = ref<Set<string>>(new Set());
 
-async function loadChildren(parentId: number) {
+async function loadChildren(parentId: string) {
   if (childrenCache.value.has(parentId) || loadingChildren.value.has(parentId)) return;
   loadingChildren.value.add(parentId);
   try {
@@ -75,11 +75,10 @@ async function loadChildren(parentId: number) {
   }
 }
 
-// Event cache for the expanded body section.
-const spanEventsCache = ref<Map<number, LogEvent[]>>(new Map());
-const loadingEvents = ref<Set<number>>(new Set());
+const spanEventsCache = ref<Map<string, LogEvent[]>>(new Map());
+const loadingEvents = ref<Set<string>>(new Set());
 
-async function loadEvents(spanId: number) {
+async function loadEvents(spanId: string) {
   if (spanEventsCache.value.has(spanId) || loadingEvents.value.has(spanId)) return;
   loadingEvents.value.add(spanId);
   try {

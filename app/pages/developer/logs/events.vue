@@ -121,11 +121,11 @@ watch(ctx.refreshTrigger, () => {
 // Span chain (event -> span -> ancestors) loaded on expand, cached by event id and
 // span id.
 
-const spanCache = ref<Map<number, LogSpan>>(new Map());
-const eventChainCache = ref<Map<number, LogSpan[]>>(new Map());
-const pendingEventIds = ref<Set<number>>(new Set());
+const spanCache = ref<Map<string, LogSpan>>(new Map());
+const eventChainCache = ref<Map<string, LogSpan[]>>(new Map());
+const pendingEventIds = ref<Set<string>>(new Set());
 
-async function loadSpanIntoCache(id: number): Promise<LogSpan | null> {
+async function loadSpanIntoCache(id: string): Promise<LogSpan | null> {
   const cached = spanCache.value.get(id);
   if (cached) return cached;
   try {
@@ -145,8 +145,8 @@ async function loadEventSpanChain(event: LogEvent) {
     return;
   }
   const chain: LogSpan[] = [];
-  let currentId: number | undefined = event.span_id;
-  const visited = new Set<number>();
+  let currentId: string | undefined = event.span_id;
+  const visited = new Set<string>();
   while (currentId && !visited.has(currentId)) {
     visited.add(currentId);
     const span = await loadSpanIntoCache(currentId);

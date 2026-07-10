@@ -74,30 +74,30 @@ describe("encodeFields", () => {
 
 describe("encodeExpand / parseExpand round trip", () => {
   it("encodes events and spans", () => {
-    expect(encodeExpand([1, 2], [3])).toEqual(["e-1", "e-2", "s-3"]);
+    expect(encodeExpand(["1", "2"], ["3"])).toEqual(["e-1", "e-2", "s-3"]);
   });
 
   it("parses a single string value", () => {
-    expect(parseExpand("e-5")).toEqual({ events: [5], spans: [] });
+    expect(parseExpand("e-5")).toEqual({ events: ["5"], spans: [] });
   });
 
   it("parses an array of values", () => {
     expect(parseExpand(["e-1", "s-2", "e-3"])).toEqual({
-      events: [1, 3],
-      spans: [2],
+      events: ["1", "3"],
+      spans: ["2"],
     });
   });
 
   it("ignores garbage", () => {
-    expect(parseExpand(["foo", "e-", "e-abc", 42, null])).toEqual({
+    expect(parseExpand(["foo", "e-", 42, null])).toEqual({
       events: [],
       spans: [],
     });
   });
 
   it("round trips through encode/parse", () => {
-    const encoded = encodeExpand([10, 20], [30]);
-    expect(parseExpand(encoded)).toEqual({ events: [10, 20], spans: [30] });
+    const encoded = encodeExpand(["10", "20"], ["30"]);
+    expect(parseExpand(encoded)).toEqual({ events: ["10", "20"], spans: ["30"] });
   });
 });
 
@@ -117,9 +117,9 @@ describe("logsParamsFromFilters", () => {
 
   it("maps search, target, spanId", () => {
     const p = logsParamsFromFilters(
-      baseFilters({ search: "abc", target: ["aperture"], spanId: 7 }),
+      baseFilters({ search: "abc", target: ["aperture"], spanId: "7" }),
     );
-    expect(p).toEqual({ min_level: "info", q: "abc", target: "aperture", span_id: 7 });
+    expect(p).toEqual({ min_level: "info", q: "abc", target: "aperture", span_id: "7" });
   });
 
   it("serializes multi-target as comma-separated string", () => {
@@ -127,11 +127,11 @@ describe("logsParamsFromFilters", () => {
     expect(p).toEqual({ min_level: "info", target: "aperture,turso" });
   });
 
-  it("packs boot_id and field filters into the fields JSON string", () => {
+  it("emits boot_id as a separate query param", () => {
     const p = logsParamsFromFilters(
       baseFilters({ bootId: "BOOT", fieldFilters: [{ key: "k", value: "v" }] }),
     );
-    expect(p).toEqual({ min_level: "info", fields: '{"k":"v","boot_id":"BOOT"}' });
+    expect(p).toEqual({ min_level: "info", boot_id: "BOOT", fields: '{"k":"v"}' });
   });
 });
 
@@ -140,9 +140,9 @@ describe("fieldFiltersJson", () => {
     expect(fieldFiltersJson(baseFilters())).toBeUndefined();
   });
 
-  it("merges boot_id and field filters", () => {
+  it("encodes field filters without boot_id", () => {
     expect(
       fieldFiltersJson(baseFilters({ bootId: "B", fieldFilters: [{ key: "addr", value: "1" }] })),
-    ).toBe('{"addr":"1","boot_id":"B"}');
+    ).toBe('{"addr":"1"}');
   });
 });

@@ -53,5 +53,5 @@ export const apertureApi = {
   listSpans: (params?: ListLogSpansParams) =>
     $fetch<LogSpanPage>(`${BASE}/logs/spans`, { query: params }),
 
-  getSpan: (id: number) => $fetch<LogSpanDetail>(`${BASE}/logs/spans/${id}`),
+  getSpan: (id: string) => $fetch<LogSpanDetail>(`${BASE}/logs/spans/${id}`),
 };

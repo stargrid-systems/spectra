@@ -12,9 +12,9 @@ export interface LogsFilters {
   timeRange: string | undefined;
   bootId: string | undefined;
   fieldFilters: FieldFilter[];
-  spanId: number | undefined;
-  expandEvent: number[];
-  expandSpan: number[];
+  spanId: string | undefined;
+  expandEvent: string[];
+  expandSpan: string[];
 }
 
 const QUERY_KEYS = {
@@ -49,10 +49,10 @@ export function encodeFields(filters: FieldFilter[]): string | undefined {
   return Object.keys(obj).length > 0 ? JSON.stringify(obj) : undefined;
 }
 
-export function parseExpand(values: unknown): { events: number[]; spans: number[] } {
+export function parseExpand(values: unknown): { events: string[]; spans: string[] } {
   if (typeof document === "undefined") return { events: [], spans: [] };
-  const events: number[] = [];
-  const spans: number[] = [];
+  const events: string[] = [];
+  const spans: string[] = [];
   const arr = Array.isArray(values) ? values : values ? [values] : [];
   for (const v of arr) {
     if (typeof v !== "string") continue;
@@ -62,15 +62,13 @@ export function parseExpand(values: unknown): { events: number[]; spans: number[
     if (!prefix) continue;
     const rest = v.slice(2);
     if (!rest) continue;
-    const n = Number(rest);
-    if (!Number.isFinite(n)) continue;
-    if (prefix === "e") events.push(n);
-    else spans.push(n);
+    if (prefix === "e") events.push(rest);
+    else spans.push(rest);
   }
   return { events, spans };
 }
 
-export function encodeExpand(events: number[], spans: number[]): string[] {
+export function encodeExpand(events: string[], spans: string[]): string[] {
   return [...events.map((e) => `e-${e}`), ...spans.map((s) => `s-${s}`)];
 }
 
@@ -108,7 +106,7 @@ export function useLogsFilters() {
     filters.search = (q[QUERY_KEYS.search] as string) || undefined;
     filters.timeRange = (q[QUERY_KEYS.timeRange] as string) || undefined;
     filters.bootId = (q[QUERY_KEYS.boot] as string) || undefined;
-    filters.spanId = q[QUERY_KEYS.span] ? Number(q[QUERY_KEYS.span]) : undefined;
+    filters.spanId = (q[QUERY_KEYS.span] as string) || undefined;
     filters.fieldFilters = parseFields((q[QUERY_KEYS.fields] as string) || "");
     const exp = parseExpand(q[QUERY_KEYS.expand]);
     filters.expandEvent = exp.events;
@@ -122,7 +120,7 @@ export function useLogsFilters() {
     if (filters.search) query[QUERY_KEYS.search] = filters.search;
     if (filters.timeRange) query[QUERY_KEYS.timeRange] = filters.timeRange;
     if (filters.bootId) query[QUERY_KEYS.boot] = filters.bootId;
-    if (filters.spanId !== undefined) query[QUERY_KEYS.span] = String(filters.spanId);
+    if (filters.spanId !== undefined) query[QUERY_KEYS.span] = filters.spanId;
     const fieldsJson = encodeFields(filters.fieldFilters);
     if (fieldsJson) query[QUERY_KEYS.fields] = fieldsJson;
     const expandValues = encodeExpand(filters.expandEvent, filters.expandSpan);
@@ -161,13 +159,11 @@ export function logsParamsFromFilters(filters: LogsFilters): ListLogsParams | un
     p.target = filters.target.join(",") as unknown as ListLogsParams["target"];
   if (filters.search) p.q = filters.search;
   if (filters.spanId !== undefined) p.span_id = filters.spanId;
+  if (filters.bootId) p.boot_id = filters.bootId;
 
   const fields: Record<string, string> = {};
   for (const f of filters.fieldFilters) {
     if (f.key && f.value) fields[f.key] = f.value;
-  }
-  if (filters.bootId) {
-    fields.boot_id = filters.bootId;
   }
   if (Object.keys(fields).length > 0) {
     p.fields = JSON.stringify(fields);
@@ -179,9 +175,6 @@ export function fieldFiltersJson(filters: LogsFilters): string | undefined {
   const fields: Record<string, string> = {};
   for (const f of filters.fieldFilters) {
     if (f.key && f.value) fields[f.key] = f.value;
-  }
-  if (filters.bootId) {
-    fields.boot_id = filters.bootId;
   }
   return Object.keys(fields).length > 0 ? JSON.stringify(fields) : undefined;
 }

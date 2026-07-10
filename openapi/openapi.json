@@ -326,7 +326,7 @@
           {
             "name": "q",
             "in": "query",
-            "description": "Substring search across message, target, and structured fields.",
+            "description": "Substring search across message and target.",
             "required": false,
             "schema": {
               "type": "string"
@@ -338,8 +338,17 @@
             "description": "Only events belonging to this span.",
             "required": false,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "$ref": "#/components/schemas/DbId"
+            }
+          },
+          {
+            "name": "boot_id",
+            "in": "query",
+            "description": "Only events from this boot session.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           },
           {
@@ -368,7 +377,7 @@
             "description": "Structured field filter as a JSON object, e.g. `{\"key\":\"value\"}`.",
             "required": false,
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/JsonQueryString"
             }
           }
         ],
@@ -465,6 +474,16 @@
             }
           },
           {
+            "name": "boot_id",
+            "in": "query",
+            "description": "Only spans from this boot session.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "since",
             "in": "query",
             "description": "Only spans started at or after this time (RFC 3339).",
@@ -490,8 +509,7 @@
             "description": "Only direct children of this span id.",
             "required": false,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "$ref": "#/components/schemas/DbId"
             }
           },
           {
@@ -509,7 +527,7 @@
             "description": "Structured field filter as a JSON object, e.g. `{\"key\":\"value\"}`.",
             "required": false,
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/JsonQueryString"
             }
           }
         ],
@@ -538,8 +556,7 @@
             "description": "Span id",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "$ref": "#/components/schemas/DbId"
             }
           }
         ],
@@ -673,8 +690,7 @@
             "description": "Only children of this task.",
             "required": false,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "$ref": "#/components/schemas/DbId"
             }
           },
           {
@@ -777,8 +793,7 @@
             "description": "Task id",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "$ref": "#/components/schemas/DbId"
             }
           }
         ],
@@ -810,8 +825,7 @@
             "description": "Task id",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "$ref": "#/components/schemas/DbId"
             }
           }
         ],
@@ -880,7 +894,8 @@
           "size_bytes": {
             "type": "integer",
             "format": "int64",
-            "description": "Stored blob size of the newest version, in bytes."
+            "description": "Stored blob size of the newest version, in bytes.",
+            "minimum": 0
           },
           "source": {
             "type": "string",
@@ -896,7 +911,8 @@
           "version_count": {
             "type": "integer",
             "format": "int64",
-            "description": "How many versions of this key are stored."
+            "description": "How many versions of this key are stored.",
+            "minimum": 0
           }
         }
       },
@@ -934,7 +950,8 @@
           "size_bytes": {
             "type": "integer",
             "format": "int64",
-            "description": "Stored blob size in bytes."
+            "description": "Stored blob size in bytes.",
+            "minimum": 0
           },
           "source": {
             "type": "string",
@@ -976,7 +993,8 @@
           "event_count": {
             "type": "integer",
             "format": "int64",
-            "description": "Number of events recorded so far in this boot."
+            "description": "Number of events recorded so far in this boot.",
+            "minimum": 0
           },
           "first_seen": {
             "type": "string",
@@ -1035,6 +1053,10 @@
             "description": "The kind of task to create."
           }
         }
+      },
+      "DbId": {
+        "type": "string",
+        "description": "Primary key of a row in the database (SQLite rowid).\n\nWraps an [`i64`] so that parsing and display are centralized on the type\nitself rather than scattered as free functions. Serializes as a string to\nkeep the API representation opaque."
       },
       "DownloadInput": {
         "type": "object",
@@ -1111,6 +1133,11 @@
         ],
         "description": "Where a download fetches from."
       },
+      "JsonQueryString": {
+        "type": "string",
+        "description": "A structured field filter passed as a string-encoded JSON object in a\nquery parameter, e.g. `{\"key\":\"value\"}`. The raw string is parsed into\nkey-value pairs during deserialization.",
+        "example": "{\"status\":\"ok\"}"
+      },
       "LevelResponse": {
         "type": "string",
         "description": "Severity level of a log event or span.",
@@ -1129,11 +1156,23 @@
           "id",
           "level",
           "target",
-          "timestamp"
+          "timestamp",
+          "boot_id",
+          "fields"
         ],
         "properties": {
+          "boot_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Boot session this event belongs to, if known."
+          },
           "fields": {
-            "description": "All structured fields as a JSON object, if any."
+            "type": "object",
+            "description": "Structured fields as a JSON object, if any.",
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
           },
           "file": {
             "type": [
@@ -1143,8 +1182,7 @@
             "description": "Source file, if available."
           },
           "id": {
-            "type": "integer",
-            "format": "int64",
+            "$ref": "#/components/schemas/DbId",
             "description": "Event id."
           },
           "level": {
@@ -1168,12 +1206,15 @@
             "description": "Human-readable message, if any."
           },
           "span_id": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64",
-            "description": "Span this event belongs to, if any."
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DbId",
+                "description": "Span this event belongs to, if any."
+              }
+            ]
           },
           "target": {
             "type": "string",
@@ -1217,7 +1258,8 @@
           "name",
           "level",
           "target",
-          "started_at"
+          "started_at",
+          "fields"
         ],
         "properties": {
           "ended_at": {
@@ -1229,7 +1271,12 @@
             "description": "When the span ended, if it did."
           },
           "fields": {
-            "description": "Span fields as a JSON object, if any."
+            "type": "object",
+            "description": "Span fields as a JSON object, if any.",
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
           },
           "file": {
             "type": [
@@ -1239,8 +1286,7 @@
             "description": "Source file, if available."
           },
           "id": {
-            "type": "integer",
-            "format": "int64",
+            "$ref": "#/components/schemas/DbId",
             "description": "Span id."
           },
           "level": {
@@ -1261,12 +1307,15 @@
             "description": "Span name."
           },
           "parent_id": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64",
-            "description": "Parent span id, if any."
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DbId",
+                "description": "Parent span id, if any."
+              }
+            ]
           },
           "started_at": {
             "type": "string",
@@ -1324,7 +1373,8 @@
                 "size_bytes": {
                   "type": "integer",
                   "format": "int64",
-                  "description": "Stored blob size of the newest version, in bytes."
+                  "description": "Stored blob size of the newest version, in bytes.",
+                  "minimum": 0
                 },
                 "source": {
                   "type": "string",
@@ -1340,7 +1390,8 @@
                 "version_count": {
                   "type": "integer",
                   "format": "int64",
-                  "description": "How many versions of this key are stored."
+                  "description": "How many versions of this key are stored.",
+                  "minimum": 0
                 }
               }
             },
@@ -1405,7 +1456,8 @@
                 "size_bytes": {
                   "type": "integer",
                   "format": "int64",
-                  "description": "Stored blob size in bytes."
+                  "description": "Stored blob size in bytes.",
+                  "minimum": 0
                 },
                 "source": {
                   "type": "string",
@@ -1462,11 +1514,23 @@
                 "id",
                 "level",
                 "target",
-                "timestamp"
+                "timestamp",
+                "boot_id",
+                "fields"
               ],
               "properties": {
+                "boot_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "Boot session this event belongs to, if known."
+                },
                 "fields": {
-                  "description": "All structured fields as a JSON object, if any."
+                  "type": "object",
+                  "description": "Structured fields as a JSON object, if any.",
+                  "additionalProperties": {},
+                  "propertyNames": {
+                    "type": "string"
+                  }
                 },
                 "file": {
                   "type": [
@@ -1476,8 +1540,7 @@
                   "description": "Source file, if available."
                 },
                 "id": {
-                  "type": "integer",
-                  "format": "int64",
+                  "$ref": "#/components/schemas/DbId",
                   "description": "Event id."
                 },
                 "level": {
@@ -1501,12 +1564,15 @@
                   "description": "Human-readable message, if any."
                 },
                 "span_id": {
-                  "type": [
-                    "integer",
-                    "null"
-                  ],
-                  "format": "int64",
-                  "description": "Span this event belongs to, if any."
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/DbId",
+                      "description": "Span this event belongs to, if any."
+                    }
+                  ]
                 },
                 "target": {
                   "type": "string",
@@ -1554,7 +1620,8 @@
                 "name",
                 "level",
                 "target",
-                "started_at"
+                "started_at",
+                "fields"
               ],
               "properties": {
                 "ended_at": {
@@ -1566,7 +1633,12 @@
                   "description": "When the span ended, if it did."
                 },
                 "fields": {
-                  "description": "Span fields as a JSON object, if any."
+                  "type": "object",
+                  "description": "Span fields as a JSON object, if any.",
+                  "additionalProperties": {},
+                  "propertyNames": {
+                    "type": "string"
+                  }
                 },
                 "file": {
                   "type": [
@@ -1576,8 +1648,7 @@
                   "description": "Source file, if available."
                 },
                 "id": {
-                  "type": "integer",
-                  "format": "int64",
+                  "$ref": "#/components/schemas/DbId",
                   "description": "Span id."
                 },
                 "level": {
@@ -1598,12 +1669,15 @@
                   "description": "Span name."
                 },
                 "parent_id": {
-                  "type": [
-                    "integer",
-                    "null"
-                  ],
-                  "format": "int64",
-                  "description": "Parent span id, if any."
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/DbId",
+                      "description": "Parent span id, if any."
+                    }
+                  ]
                 },
                 "started_at": {
                   "type": "string",
@@ -1675,8 +1749,7 @@
                   "description": "When it finished, if it did."
                 },
                 "id": {
-                  "type": "integer",
-                  "format": "int64",
+                  "$ref": "#/components/schemas/DbId",
                   "description": "Invocation id."
                 },
                 "input": {
@@ -1690,12 +1763,15 @@
                   "description": "The output, once the task succeeds."
                 },
                 "parent_id": {
-                  "type": [
-                    "integer",
-                    "null"
-                  ],
-                  "format": "int64",
-                  "description": "The parent invocation, if this task was spawned by another."
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/DbId",
+                      "description": "The parent invocation, if this task was spawned by another."
+                    }
+                  ]
                 },
                 "progress": {
                   "oneOf": [
@@ -1862,8 +1938,7 @@
             "description": "When it finished, if it did."
           },
           "id": {
-            "type": "integer",
-            "format": "int64",
+            "$ref": "#/components/schemas/DbId",
             "description": "Invocation id."
           },
           "input": {
@@ -1877,12 +1952,15 @@
             "description": "The output, once the task succeeds."
           },
           "parent_id": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64",
-            "description": "The parent invocation, if this task was spawned by another."
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DbId",
+                "description": "The parent invocation, if this task was spawned by another."
+              }
+            ]
           },
           "progress": {
             "oneOf": [

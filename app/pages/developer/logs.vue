@@ -113,7 +113,7 @@ function selectBoot(bootId: string | undefined) {
   bootMenuOpen.value = false;
 }
 
-function focusSpan(spanId: number) {
+function focusSpan(spanId: string) {
   filters.spanId = spanId;
   void router.push(localePath("/developer/logs/spans"));
 }
