@@ -45,6 +45,6 @@
     "prettier": "3.9.4",
     "typescript": "6.0.3",
     "vitest": "4.1.10",
-    "vue-tsc": "^3.3.7"
+    "vue-tsc": "3.3.7"
   }
 }
