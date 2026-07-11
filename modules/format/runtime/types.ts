@@ -79,10 +79,6 @@ export interface Formatter {
   unit(value: number, unit: UnitIdentifier, options?: UnitFormatOptions): string;
   percent(value: number, options?: PercentFormatOptions): string;
   date(value: TemporalDate, options?: Intl.DateTimeFormatOptions): string;
-  relativeTime(
-    value: number,
-    unit: Intl.RelativeTimeFormatUnit,
-    options?: Intl.RelativeTimeFormatOptions,
-  ): string;
+  relativeTime(duration: Temporal.Duration, options?: Intl.RelativeTimeFormatOptions): string;
   list(items: Iterable<string>, options?: Intl.ListFormatOptions): string;
 }
