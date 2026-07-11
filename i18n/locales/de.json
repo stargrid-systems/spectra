@@ -95,7 +95,9 @@
         "absolute": "Absolut",
         "from": "Von",
         "to": "Bis",
-        "apply": "Anwenden"
+        "apply": "Anwenden",
+        "previewFrom": "Von {date}",
+        "previewUntil": "Bis {date}"
       },
       "empty": "Keine Log-Ereignisse gefunden",
       "emptySpans": "Keine Spans gefunden",

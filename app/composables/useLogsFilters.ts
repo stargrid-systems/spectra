@@ -1,3 +1,4 @@
+import type { QuerySchema } from "~/composables/useRouteQueryState";
 import type { ListLogsParams } from "~~/modules/aperture/runtime/types";
 
 export interface FieldFilter {
@@ -5,28 +6,18 @@ export interface FieldFilter {
   value: string;
 }
 
-export interface LogsFilters {
-  level: string | undefined;
+export interface LogsState {
+  level: string;
   target: string[];
   search: string | undefined;
   timeRange: string | undefined;
   bootId: string | undefined;
   fieldFilters: FieldFilter[];
   spanId: string | undefined;
-  expandEvent: string[];
-  expandSpan: string[];
+  expand: { events: string[]; spans: string[] };
+  since: Temporal.Instant | undefined;
+  until: Temporal.Instant | undefined;
 }
-
-const QUERY_KEYS = {
-  level: "level",
-  target: "target",
-  search: "q",
-  timeRange: "range",
-  boot: "boot",
-  span: "span",
-  fields: "fields",
-  expand: "expand",
-} as const;
 
 const DEFAULT_LEVEL = "info";
 
@@ -72,87 +63,98 @@ export function encodeExpand(events: string[], spans: string[]): string[] {
   return [...events.map((e) => `e-${e}`), ...spans.map((s) => `s-${s}`)];
 }
 
+function serializeExpand(value: { events: string[]; spans: string[] }): string[] | undefined {
+  const arr = encodeExpand(value.events, value.spans);
+  return arr.length ? arr : undefined;
+}
+
+function parseInstant(value: string | string[] | undefined): Temporal.Instant | undefined {
+  if (typeof value !== "string") return undefined;
+  return Temporal.Instant.from(value);
+}
+
+function serializeInstant(value: Temporal.Instant | undefined): string | undefined {
+  return value?.toString();
+}
+
+function parseString(value: string | string[] | undefined): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function parseStringArray(value: string | string[] | undefined): string[] {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string") return [value];
+  return [];
+}
+
+function parseFieldsFromQuery(value: string | string[] | undefined): FieldFilter[] {
+  if (typeof value !== "string") return [];
+  return parseFields(value);
+}
+
+function serializeFields(filters: FieldFilter[]): string | undefined {
+  return encodeFields(filters);
+}
+
+const schema: QuerySchema<LogsState> = {
+  level: {
+    key: "level",
+    parse: (v) => (typeof v === "string" ? v : DEFAULT_LEVEL),
+    serialize: (v) => (v && v !== DEFAULT_LEVEL ? v : undefined),
+  },
+  target: {
+    key: "target",
+    parse: parseStringArray,
+    serialize: (v) => (v.length ? v : undefined),
+  },
+  search: {
+    key: "q",
+    parse: parseString,
+    serialize: (v) => v ?? undefined,
+  },
+  timeRange: {
+    key: "range",
+    parse: parseString,
+    serialize: (v) => v ?? undefined,
+  },
+  bootId: {
+    key: "boot",
+    parse: parseString,
+    serialize: (v) => v ?? undefined,
+  },
+  spanId: {
+    key: "span",
+    parse: parseString,
+    serialize: (v) => v ?? undefined,
+  },
+  fieldFilters: {
+    key: "fields",
+    parse: parseFieldsFromQuery,
+    serialize: serializeFields,
+  },
+  expand: {
+    key: "expand",
+    parse: parseExpand,
+    serialize: serializeExpand,
+  },
+  since: {
+    key: "since",
+    parse: parseInstant,
+    serialize: serializeInstant,
+  },
+  until: {
+    key: "until",
+    parse: parseInstant,
+    serialize: serializeInstant,
+  },
+};
+
 export function useLogsFilters() {
-  const route = useRoute();
-  const router = useRouter();
-
-  const filters = reactive<LogsFilters>({
-    level: DEFAULT_LEVEL,
-    target: [],
-    search: undefined,
-    timeRange: undefined,
-    bootId: undefined,
-    fieldFilters: [],
-    spanId: undefined,
-    expandEvent: [],
-    expandSpan: [],
-  });
-
-  let skipRouteWatch = false;
-
-  function readFromRoute() {
-    if (skipRouteWatch) {
-      skipRouteWatch = false;
-      return;
-    }
-    const q = route.query;
-    filters.level = (q[QUERY_KEYS.level] as string) || DEFAULT_LEVEL;
-    const targetRaw = q[QUERY_KEYS.target];
-    filters.target = Array.isArray(targetRaw)
-      ? targetRaw.filter((t): t is string => typeof t === "string")
-      : targetRaw
-        ? [targetRaw as string]
-        : [];
-    filters.search = (q[QUERY_KEYS.search] as string) || undefined;
-    filters.timeRange = (q[QUERY_KEYS.timeRange] as string) || undefined;
-    filters.bootId = (q[QUERY_KEYS.boot] as string) || undefined;
-    filters.spanId = (q[QUERY_KEYS.span] as string) || undefined;
-    filters.fieldFilters = parseFields((q[QUERY_KEYS.fields] as string) || "");
-    const exp = parseExpand(q[QUERY_KEYS.expand]);
-    filters.expandEvent = exp.events;
-    filters.expandSpan = exp.spans;
-  }
-
-  function writeToRoute() {
-    const query: Record<string, string | string[]> = {};
-    if (filters.level && filters.level !== DEFAULT_LEVEL) query[QUERY_KEYS.level] = filters.level;
-    if (filters.target.length) query[QUERY_KEYS.target] = filters.target;
-    if (filters.search) query[QUERY_KEYS.search] = filters.search;
-    if (filters.timeRange) query[QUERY_KEYS.timeRange] = filters.timeRange;
-    if (filters.bootId) query[QUERY_KEYS.boot] = filters.bootId;
-    if (filters.spanId !== undefined) query[QUERY_KEYS.span] = filters.spanId;
-    const fieldsJson = encodeFields(filters.fieldFilters);
-    if (fieldsJson) query[QUERY_KEYS.fields] = fieldsJson;
-    const expandValues = encodeExpand(filters.expandEvent, filters.expandSpan);
-    if (expandValues.length) query[QUERY_KEYS.expand] = expandValues;
-    skipRouteWatch = true;
-    router.replace({ query });
-  }
-
-  readFromRoute();
-
-  watch(
-    () => ({
-      level: filters.level,
-      target: filters.target,
-      search: filters.search,
-      timeRange: filters.timeRange,
-      bootId: filters.bootId,
-      spanId: filters.spanId,
-      fieldFilters: [...filters.fieldFilters],
-      expandEvent: [...filters.expandEvent],
-      expandSpan: [...filters.expandSpan],
-    }),
-    () => writeToRoute(),
-    { deep: true },
-  );
-
-  watch(() => route.query, readFromRoute, { deep: true });
-
+  const filters = useRouteQueryState<LogsState>(schema);
   return { filters };
 }
 
-export function logsParamsFromFilters(filters: LogsFilters): ListLogsParams | undefined {
+export function logsParamsFromFilters(filters: LogsState): ListLogsParams | undefined {
   const p: ListLogsParams = {};
   if (filters.level) p.min_level = filters.level as ListLogsParams["min_level"];
   if (filters.target.length)
@@ -171,7 +173,7 @@ export function logsParamsFromFilters(filters: LogsFilters): ListLogsParams | un
   return Object.keys(p).length > 0 ? p : undefined;
 }
 
-export function fieldFiltersJson(filters: LogsFilters): string | undefined {
+export function fieldFiltersJson(filters: LogsState): string | undefined {
   const fields: Record<string, string> = {};
   for (const f of filters.fieldFilters) {
     if (f.key && f.value) fields[f.key] = f.value;

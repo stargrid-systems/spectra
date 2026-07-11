@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BootResponse } from "~~/modules/aperture/runtime/types";
 import { useLogsFilters } from "~/composables/useLogsFilters";
-import { useLogsContextKey } from "~/composables/useLogsContext";
+import { useLogsContextKey, timeRangeDurations } from "~/composables/useLogsContext";
 
 const { t } = useI18n();
 const fmt = useFormatter();
@@ -10,9 +10,6 @@ const router = useRouter();
 const localePath = useLocalePath();
 
 const { filters } = useLogsFilters();
-
-const since = ref<Temporal.Instant | undefined>(undefined);
-const until = ref<Temporal.Instant | undefined>(undefined);
 
 const { data: targetOptions } = useLogTargets();
 const { data: bootsData } = useBoots();
@@ -58,10 +55,9 @@ function clearFilters() {
   filters.bootId = undefined;
   filters.fieldFilters = [];
   filters.spanId = undefined;
-  filters.expandEvent = [];
-  filters.expandSpan = [];
-  since.value = undefined;
-  until.value = undefined;
+  filters.expand = { events: [], spans: [] };
+  filters.since = undefined;
+  filters.until = undefined;
 }
 
 const levelColors: Record<
@@ -138,14 +134,22 @@ const activeTab = computed({
   },
 });
 
+const computedSince = computed(() => {
+  if (filters.since) return filters.since.toString();
+  const range = filters.timeRange;
+  if (!range || range === "all") return undefined;
+  const duration = timeRangeDurations[range];
+  if (!duration) return undefined;
+  return Temporal.Now.instant().subtract(duration).toString();
+});
+
 const logsContext = {
   filters,
   inlineFields,
-  since,
-  until,
   boots,
   targetOptions,
   levelColors,
+  computedSince,
   formatDuration,
   focusSpan,
   showAllSpans,
@@ -220,11 +224,11 @@ provide(useLogsContextKey, logsContext);
 
         <TimeRangePicker
           :model-value="filters.timeRange"
-          :since="since"
-          :until="until"
+          :since="filters.since"
+          :until="filters.until"
           @update:model-value="(v) => (filters.timeRange = v)"
-          @update:since="(v) => (since = v)"
-          @update:until="(v) => (until = v)"
+          @update:since="(v) => (filters.since = v)"
+          @update:until="(v) => (filters.until = v)"
         />
 
         <USelect v-model="filters.level" :items="levelOptions" size="sm" class="w-32" />

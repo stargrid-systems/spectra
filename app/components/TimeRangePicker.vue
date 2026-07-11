@@ -36,22 +36,15 @@ const relativeRanges: { label: string; value: Range }[] = [
 
 const selectedRange = ref<Range>((props.modelValue as Range) || "all");
 
-function instantToDatetimeLocal(instant: Temporal.Instant): string {
-  return instant
-    .toZonedDateTimeISO(Temporal.Now.timeZoneId())
-    .toPlainDateTime()
-    .toString({ smallestUnit: "minute" });
-}
+const previewDateOptions: Intl.DateTimeFormatOptions = {
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+};
 
-function datetimeLocalToInstant(value: string): Temporal.Instant | undefined {
-  if (!value) return undefined;
-  return Temporal.PlainDateTime.from(value)
-    .toZonedDateTime(Temporal.Now.timeZoneId())
-    .toInstant();
-}
-
-const absoluteSince = ref(props.since ? instantToDatetimeLocal(props.since) : "");
-const absoluteUntil = ref(props.until ? instantToDatetimeLocal(props.until) : "");
+const absoluteSince = ref(props.since ? fmt.toInputDatetimeLocal(props.since) : "");
+const absoluteUntil = ref(props.until ? fmt.toInputDatetimeLocal(props.until) : "");
 
 function selectRelative(r: Range) {
   selectedRange.value = r;
@@ -83,35 +76,25 @@ function applyRelative() {
 
 function applyAbsolute() {
   emit("update:modelValue", "custom");
-  emit("update:since", datetimeLocalToInstant(absoluteSince.value));
-  emit("update:until", datetimeLocalToInstant(absoluteUntil.value));
+  emit("update:since", fmt.fromInputDatetimeLocal(absoluteSince.value));
+  emit("update:until", fmt.fromInputDatetimeLocal(absoluteUntil.value));
   open.value = false;
-}
-
-function formatShortDate(instant: Temporal.Instant): string {
-  return fmt.date(instant, {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 const preview = computed(() => {
   const r = props.modelValue;
-  if (props.since || props.until) {
-    const parts: string[] = [];
-    if (props.since) parts.push(formatShortDate(props.since));
-    if (props.until) parts.push(formatShortDate(props.until));
-    if (parts.length === 0) {
-      return t("developer.logs.timeRange.absolute");
-    }
-    if (parts.length === 1) {
-      return props.since
-        ? `${t("developer.logs.timeRange.from")} ${parts[0]}`
-        : `${t("developer.logs.timeRange.to")} ${parts[0]}`;
-    }
-    return parts.join(" - ");
+  if (props.since && props.until) {
+    return fmt.dateRange(props.since, props.until, previewDateOptions);
+  }
+  if (props.since) {
+    return t("developer.logs.timeRange.previewFrom", {
+      date: fmt.date(props.since, previewDateOptions),
+    });
+  }
+  if (props.until) {
+    return t("developer.logs.timeRange.previewUntil", {
+      date: fmt.date(props.until, previewDateOptions),
+    });
   }
   if (!r || r === "all") {
     return t("developer.logs.timeRanges.all");

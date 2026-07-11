@@ -41,6 +41,12 @@ export function useFormatter(): Formatter {
 
     date: (value: TemporalDate, options) => value.toLocaleString(locale.value, options),
 
+    dateRange: (start: Temporal.Instant, end: Temporal.Instant, options) =>
+      new Intl.DateTimeFormat(locale.value, options).formatRange(
+        new Date(start.epochMilliseconds),
+        new Date(end.epochMilliseconds),
+      ),
+
     duration: (value: Temporal.Duration, options: DurationFormatOptions) => {
       const precision = options?.precision ?? 1;
       const unitOpts = { minimumFractionDigits: 0, maximumFractionDigits: precision };
@@ -86,5 +92,18 @@ export function useFormatter(): Formatter {
     },
 
     list: (items, options) => new Intl.ListFormat(locale.value, options).format(items),
+
+    toInputDatetimeLocal: (value: Temporal.Instant) =>
+      value
+        .toZonedDateTimeISO(Temporal.Now.timeZoneId())
+        .toPlainDateTime()
+        .toString({ smallestUnit: "minute" }),
+
+    fromInputDatetimeLocal: (value: string) => {
+      if (!value) return undefined;
+      return Temporal.PlainDateTime.from(value)
+        .toZonedDateTime(Temporal.Now.timeZoneId())
+        .toInstant();
+    },
   };
 }

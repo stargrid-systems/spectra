@@ -1,21 +1,20 @@
-import type { InjectionKey, Ref } from "vue";
+import type { ComputedRef, InjectionKey, Ref } from "vue";
 import { inject } from "vue";
 import type { BootResponse } from "~~/modules/aperture/runtime/types";
-import type { LogsFilters } from "~/composables/useLogsFilters";
+import type { LogsState } from "~/composables/useLogsFilters";
 
 type TargetOptionsRef = ReturnType<typeof useLogTargets>["data"];
 
 export interface LogsContext {
-  filters: LogsFilters;
+  filters: LogsState;
   inlineFields: Ref<boolean>;
-  since: Ref<Temporal.Instant | undefined>;
-  until: Ref<Temporal.Instant | undefined>;
   boots: Ref<BootResponse[]>;
   targetOptions: TargetOptionsRef;
   levelColors: Record<
     string,
     "error" | "primary" | "secondary" | "success" | "info" | "warning" | "neutral"
   >;
+  computedSince: ComputedRef<string | undefined>;
   formatDuration: (startedAt: Temporal.Instant, endedAt?: Temporal.Instant | null) => string;
   focusSpan: (spanId: string) => void;
   showAllSpans: () => void;

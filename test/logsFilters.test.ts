@@ -7,10 +7,10 @@ import {
   parseExpand,
   parseFields,
   type FieldFilter,
-  type LogsFilters,
+  type LogsState,
 } from "~/composables/useLogsFilters";
 
-function baseFilters(overrides: Partial<LogsFilters> = {}): LogsFilters {
+function baseFilters(overrides: Partial<LogsState> = {}): LogsState {
   return {
     level: "info",
     target: [],
@@ -19,8 +19,9 @@ function baseFilters(overrides: Partial<LogsFilters> = {}): LogsFilters {
     bootId: undefined,
     fieldFilters: [],
     spanId: undefined,
-    expandEvent: [],
-    expandSpan: [],
+    expand: { events: [], spans: [] },
+    since: undefined,
+    until: undefined,
     ...overrides,
   };
 }

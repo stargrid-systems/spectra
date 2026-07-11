@@ -1,34 +1,25 @@
 <script setup lang="ts">
 import type { ListLogsParams, LogEvent, LogSpan } from "~~/modules/aperture/runtime/types";
 import { useInfiniteScroll } from "@vueuse/core";
-import { useLogsContext, timeRangeDurations } from "~/composables/useLogsContext";
+import { useLogsContext } from "~/composables/useLogsContext";
 import { logsParamsFromFilters } from "~/composables/useLogsFilters";
 
 const ctx = useLogsContext();
-const { filters, inlineFields, since, until, levelColors, focusSpan } = ctx;
-
-const computedSince = computed(() => {
-  const range = filters.timeRange;
-  if (since.value) return since.value.toString();
-  if (!range || range === "all") return undefined;
-  const duration = timeRangeDurations[range];
-  if (!duration) return undefined;
-  return Temporal.Now.instant().subtract(duration).toString();
-});
+const { filters, inlineFields, levelColors, focusSpan } = ctx;
 
 const logsParams = computed<ListLogsParams | undefined>(() => {
   const p = logsParamsFromFilters(filters) ?? ({} as ListLogsParams);
-  if (computedSince.value) p.since = computedSince.value;
-  if (until.value) p.until = until.value.toString();
+  if (ctx.computedSince.value) p.since = ctx.computedSince.value;
+  if (filters.until) p.until = filters.until.toString();
   return Object.keys(p).length > 0 ? p : undefined;
 });
 
 const { data, status, error, refresh } = useLogs(() => logsParams.value);
 
-const expandedRows = computed(() => new Set(filters.expandEvent));
+const expandedRows = computed(() => new Set(filters.expand.events));
 
 function toggleRow(event: LogEvent) {
-  const arr = filters.expandEvent;
+  const arr = filters.expand.events;
   const idx = arr.indexOf(event.id);
   if (idx >= 0) {
     arr.splice(idx, 1);

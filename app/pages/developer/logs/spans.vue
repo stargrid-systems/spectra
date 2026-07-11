@@ -1,19 +1,10 @@
 <script setup lang="ts">
 import type { ListLogSpansParams, LogEvent, LogSpan } from "~~/modules/aperture/runtime/types";
-import { useLogsContext, timeRangeDurations } from "~/composables/useLogsContext";
+import { useLogsContext } from "~/composables/useLogsContext";
 import { fieldFiltersJson } from "~/composables/useLogsFilters";
 
 const ctx = useLogsContext();
-const { filters, inlineFields, since, until, levelColors, focusSpan, showAllSpans } = ctx;
-
-const computedSince = computed(() => {
-  const range = filters.timeRange;
-  if (since.value) return since.value.toString();
-  if (!range || range === "all") return undefined;
-  const duration = timeRangeDurations[range];
-  if (!duration) return undefined;
-  return Temporal.Now.instant().subtract(duration).toString();
-});
+const { filters, inlineFields, levelColors, focusSpan, showAllSpans } = ctx;
 
 const spansParams = computed<ListLogSpansParams | undefined>(() => {
   const base = {} as ListLogSpansParams;
@@ -26,8 +17,8 @@ const spansParams = computed<ListLogSpansParams | undefined>(() => {
     base.parent_null = true;
   }
   if (filters.bootId) base.boot_id = filters.bootId;
-  if (computedSince.value) base.since = computedSince.value;
-  if (until.value) base.until = until.value.toString();
+  if (ctx.computedSince.value) base.since = ctx.computedSince.value;
+  if (filters.until) base.until = filters.until.toString();
   const fieldsJson = fieldFiltersJson(filters);
   if (fieldsJson) base.fields = fieldsJson;
   return Object.keys(base).length > 0 ? base : undefined;
@@ -82,14 +73,14 @@ async function loadEvents(spanId: string) {
   }
 }
 
-const expandedSpans = computed(() => new Set(filters.expandSpan));
+const expandedSpans = computed(() => new Set(filters.expand.spans));
 
 function spanHasChildren(span: LogSpan): boolean {
   return childrenCache.value.get(span.id)?.length !== 0;
 }
 
 async function toggleSpan(span: LogSpan) {
-  const arr = filters.expandSpan;
+  const arr = filters.expand.spans;
   const idx = arr.indexOf(span.id);
   if (idx >= 0) {
     arr.splice(idx, 1);
