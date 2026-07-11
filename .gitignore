@@ -26,12 +26,3 @@ eslint.sarif
 .env
 .env.*
 !.env.example
-
-# Generated OpenAPI types
-modules/aperture/runtime/generated.ts
-
-# AI agent instructions (kept local, not version-controlled)
-AGENTS.md
-
-# Generated OpenAPI types (regenerated via npm run openapi:generate)
-app/utils/api/generated.ts
