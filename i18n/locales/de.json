@@ -53,12 +53,12 @@
         "search": "Nachricht, Ziel oder Felder durchsuchen",
         "timeRange": "Zeitbereich",
         "fields": "Feldfilter",
-        "fieldKey": "Schluessel",
+        "fieldKey": "Schlüssel",
         "fieldValue": "Wert",
-        "addField": "Feldfilter hinzufuegen",
+        "addField": "Feldfilter hinzufügen",
         "removeField": "Entfernen",
         "hideFields": "Feldfilter ausblenden",
-        "clear": "Filter zuruecksetzen",
+        "clear": "Filter zurücksetzen",
         "bootOnly": "Nur dieser Boot"
       },
       "bootSelect": {

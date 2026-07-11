@@ -32,8 +32,19 @@ export function useLogsContext(): LogsContext {
   return ctx;
 }
 
+export const timeRangeDurations: Record<string, Temporal.Duration> = {
+  "5m": Temporal.Duration.from({ minutes: 5 }),
+  "15m": Temporal.Duration.from({ minutes: 15 }),
+  "1h": Temporal.Duration.from({ hours: 1 }),
+  "6h": Temporal.Duration.from({ hours: 6 }),
+  "12h": Temporal.Duration.from({ hours: 12 }),
+  "24h": Temporal.Duration.from({ hours: 24 }),
+  "7d": Temporal.Duration.from({ days: 7 }),
+  "30d": Temporal.Duration.from({ days: 30 }),
+};
+
 export function formatTimestamp(ts: string): string {
-  return new Date(ts).toLocaleString(undefined, {
+  return Temporal.Instant.from(ts).toLocaleString(undefined, {
     month: "short",
     day: "numeric",
     hour: "2-digit",

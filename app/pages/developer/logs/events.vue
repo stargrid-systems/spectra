@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ListLogsParams, LogEvent, LogSpan } from "~~/modules/aperture/runtime/types";
 import { useInfiniteScroll } from "@vueuse/core";
-import { useLogsContext } from "~/composables/useLogsContext";
+import { useLogsContext, timeRangeDurations } from "~/composables/useLogsContext";
 import { logsParamsFromFilters } from "~/composables/useLogsFilters";
 
 const ctx = useLogsContext();
@@ -11,21 +11,10 @@ const computedSince = computed(() => {
   const range = filters.timeRange;
   if (since.value) return since.value;
   if (!range || range === "all") return undefined;
-  const ms = timeRangeMillis[range];
-  if (!ms) return undefined;
-  return new Date(Date.now() - ms).toISOString();
+  const duration = timeRangeDurations[range];
+  if (!duration) return undefined;
+  return Temporal.Now.instant().subtract(duration).toString();
 });
-
-const timeRangeMillis: Record<string, number> = {
-  "5m": 5 * 60 * 1000,
-  "15m": 15 * 60 * 1000,
-  "1h": 60 * 60 * 1000,
-  "6h": 6 * 60 * 60 * 1000,
-  "12h": 12 * 60 * 60 * 1000,
-  "24h": 24 * 60 * 60 * 1000,
-  "7d": 7 * 24 * 60 * 60 * 1000,
-  "30d": 30 * 24 * 60 * 60 * 1000,
-};
 
 const logsParams = computed<ListLogsParams | undefined>(() => {
   const p = logsParamsFromFilters(filters) ?? ({} as ListLogsParams);
@@ -46,7 +35,7 @@ function toggleRow(event: LogEvent) {
     return;
   }
   arr.push(event.id);
-  if (event.fields) {
+  if (event.span_id) {
     pendingEventIds.value.add(event.id);
     void loadEventSpanChain(event);
   }
@@ -85,6 +74,8 @@ async function loadMore() {
     const result = await apertureApi.listLogs(params);
     allItems.value = [...allItems.value, ...result.items];
     nextCursor.value = result.next_cursor;
+  } catch (err) {
+    console.error("Failed to load more logs", err);
   } finally {
     isLoadingMore.value = false;
   }
@@ -134,7 +125,8 @@ async function loadSpanIntoCache(id: string): Promise<LogSpan | null> {
     void _events;
     spanCache.value.set(id, span);
     return span;
-  } catch {
+  } catch (err) {
+    console.error("Failed to load span", id, err);
     return null;
   }
 }

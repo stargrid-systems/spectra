@@ -4,6 +4,7 @@ import { useLogsFilters } from "~/composables/useLogsFilters";
 import { useLogsContextKey } from "~/composables/useLogsContext";
 
 const { t } = useI18n();
+const fmt = useFormatter();
 const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
@@ -79,17 +80,32 @@ const levelOptions = computed(() => [
 
 function formatDuration(startedAt: string, endedAt?: string | null): string {
   if (!endedAt) return t("developer.logs.running");
-  const start = new Date(startedAt).getTime();
-  const end = new Date(endedAt).getTime();
-  const ms = end - start;
-  if (ms < 1000) return `${ms}ms`;
-  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-  if (ms < 3_600_000) return `${(ms / 60000).toFixed(1)}m`;
-  return `${(ms / 3_600_000).toFixed(1)}h`;
+  const start = Temporal.Instant.from(startedAt);
+  const end = Temporal.Instant.from(endedAt);
+  const duration = end.since(start);
+  const totalMs = duration.total("millisecond");
+  if (totalMs < 1000) return fmt.unit(totalMs, "millisecond", { unitDisplay: "short" });
+  if (totalMs < 60_000)
+    return fmt.unit(totalMs / 1000, "second", {
+      unitDisplay: "short",
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    });
+  if (totalMs < 3_600_000)
+    return fmt.unit(totalMs / 60_000, "minute", {
+      unitDisplay: "short",
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    });
+  return fmt.unit(totalMs / 3_600_000, "hour", {
+    unitDisplay: "short",
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
 }
 
 function formatBootLabel(boot: BootResponse): string {
-  const start = new Date(boot.first_seen).toLocaleString(undefined, {
+  const start = Temporal.Instant.from(boot.first_seen).toLocaleString(undefined, {
     month: "short",
     day: "numeric",
     hour: "2-digit",

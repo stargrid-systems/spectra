@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ListLogSpansParams, LogEvent, LogSpan } from "~~/modules/aperture/runtime/types";
-import { useLogsContext } from "~/composables/useLogsContext";
+import { useLogsContext, timeRangeDurations } from "~/composables/useLogsContext";
 import { fieldFiltersJson } from "~/composables/useLogsFilters";
 
 const ctx = useLogsContext();
@@ -10,21 +10,10 @@ const computedSince = computed(() => {
   const range = filters.timeRange;
   if (since.value) return since.value;
   if (!range || range === "all") return undefined;
-  const ms = timeRangeMillis[range];
-  if (!ms) return undefined;
-  return new Date(Date.now() - ms).toISOString();
+  const duration = timeRangeDurations[range];
+  if (!duration) return undefined;
+  return Temporal.Now.instant().subtract(duration).toString();
 });
-
-const timeRangeMillis: Record<string, number> = {
-  "5m": 5 * 60 * 1000,
-  "15m": 15 * 60 * 1000,
-  "1h": 60 * 60 * 1000,
-  "6h": 6 * 60 * 60 * 1000,
-  "12h": 12 * 60 * 60 * 1000,
-  "24h": 24 * 60 * 60 * 1000,
-  "7d": 7 * 24 * 60 * 60 * 1000,
-  "30d": 30 * 24 * 60 * 60 * 1000,
-};
 
 const spansParams = computed<ListLogSpansParams | undefined>(() => {
   const base = {} as ListLogSpansParams;
@@ -70,6 +59,8 @@ async function loadChildren(parentId: string) {
     const children = result.items ?? [];
     for (const c of children) spanCache.value.set(c.id, c);
     childrenCache.value.set(parentId, children);
+  } catch (err) {
+    console.error("Failed to load child spans", parentId, err);
   } finally {
     loadingChildren.value.delete(parentId);
   }
@@ -84,6 +75,8 @@ async function loadEvents(spanId: string) {
   try {
     const detail = await apertureApi.getSpan(spanId);
     spanEventsCache.value.set(spanId, detail.events ?? []);
+  } catch (err) {
+    console.error("Failed to load span events", spanId, err);
   } finally {
     loadingEvents.value.delete(spanId);
   }
@@ -119,7 +112,8 @@ watch(
         const { events, ...rest } = detail;
         void events;
         spanCache.value.set(id, rest as LogSpan);
-      } catch {
+      } catch (err) {
+        console.error("Failed to load focused span", id, err);
         return;
       }
     }

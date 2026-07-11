@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { timeRangeDurations } from "~/composables/useLogsContext";
+
 type Range = "5m" | "15m" | "1h" | "6h" | "12h" | "24h" | "7d" | "30d" | "all" | "custom";
 
 const props = defineProps<{
@@ -31,17 +33,6 @@ const relativeRanges: { label: string; value: Range }[] = [
   { label: t("developer.logs.timeRanges.all"), value: "all" },
 ];
 
-const rangeMillis: Record<string, number> = {
-  "5m": 5 * 60 * 1000,
-  "15m": 15 * 60 * 1000,
-  "1h": 60 * 60 * 1000,
-  "6h": 6 * 60 * 60 * 1000,
-  "12h": 12 * 60 * 60 * 1000,
-  "24h": 24 * 60 * 60 * 1000,
-  "7d": 7 * 24 * 60 * 60 * 1000,
-  "30d": 30 * 24 * 60 * 60 * 1000,
-};
-
 const selectedRange = ref<Range>((props.modelValue as Range) || "all");
 
 const absoluteSince = ref(props.since || "");
@@ -64,13 +55,16 @@ function switchMode(m: "relative" | "absolute") {
 
 function applyRelative() {
   const r = selectedRange.value;
-  if (r === "all" || !rangeMillis[r]) {
+  if (r === "all" || !timeRangeDurations[r]) {
     emit("update:modelValue", undefined);
     emit("update:since", undefined);
     emit("update:until", undefined);
   } else {
     emit("update:modelValue", r);
-    emit("update:since", new Date(Date.now() - rangeMillis[r]).toISOString());
+    emit(
+      "update:since",
+      Temporal.Now.instant().subtract(timeRangeDurations[r]!).toString(),
+    );
     emit("update:until", undefined);
   }
 }
@@ -84,7 +78,7 @@ function applyAbsolute() {
 
 function formatShortDate(iso: string): string {
   if (!iso) return "";
-  return new Date(iso).toLocaleString(undefined, {
+  return Temporal.Instant.from(iso).toLocaleString(undefined, {
     month: "short",
     day: "numeric",
     hour: "2-digit",

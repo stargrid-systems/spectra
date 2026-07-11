@@ -35,12 +35,6 @@ const links = computed(() => [
           to: localePath("/developer/logs"),
           onSelect: closeSidebar,
         },
-        {
-          label: t("developer.events.title"),
-          icon: "i-lucide-radio",
-          to: localePath("/developer/events"),
-          onSelect: closeSidebar,
-        },
       ],
     },
     {
