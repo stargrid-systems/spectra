@@ -126,7 +126,11 @@ const formatKw = (value: number) => `${value.toFixed(1)} ${t("devices.meter.unit
               :label="$t(range.labelKey)"
               :variant="activeRange === range.value ? 'solid' : 'ghost'"
               color="primary"
-              @click="activeRange = range.value"
+              @click="
+                () => {
+                  activeRange = range.value;
+                }
+              "
             />
           </UFieldGroup>
         </div>
