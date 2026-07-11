@@ -359,14 +359,7 @@
       "ArtifactSummaryResponse": {
         "type": "object",
         "description": "A distinct artifact key with its newest version, for `GET /api/v1/artifacts`.",
-        "required": [
-          "key",
-          "version_count",
-          "source",
-          "digest",
-          "size_bytes",
-          "downloaded_at"
-        ],
+        "required": ["key", "version_count", "source", "digest", "size_bytes", "downloaded_at"],
         "properties": {
           "digest": {
             "type": "string",
@@ -391,10 +384,7 @@
             "description": "Where the newest version came from."
           },
           "version": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "Human-readable version of the newest version, if known."
           },
           "version_count": {
@@ -407,13 +397,7 @@
       "ArtifactVersionResponse": {
         "type": "object",
         "description": "One stored version of an artifact.",
-        "required": [
-          "key",
-          "digest",
-          "source",
-          "size_bytes",
-          "downloaded_at"
-        ],
+        "required": ["key", "digest", "source", "size_bytes", "downloaded_at"],
         "properties": {
           "digest": {
             "type": "string",
@@ -429,10 +413,7 @@
             "description": "Logical artifact key."
           },
           "media_type": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "OCI media type, if applicable."
           },
           "size_bytes": {
@@ -445,18 +426,12 @@
             "description": "Where this version came from."
           },
           "verified_at": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time",
             "description": "When this version was last verified, if ever."
           },
           "version": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "Human-readable version, if known."
           }
         }
@@ -464,9 +439,7 @@
       "DownloadProgressResponse": {
         "type": "object",
         "description": "Live byte progress of a running download.",
-        "required": [
-          "done_bytes"
-        ],
+        "required": ["done_bytes"],
         "properties": {
           "done_bytes": {
             "type": "integer",
@@ -475,10 +448,7 @@
             "minimum": 0
           },
           "total_bytes": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "format": "int64",
             "description": "Expected total bytes, if known.",
             "minimum": 0
@@ -488,33 +458,18 @@
       "DownloadResponse": {
         "type": "object",
         "description": "One download attempt, returned by `GET /api/v1/downloads`.",
-        "required": [
-          "id",
-          "key",
-          "source",
-          "status",
-          "started_at"
-        ],
+        "required": ["id", "key", "source", "status", "started_at"],
         "properties": {
           "digest": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "Resolved content digest, if it got that far."
           },
           "error": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "Failure detail, if any."
           },
           "finished_at": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time",
             "description": "When it finished, if it did."
           },
@@ -539,10 +494,7 @@
             ]
           },
           "size_bytes": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "format": "int64",
             "description": "Bytes transferred, recorded on completion."
           },
@@ -564,19 +516,12 @@
       "DownloadStatusResponse": {
         "type": "string",
         "description": "Lifecycle state of a download attempt.",
-        "enum": [
-          "running",
-          "succeeded",
-          "failed",
-          "interrupted"
-        ]
+        "enum": ["running", "succeeded", "failed", "interrupted"]
       },
       "Page_ArtifactSummaryResponse": {
         "type": "object",
         "description": "A page of results plus the cursors for the neighbouring pages.",
-        "required": [
-          "items"
-        ],
+        "required": ["items"],
         "properties": {
           "items": {
             "type": "array",
@@ -615,10 +560,7 @@
                   "description": "Where the newest version came from."
                 },
                 "version": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
+                  "type": ["string", "null"],
                   "description": "Human-readable version of the newest version, if known."
                 },
                 "version_count": {
@@ -631,17 +573,11 @@
             "description": "The rows in this page."
           },
           "next_cursor": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
           },
           "prev_cursor": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
           }
         }
@@ -649,22 +585,14 @@
       "Page_ArtifactVersionResponse": {
         "type": "object",
         "description": "A page of results plus the cursors for the neighbouring pages.",
-        "required": [
-          "items"
-        ],
+        "required": ["items"],
         "properties": {
           "items": {
             "type": "array",
             "items": {
               "type": "object",
               "description": "One stored version of an artifact.",
-              "required": [
-                "key",
-                "digest",
-                "source",
-                "size_bytes",
-                "downloaded_at"
-              ],
+              "required": ["key", "digest", "source", "size_bytes", "downloaded_at"],
               "properties": {
                 "digest": {
                   "type": "string",
@@ -680,10 +608,7 @@
                   "description": "Logical artifact key."
                 },
                 "media_type": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
+                  "type": ["string", "null"],
                   "description": "OCI media type, if applicable."
                 },
                 "size_bytes": {
@@ -696,18 +621,12 @@
                   "description": "Where this version came from."
                 },
                 "verified_at": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
+                  "type": ["string", "null"],
                   "format": "date-time",
                   "description": "When this version was last verified, if ever."
                 },
                 "version": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
+                  "type": ["string", "null"],
                   "description": "Human-readable version, if known."
                 }
               }
@@ -715,17 +634,11 @@
             "description": "The rows in this page."
           },
           "next_cursor": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
           },
           "prev_cursor": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
           }
         }
@@ -733,42 +646,25 @@
       "Page_DownloadResponse": {
         "type": "object",
         "description": "A page of results plus the cursors for the neighbouring pages.",
-        "required": [
-          "items"
-        ],
+        "required": ["items"],
         "properties": {
           "items": {
             "type": "array",
             "items": {
               "type": "object",
               "description": "One download attempt, returned by `GET /api/v1/downloads`.",
-              "required": [
-                "id",
-                "key",
-                "source",
-                "status",
-                "started_at"
-              ],
+              "required": ["id", "key", "source", "status", "started_at"],
               "properties": {
                 "digest": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
+                  "type": ["string", "null"],
                   "description": "Resolved content digest, if it got that far."
                 },
                 "error": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
+                  "type": ["string", "null"],
                   "description": "Failure detail, if any."
                 },
                 "finished_at": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
+                  "type": ["string", "null"],
                   "format": "date-time",
                   "description": "When it finished, if it did."
                 },
@@ -793,10 +689,7 @@
                   ]
                 },
                 "size_bytes": {
-                  "type": [
-                    "integer",
-                    "null"
-                  ],
+                  "type": ["integer", "null"],
                   "format": "int64",
                   "description": "Bytes transferred, recorded on completion."
                 },
@@ -818,17 +711,11 @@
             "description": "The rows in this page."
           },
           "next_cursor": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
           },
           "prev_cursor": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
           }
         }
@@ -836,9 +723,7 @@
       "VersionResponse": {
         "type": "object",
         "description": "Version information returned by `GET /api/v1/version`.",
-        "required": [
-          "aperture"
-        ],
+        "required": ["aperture"],
         "properties": {
           "aperture": {
             "type": "string",
@@ -848,28 +733,17 @@
       },
       "OrderParam": {
         "type": "string",
-        "enum": [
-          "asc",
-          "desc"
-        ],
+        "enum": ["asc", "desc"],
         "description": "Sort direction shared by list endpoints."
       },
       "VersionSortParam": {
         "type": "string",
-        "enum": [
-          "downloaded_at",
-          "size_bytes"
-        ],
+        "enum": ["downloaded_at", "size_bytes"],
         "description": "Field a version listing is sorted by."
       },
       "DownloadStatusParam": {
         "type": "string",
-        "enum": [
-          "running",
-          "succeeded",
-          "failed",
-          "interrupted"
-        ],
+        "enum": ["running", "succeeded", "failed", "interrupted"],
         "description": "Filter for download status."
       }
     }

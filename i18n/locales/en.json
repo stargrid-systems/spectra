@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "Spectra",
-    "description": "Universal UI for the eCube energy storage system"
+    "description": "Universal UI for the eCube energy storage system",
+    "titleWithPage": "{page} - Spectra"
   },
   "home": "Home",
   "go-to": "Go to",

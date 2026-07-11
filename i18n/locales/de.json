@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "Spectra",
-    "description": "Universelle Benutzeroberfläche für das eCube-Energiespeichersystem"
+    "description": "Universelle Benutzeroberfl\u00e4che f\u00fcr das eCube-Energiespeichersystem",
+    "titleWithPage": "{page} \u2013 Spectra"
   },
   "home": "Startseite",
   "go-to": "Gehe zu",

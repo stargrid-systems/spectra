@@ -1,5 +1,4 @@
 <script setup lang="ts">
-type TimeRange = "1h" | "24h" | "7d" | "30d" | "1y" | "5y";
 type DataPoint = { label: string; usage: number };
 
 defineProps<{
@@ -8,31 +7,34 @@ defineProps<{
 
 const { t, locale } = useI18n();
 
-const timeRanges: { value: TimeRange; labelKey: string }[] = [
+const timeRanges = [
   { value: "1h", labelKey: "devices.meter.range.1h" },
   { value: "24h", labelKey: "devices.meter.range.24h" },
   { value: "7d", labelKey: "devices.meter.range.7d" },
   { value: "30d", labelKey: "devices.meter.range.30d" },
   { value: "1y", labelKey: "devices.meter.range.1y" },
   { value: "5y", labelKey: "devices.meter.range.5y" },
-];
+] as const satisfies readonly { value: string; labelKey: string }[];
+
+type TimeRange = (typeof timeRanges)[number]["value"];
+
+const unitFormat = (unit: string, value: number) =>
+  new Intl.NumberFormat(locale.value, { style: "unit", unit, unitDisplay: "narrow" }).format(value);
 
 const timeLabels: Record<TimeRange, (index: number, total: number) => string> = {
-  "1h": (idx, total) => `${(total - idx - 1) * 5}m`,
-  "24h": (idx, total) => `${total - idx - 1}h`,
-  "7d": (idx, total) => `${total - idx - 1}d`,
-  "30d": (idx, total) => `${total - idx - 1}d`,
+  "1h": (idx, total) => unitFormat("minute", (total - idx - 1) * 5),
+  "24h": (idx, total) => unitFormat("hour", total - idx - 1),
+  "7d": (idx, total) => unitFormat("day", total - idx - 1),
+  "30d": (idx, total) => unitFormat("day", total - idx - 1),
   "1y": (idx, total) => {
     const date = new Date();
     date.setMonth(date.getMonth() - (total - idx - 1));
-    return date.toLocaleString(locale.value, { month: "short" });
+    return new Intl.DateTimeFormat(locale.value, { month: "short" }).format(date);
   },
   "5y": (idx, total) => {
     const date = new Date();
     date.setMonth(date.getMonth() - (total - idx - 1));
-    const month = date.toLocaleString(locale.value, { month: "short" });
-    const year = String(date.getFullYear()).slice(-2);
-    return `${month} '${year}`;
+    return new Intl.DateTimeFormat(locale.value, { month: "short", year: "2-digit" }).format(date);
   },
 };
 

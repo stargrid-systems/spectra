@@ -11,7 +11,7 @@ useHead({
     lang,
     dir,
   },
-  titleTemplate: (title) => (title ? `${title} - ${t("app.name")}` : t("app.name")),
+  titleTemplate: (title) => (title ? t("app.titleWithPage", { page: title }) : t("app.name")),
 });
 
 useSeoMeta({
