@@ -1,4 +1,10 @@
-import type { Formatter, TemporalDate, UnitIdentifier } from "../types";
+import type {
+  DurationFormatOptions,
+  Formatter,
+  SimpleUnit,
+  TemporalDate,
+  UnitIdentifier,
+} from "../types";
 import type { PolyfilledUnit } from "../units";
 import { polyfilledUnits } from "../units";
 import { useI18n } from "#imports";
@@ -34,6 +40,32 @@ export function useFormatter(): Formatter {
       }).format(value),
 
     date: (value: TemporalDate, options) => value.toLocaleString(locale.value, options),
+
+    duration: (value: Temporal.Duration, options: DurationFormatOptions) => {
+      const precision = options?.precision ?? 1;
+      const unitOpts = { minimumFractionDigits: 0, maximumFractionDigits: precision };
+      const units: Array<["hour" | "minute" | "second" | "millisecond", SimpleUnit]> = [
+        ["hour", "hour"],
+        ["minute", "minute"],
+        ["second", "second"],
+        ["millisecond", "millisecond"],
+      ];
+      for (const [totalUnit, displayUnit] of units) {
+        const total = value.total(totalUnit);
+        if (Math.abs(total) >= 1) {
+          return new Intl.NumberFormat(locale.value, {
+            ...unitOpts,
+            style: "unit",
+            unit: displayUnit,
+          }).format(total);
+        }
+      }
+      return new Intl.NumberFormat(locale.value, {
+        ...unitOpts,
+        style: "unit",
+        unit: "millisecond",
+      }).format(0);
+    },
 
     relativeTime: (duration: Temporal.Duration, options) => {
       const entries: Array<[number, Intl.RelativeTimeFormatUnit]> = [

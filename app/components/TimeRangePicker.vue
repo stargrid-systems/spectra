@@ -5,17 +5,18 @@ type Range = "5m" | "15m" | "1h" | "6h" | "12h" | "24h" | "7d" | "30d" | "all" |
 
 const props = defineProps<{
   modelValue: string | undefined;
-  since?: string;
-  until?: string;
+  since?: Temporal.Instant;
+  until?: Temporal.Instant;
 }>();
 
 const emit = defineEmits<{
   "update:modelValue": [value: string | undefined];
-  "update:since": [value: string | undefined];
-  "update:until": [value: string | undefined];
+  "update:since": [value: Temporal.Instant | undefined];
+  "update:until": [value: Temporal.Instant | undefined];
 }>();
 
 const { t } = useI18n();
+const fmt = useFormatter();
 
 const open = ref(false);
 
@@ -35,8 +36,22 @@ const relativeRanges: { label: string; value: Range }[] = [
 
 const selectedRange = ref<Range>((props.modelValue as Range) || "all");
 
-const absoluteSince = ref(props.since || "");
-const absoluteUntil = ref(props.until || "");
+function instantToDatetimeLocal(instant: Temporal.Instant): string {
+  return instant
+    .toZonedDateTimeISO(Temporal.Now.timeZoneId())
+    .toPlainDateTime()
+    .toString({ smallestUnit: "minute" });
+}
+
+function datetimeLocalToInstant(value: string): Temporal.Instant | undefined {
+  if (!value) return undefined;
+  return Temporal.PlainDateTime.from(value)
+    .toZonedDateTime(Temporal.Now.timeZoneId())
+    .toInstant();
+}
+
+const absoluteSince = ref(props.since ? instantToDatetimeLocal(props.since) : "");
+const absoluteUntil = ref(props.until ? instantToDatetimeLocal(props.until) : "");
 
 function selectRelative(r: Range) {
   selectedRange.value = r;
@@ -61,24 +76,20 @@ function applyRelative() {
     emit("update:until", undefined);
   } else {
     emit("update:modelValue", r);
-    emit(
-      "update:since",
-      Temporal.Now.instant().subtract(timeRangeDurations[r]!).toString(),
-    );
+    emit("update:since", Temporal.Now.instant().subtract(timeRangeDurations[r]!));
     emit("update:until", undefined);
   }
 }
 
 function applyAbsolute() {
   emit("update:modelValue", "custom");
-  emit("update:since", absoluteSince.value || undefined);
-  emit("update:until", absoluteUntil.value || undefined);
+  emit("update:since", datetimeLocalToInstant(absoluteSince.value));
+  emit("update:until", datetimeLocalToInstant(absoluteUntil.value));
   open.value = false;
 }
 
-function formatShortDate(iso: string): string {
-  if (!iso) return "";
-  return Temporal.Instant.from(iso).toLocaleString(undefined, {
+function formatShortDate(instant: Temporal.Instant): string {
+  return fmt.date(instant, {
     month: "short",
     day: "numeric",
     hour: "2-digit",

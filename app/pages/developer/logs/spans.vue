@@ -8,7 +8,7 @@ const { filters, inlineFields, since, until, levelColors, focusSpan, showAllSpan
 
 const computedSince = computed(() => {
   const range = filters.timeRange;
-  if (since.value) return since.value;
+  if (since.value) return since.value.toString();
   if (!range || range === "all") return undefined;
   const duration = timeRangeDurations[range];
   if (!duration) return undefined;
@@ -27,7 +27,7 @@ const spansParams = computed<ListLogSpansParams | undefined>(() => {
   }
   if (filters.bootId) base.boot_id = filters.bootId;
   if (computedSince.value) base.since = computedSince.value;
-  if (until.value) base.until = until.value;
+  if (until.value) base.until = until.value.toString();
   const fieldsJson = fieldFiltersJson(filters);
   if (fieldsJson) base.fields = fieldsJson;
   return Object.keys(base).length > 0 ? base : undefined;
@@ -129,7 +129,7 @@ function retry() {
   void refreshSpans();
 }
 
-watch(ctx.refreshTrigger, () => {
+ctx.onRefresh(() => {
   void refreshSpans();
 });
 </script>

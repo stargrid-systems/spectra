@@ -66,7 +66,7 @@ describe("sortedFields", () => {
 
 describe("formatTimestamp", () => {
   it("renders a date in short month day h:mm:ss format", () => {
-    const s = formatTimestamp("2026-07-04T23:04:59.253Z");
+    const s = formatTimestamp(Temporal.Instant.from("2026-07-04T23:04:59.253Z"));
     expect(typeof s).toBe("string");
     expect(s.length).toBeGreaterThan(8);
   });

@@ -11,8 +11,8 @@ const localePath = useLocalePath();
 
 const { filters } = useLogsFilters();
 
-const since = ref<string | undefined>(undefined);
-const until = ref<string | undefined>(undefined);
+const since = ref<Temporal.Instant | undefined>(undefined);
+const until = ref<Temporal.Instant | undefined>(undefined);
 
 const { data: targetOptions } = useLogTargets();
 const { data: bootsData } = useBoots();
@@ -24,10 +24,15 @@ const targetItems = computed(() =>
 
 const inlineFields = ref(true);
 const showFieldFilter = ref(filters.fieldFilters.length > 0);
-const refreshTrigger = ref(0);
 
-function triggerRefresh() {
-  refreshTrigger.value++;
+const refreshHandlers: (() => void)[] = [];
+
+function onRefresh(fn: () => void) {
+  refreshHandlers.push(fn);
+}
+
+function refresh() {
+  for (const fn of refreshHandlers) fn();
 }
 
 const newFieldKey = ref("");
@@ -78,34 +83,16 @@ const levelOptions = computed(() => [
   { label: t("developer.logs.levels.error"), value: "error" },
 ]);
 
-function formatDuration(startedAt: string, endedAt?: string | null): string {
+function formatDuration(
+  startedAt: Temporal.Instant,
+  endedAt?: Temporal.Instant | null,
+): string {
   if (!endedAt) return t("developer.logs.running");
-  const start = Temporal.Instant.from(startedAt);
-  const end = Temporal.Instant.from(endedAt);
-  const duration = end.since(start);
-  const totalMs = duration.total("millisecond");
-  if (totalMs < 1000) return fmt.unit(totalMs, "millisecond", { unitDisplay: "short" });
-  if (totalMs < 60_000)
-    return fmt.unit(totalMs / 1000, "second", {
-      unitDisplay: "short",
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    });
-  if (totalMs < 3_600_000)
-    return fmt.unit(totalMs / 60_000, "minute", {
-      unitDisplay: "short",
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    });
-  return fmt.unit(totalMs / 3_600_000, "hour", {
-    unitDisplay: "short",
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  });
+  return fmt.duration(endedAt.since(startedAt), { precision: 1 });
 }
 
 function formatBootLabel(boot: BootResponse): string {
-  const start = Temporal.Instant.from(boot.first_seen).toLocaleString(undefined, {
+  const start = fmt.date(boot.first_seen, {
     month: "short",
     day: "numeric",
     hour: "2-digit",
@@ -162,7 +149,8 @@ const logsContext = {
   formatDuration,
   focusSpan,
   showAllSpans,
-  refreshTrigger,
+  onRefresh,
+  refresh,
 };
 
 provide(useLogsContextKey, logsContext);
@@ -351,7 +339,7 @@ provide(useLogsContextKey, logsContext);
           icon="i-lucide-refresh-cw"
           size="sm"
           :label="$t('developer.logs.refresh')"
-          @click="triggerRefresh"
+          @click="refresh"
         />
 
         <UButton

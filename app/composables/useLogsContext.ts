@@ -8,18 +8,19 @@ type TargetOptionsRef = ReturnType<typeof useLogTargets>["data"];
 export interface LogsContext {
   filters: LogsFilters;
   inlineFields: Ref<boolean>;
-  since: Ref<string | undefined>;
-  until: Ref<string | undefined>;
+  since: Ref<Temporal.Instant | undefined>;
+  until: Ref<Temporal.Instant | undefined>;
   boots: Ref<BootResponse[]>;
   targetOptions: TargetOptionsRef;
   levelColors: Record<
     string,
     "error" | "primary" | "secondary" | "success" | "info" | "warning" | "neutral"
   >;
-  formatDuration: (startedAt: string, endedAt?: string | null) => string;
+  formatDuration: (startedAt: Temporal.Instant, endedAt?: Temporal.Instant | null) => string;
   focusSpan: (spanId: string) => void;
   showAllSpans: () => void;
-  refreshTrigger: Ref<number>;
+  onRefresh: (fn: () => void) => void;
+  refresh: () => void;
 }
 
 export const useLogsContextKey = Symbol() as InjectionKey<LogsContext>;
@@ -43,8 +44,8 @@ export const timeRangeDurations: Record<string, Temporal.Duration> = {
   "30d": Temporal.Duration.from({ days: 30 }),
 };
 
-export function formatTimestamp(ts: string): string {
-  return Temporal.Instant.from(ts).toLocaleString(undefined, {
+export function formatTimestamp(ts: Temporal.Instant): string {
+  return ts.toLocaleString(undefined, {
     month: "short",
     day: "numeric",
     hour: "2-digit",

@@ -9,7 +9,7 @@ const { filters, inlineFields, since, until, levelColors, focusSpan } = ctx;
 
 const computedSince = computed(() => {
   const range = filters.timeRange;
-  if (since.value) return since.value;
+  if (since.value) return since.value.toString();
   if (!range || range === "all") return undefined;
   const duration = timeRangeDurations[range];
   if (!duration) return undefined;
@@ -19,7 +19,7 @@ const computedSince = computed(() => {
 const logsParams = computed<ListLogsParams | undefined>(() => {
   const p = logsParamsFromFilters(filters) ?? ({} as ListLogsParams);
   if (computedSince.value) p.since = computedSince.value;
-  if (until.value) p.until = until.value;
+  if (until.value) p.until = until.value.toString();
   return Object.keys(p).length > 0 ? p : undefined;
 });
 
@@ -104,7 +104,7 @@ function retry() {
   void refresh();
 }
 
-watch(ctx.refreshTrigger, () => {
+ctx.onRefresh(() => {
   resetItems();
   void refresh();
 });
