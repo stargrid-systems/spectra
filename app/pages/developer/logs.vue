@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BootResponse } from "~/utils/api/types";
+import type { BootResponse } from "~~/modules/aperture/runtime/types";
 import { useLogsFilters } from "~/composables/useLogsFilters";
 import { useLogsContextKey } from "~/composables/useLogsContext";
 

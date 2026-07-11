@@ -1,10 +1,12 @@
+import { useAsyncData } from "#imports";
 import type {
   BootList,
   ListLogSpansParams,
   ListLogsParams,
   LogEventPage,
   LogSpanPage,
-} from "~/utils/api/types";
+} from "../types";
+import { apertureApi } from "../client";
 
 export function useLogs(params?: () => ListLogsParams | undefined) {
   return useAsyncData<LogEventPage>("logs", () => apertureApi.listLogs(params?.()), {

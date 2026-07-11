@@ -1,6 +1,6 @@
 import type { InjectionKey, Ref } from "vue";
 import { inject } from "vue";
-import type { BootResponse } from "~/utils/api/types";
+import type { BootResponse } from "~~/modules/aperture/runtime/types";
 import type { LogsFilters } from "~/composables/useLogsFilters";
 
 type TargetOptionsRef = ReturnType<typeof useLogTargets>["data"];

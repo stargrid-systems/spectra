@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ListLogsParams, LogEvent, LogSpan } from "~/utils/api/types";
+import type { ListLogsParams, LogEvent, LogSpan } from "~~/modules/aperture/runtime/types";
 import { useInfiniteScroll } from "@vueuse/core";
 import { useLogsContext } from "~/composables/useLogsContext";
 import { logsParamsFromFilters } from "~/composables/useLogsFilters";

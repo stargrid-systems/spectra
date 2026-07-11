@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ListLogSpansParams, LogEvent, LogSpan } from "~/utils/api/types";
+import type { ListLogSpansParams, LogEvent, LogSpan } from "~~/modules/aperture/runtime/types";
 import { useLogsContext } from "~/composables/useLogsContext";
 import { fieldFiltersJson } from "~/composables/useLogsFilters";
 

@@ -10,7 +10,7 @@
         <UCard>
           <template #header>
             <div class="flex items-center gap-2">
-              <UIcon name="i-lucide-list-tree" class="size-5" />
+              <UIcon name="i-lucide-activity" class="size-5" />
               <span class="font-semibold">{{ $t("developer.logs.title") }}</span>
             </div>
           </template>
@@ -18,6 +18,28 @@
           <div class="mt-4">
             <UButton :to="$localePath('/developer/logs')" color="primary" variant="soft" size="sm">
               {{ $t("developer.logs.title") }}
+            </UButton>
+          </div>
+        </UCard>
+
+        <UCard>
+          <template #header>
+            <div class="flex items-center gap-2">
+              <UIcon name="i-lucide-radio" class="size-5" />
+              <span class="font-semibold">{{ $t("developer.events.title") }}</span>
+            </div>
+          </template>
+          <p class="text-muted-foreground">
+            {{ $t("developer.events.body") }}
+          </p>
+          <div class="mt-4">
+            <UButton
+              :to="$localePath('/developer/events')"
+              color="primary"
+              variant="soft"
+              size="sm"
+            >
+              {{ $t("developer.events.title") }}
             </UButton>
           </div>
         </UCard>

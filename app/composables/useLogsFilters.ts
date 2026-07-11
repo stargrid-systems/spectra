@@ -1,4 +1,4 @@
-import type { ListLogsParams } from "~/utils/api/types";
+import type { ListLogsParams } from "~~/modules/aperture/runtime/types";
 
 export interface FieldFilter {
   key: string;
