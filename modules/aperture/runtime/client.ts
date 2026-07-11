@@ -3,9 +3,7 @@ import type {
   ArtifactSummary,
   ArtifactVersion,
   ArtifactVersionPage,
-  DownloadPage,
   ListArtifactsParams,
-  ListDownloadsParams,
   ListVersionsParams,
   VersionResponse,
 } from "./types";
@@ -37,7 +35,4 @@ export const apertureApi = {
       { method: "DELETE" },
     );
   },
-
-  listDownloads: (params?: ListDownloadsParams) =>
-    $fetch<DownloadPage>(`${BASE}/downloads`, { query: params }),
 };
