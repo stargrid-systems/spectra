@@ -17,7 +17,7 @@
     "/api/v1/artifacts": {
       "get": {
         "summary": "Lists stored artifact keys, each with its newest version.",
-        "operationId": "list_artifacts",
+        "operationId": "listArtifacts",
         "parameters": [
           {
             "name": "limit",
@@ -77,7 +77,7 @@
     "/api/v1/artifacts/{key}": {
       "get": {
         "summary": "Returns one artifact key with its newest version.",
-        "operationId": "get_artifact",
+        "operationId": "getArtifact",
         "parameters": [
           {
             "name": "key",
@@ -109,7 +109,7 @@
     "/api/v1/artifacts/{key}/versions": {
       "get": {
         "summary": "Lists the stored versions of an artifact.",
-        "operationId": "list_versions",
+        "operationId": "listArtifactVersions",
         "parameters": [
           {
             "name": "key",
@@ -196,7 +196,7 @@
     "/api/v1/artifacts/{key}/versions/{digest}": {
       "get": {
         "summary": "Returns one stored version.",
-        "operationId": "get_version",
+        "operationId": "getArtifactVersion",
         "parameters": [
           {
             "name": "key",
@@ -235,7 +235,7 @@
       },
       "delete": {
         "summary": "Evicts one stored version and its blob, if no other version needs it.",
-        "operationId": "delete_version",
+        "operationId": "deleteArtifactVersion",
         "parameters": [
           {
             "name": "key",
@@ -266,10 +266,374 @@
         }
       }
     },
-    "/api/v1/downloads": {
+    "/api/v1/logs": {
       "get": {
-        "summary": "Lists download attempts, optionally filtered by status and artifact key.\nRunning attempts carry live byte progress.",
-        "operationId": "list_downloads",
+        "summary": "Lists log events with optional filtering.",
+        "operationId": "listLogs",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum rows to return. Defaults to 50.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Cursor from a page's `next_cursor` or `prev_cursor`.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort direction. Defaults to descending (newest first).",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrderParam"
+            }
+          },
+          {
+            "name": "min_level",
+            "in": "query",
+            "description": "Only events at this severity or higher.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LevelResponse"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "description": "Only events whose target is one of these (comma-separated). Example:\n`aperture,aperture_http`.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Substring search across message and target.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "span_id",
+            "in": "query",
+            "description": "Only events belonging to this span.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/DbId"
+            }
+          },
+          {
+            "name": "boot_id",
+            "in": "query",
+            "description": "Only events from this boot session.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "description": "Only events at or after this time (RFC 3339).",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "until",
+            "in": "query",
+            "description": "Only events at or before this time (RFC 3339).",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Structured field filter as a JSON object, e.g. `{\"key\":\"value\"}`.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/JsonQueryString"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Log events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_LogEventResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/logs/boots": {
+      "get": {
+        "summary": "Lists distinct boot sessions, newest first.",
+        "operationId": "listLogBoots",
+        "responses": {
+          "200": {
+            "description": "Boot sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BootResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/logs/spans": {
+      "get": {
+        "summary": "Lists tracing spans with optional filtering.",
+        "operationId": "listSpans",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum rows to return. Defaults to 50.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Cursor from a page's `next_cursor` or `prev_cursor`.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort direction. Defaults to descending (newest first).",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrderParam"
+            }
+          },
+          {
+            "name": "min_level",
+            "in": "query",
+            "description": "Only spans at this severity or higher.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LevelResponse"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "description": "Only spans whose target is one of these (comma-separated). Example:\n`aperture,aperture_storage`.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "boot_id",
+            "in": "query",
+            "description": "Only spans from this boot session.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "description": "Only spans started at or after this time (RFC 3339).",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "until",
+            "in": "query",
+            "description": "Only spans started at or before this time (RFC 3339).",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "parent_id",
+            "in": "query",
+            "description": "Only direct children of this span id.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/DbId"
+            }
+          },
+          {
+            "name": "parent_null",
+            "in": "query",
+            "description": "When true, only root spans (no parent) are returned.",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Structured field filter as a JSON object, e.g. `{\"key\":\"value\"}`.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/JsonQueryString"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Spans",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_LogSpanResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/logs/spans/{id}": {
+      "get": {
+        "summary": "Returns a single span with its events.",
+        "operationId": "getSpan",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Span id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DbId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Span with events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogSpanDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown span"
+          }
+        }
+      }
+    },
+    "/api/v1/logs/targets": {
+      "get": {
+        "summary": "Lists distinct log targets for autocomplete.",
+        "operationId": "listLogTargets",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Only targets starting with this prefix.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Target names",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/task-definitions": {
+      "get": {
+        "summary": "Lists the registered task kinds with their capabilities and JSON Schemas.",
+        "operationId": "listTaskDefinitions",
+        "responses": {
+          "200": {
+            "description": "Task definitions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskDefinitionResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tasks": {
+      "get": {
+        "summary": "Lists task invocations, optionally filtered by status, kind, and parent.\nRunning tasks carry live progress.",
+        "operationId": "listTasks",
         "parameters": [
           {
             "name": "limit",
@@ -305,16 +669,70 @@
           {
             "name": "status",
             "in": "query",
-            "description": "Only attempts in this state.",
+            "description": "Only tasks in this state, or the `active`/`finished` groups.",
             "required": false,
             "schema": {
-              "$ref": "#/components/schemas/DownloadStatusParam"
+              "$ref": "#/components/schemas/TaskStatusParam"
             }
           },
           {
-            "name": "key",
+            "name": "kind",
             "in": "query",
-            "description": "Only attempts for this artifact key.",
+            "description": "Only tasks of this kind.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "parent",
+            "in": "query",
+            "description": "Only children of this task.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/DbId"
+            }
+          },
+          {
+            "name": "root",
+            "in": "query",
+            "description": "Only top-level tasks (no parent). Ignored when `parent` is set.",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "input_path",
+            "in": "query",
+            "description": "Only tasks whose input JSON has `input_value` at this path, for example\n`key` or `source.reference`. Requires `input_value`.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "input_value",
+            "in": "query",
+            "description": "The value the field at `input_path` must equal.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "output_path",
+            "in": "query",
+            "description": "Only tasks whose output JSON has `output_value` at this path. Requires\n`output_value`.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "output_value",
+            "in": "query",
+            "description": "The value the field at `output_path` must equal.",
             "required": false,
             "schema": {
               "type": "string"
@@ -323,14 +741,106 @@
         ],
         "responses": {
           "200": {
-            "description": "Downloads",
+            "description": "Tasks",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Page_DownloadResponse"
+                  "$ref": "#/components/schemas/Page_TaskResponse"
                 }
               }
             }
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a task of the given kind and starts it. The body input is validated\nagainst the kind's input schema.",
+        "operationId": "createTask",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Task created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unknown kind or invalid input"
+          }
+        }
+      }
+    },
+    "/api/v1/tasks/{id}": {
+      "get": {
+        "summary": "Returns one task invocation.",
+        "operationId": "getTask",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Task id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DbId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown task"
+          }
+        }
+      }
+    },
+    "/api/v1/tasks/{id}/cancel": {
+      "post": {
+        "summary": "Requests cooperative cancellation of a running task.",
+        "operationId": "cancelTask",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Task id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DbId"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Cancellation requested"
+          },
+          "404": {
+            "description": "Unknown task"
+          },
+          "409": {
+            "description": "Task kind cannot be cancelled"
+          },
+          "410": {
+            "description": "Task has already finished"
           }
         }
       }
@@ -338,7 +848,7 @@
     "/api/v1/version": {
       "get": {
         "summary": "Returns version information about the gateway.",
-        "operationId": "get_gateway_version",
+        "operationId": "getGatewayVersion",
         "responses": {
           "200": {
             "description": "Gateway version",
@@ -358,7 +868,7 @@
     "schemas": {
       "ArtifactSummaryResponse": {
         "type": "object",
-        "description": "A distinct artifact key with its newest version, for `GET /api/v1/artifacts`.",
+        "description": "A distinct artifact key with its newest version, for `GET\n/api/v1/artifacts`.",
         "required": ["key", "version_count", "source", "digest", "size_bytes", "downloaded_at"],
         "properties": {
           "digest": {
@@ -377,7 +887,8 @@
           "size_bytes": {
             "type": "integer",
             "format": "int64",
-            "description": "Stored blob size of the newest version, in bytes."
+            "description": "Stored blob size of the newest version, in bytes.",
+            "minimum": 0
           },
           "source": {
             "type": "string",
@@ -390,7 +901,8 @@
           "version_count": {
             "type": "integer",
             "format": "int64",
-            "description": "How many versions of this key are stored."
+            "description": "How many versions of this key are stored.",
+            "minimum": 0
           }
         }
       },
@@ -419,7 +931,8 @@
           "size_bytes": {
             "type": "integer",
             "format": "int64",
-            "description": "Stored blob size in bytes."
+            "description": "Stored blob size in bytes.",
+            "minimum": 0
           },
           "source": {
             "type": "string",
@@ -436,87 +949,295 @@
           }
         }
       },
-      "DownloadProgressResponse": {
+      "BootResponse": {
         "type": "object",
-        "description": "Live byte progress of a running download.",
-        "required": ["done_bytes"],
+        "description": "One boot session observed in the log store, returned by\n`GET /api/v1/logs/boots`.",
+        "required": ["boot_id", "first_seen", "last_seen", "event_count", "is_current"],
         "properties": {
-          "done_bytes": {
+          "boot_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique boot id (UUID)."
+          },
+          "event_count": {
             "type": "integer",
             "format": "int64",
-            "description": "Bytes transferred so far.",
+            "description": "Number of events recorded so far in this boot.",
             "minimum": 0
           },
-          "total_bytes": {
-            "type": ["integer", "null"],
-            "format": "int64",
-            "description": "Expected total bytes, if known.",
-            "minimum": 0
+          "first_seen": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the earliest event in this boot."
+          },
+          "is_current": {
+            "type": "boolean",
+            "description": "True if this is the currently running gateway boot."
+          },
+          "last_seen": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the latest event in this boot."
           }
         }
       },
-      "DownloadResponse": {
+      "CreateTaskInput": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["kind", "input"],
+            "properties": {
+              "input": {
+                "$ref": "#/components/schemas/DownloadInput"
+              },
+              "kind": {
+                "type": "string",
+                "enum": ["download"]
+              }
+            }
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind"
+        }
+      },
+      "CreateTaskRequest": {
         "type": "object",
-        "description": "One download attempt, returned by `GET /api/v1/downloads`.",
-        "required": ["id", "key", "source", "status", "started_at"],
+        "description": "Body for `POST /api/v1/tasks`.",
+        "required": ["kind", "input"],
         "properties": {
-          "digest": {
-            "type": ["string", "null"],
-            "description": "Resolved content digest, if it got that far."
+          "input": {
+            "description": "The task input, matching the kind's input schema."
           },
-          "error": {
-            "type": ["string", "null"],
-            "description": "Failure detail, if any."
-          },
-          "finished_at": {
-            "type": ["string", "null"],
-            "format": "date-time",
-            "description": "When it finished, if it did."
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Attempt id."
-          },
+          "kind": {
+            "type": "string",
+            "description": "The kind of task to create."
+          }
+        }
+      },
+      "DbId": {
+        "type": "string",
+        "description": "Primary key of a row in the database (SQLite rowid).\n\nWraps an [`i64`] so that parsing and display are centralized on the type\nitself rather than scattered as free functions. Serializes as a string to\nkeep the API representation opaque."
+      },
+      "DownloadInput": {
+        "type": "object",
+        "description": "Input for a download task: what to fetch and where from.",
+        "required": ["key", "source"],
+        "properties": {
           "key": {
             "type": "string",
-            "description": "Logical artifact key."
+            "description": "Logical key to record the artifact under."
           },
-          "progress": {
+          "source": {
+            "$ref": "#/components/schemas/DownloadSource",
+            "description": "Where and how to fetch it from."
+          }
+        }
+      },
+      "DownloadOutput": {
+        "type": "object",
+        "description": "Output of a download task: the stored version that resulted.",
+        "required": ["digest", "size_bytes"],
+        "properties": {
+          "digest": {
+            "type": "string",
+            "description": "Content digest of the stored blob."
+          },
+          "size_bytes": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Stored blob size in bytes.",
+            "minimum": 0
+          },
+          "version": {
+            "type": ["string", "null"],
+            "description": "Human-readable version, if known."
+          }
+        }
+      },
+      "DownloadSource": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "A layer of an OCI image.",
+            "required": ["reference", "media_type", "type"],
+            "properties": {
+              "media_type": {
+                "type": "string",
+                "description": "The media type of the layer to pull."
+              },
+              "reference": {
+                "type": "string",
+                "description": "The image reference, for example `ghcr.io/org/image:tag`."
+              },
+              "type": {
+                "type": "string",
+                "enum": ["oci"]
+              }
+            }
+          }
+        ],
+        "description": "Where a download fetches from."
+      },
+      "JsonQueryString": {
+        "type": "string",
+        "description": "A structured field filter passed as a string-encoded JSON object in a\nquery parameter, e.g. `{\"key\":\"value\"}`. The raw string is parsed into\nkey-value pairs during deserialization.",
+        "example": "{\"status\":\"ok\"}"
+      },
+      "LevelResponse": {
+        "type": "string",
+        "description": "Severity level of a log event or span.",
+        "enum": ["trace", "debug", "info", "warn", "error"]
+      },
+      "LogEventResponse": {
+        "type": "object",
+        "description": "A single log event, returned by `GET /api/v1/logs`.",
+        "required": ["id", "level", "target", "timestamp", "boot_id", "fields"],
+        "properties": {
+          "boot_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Boot session this event belongs to, if known."
+          },
+          "fields": {
+            "type": "object",
+            "description": "Structured fields as a JSON object, if any.",
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "file": {
+            "type": ["string", "null"],
+            "description": "Source file, if available."
+          },
+          "id": {
+            "$ref": "#/components/schemas/DbId",
+            "description": "Event id."
+          },
+          "level": {
+            "$ref": "#/components/schemas/LevelResponse",
+            "description": "Severity level."
+          },
+          "line": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Source line, if available.",
+            "minimum": 0
+          },
+          "message": {
+            "type": ["string", "null"],
+            "description": "Human-readable message, if any."
+          },
+          "span_id": {
             "oneOf": [
               {
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/DownloadProgressResponse",
-                "description": "Live byte progress, present only while running."
+                "$ref": "#/components/schemas/DbId",
+                "description": "Span this event belongs to, if any."
               }
             ]
           },
-          "size_bytes": {
-            "type": ["integer", "null"],
-            "format": "int64",
-            "description": "Bytes transferred, recorded on completion."
-          },
-          "source": {
+          "target": {
             "type": "string",
-            "description": "Where it was fetched from."
+            "description": "Module path that emitted the event."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the event was emitted."
+          }
+        }
+      },
+      "LogSpanDetailResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LogSpanResponse"
+          },
+          {
+            "type": "object",
+            "required": ["events"],
+            "properties": {
+              "events": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/LogEventResponse"
+                },
+                "description": "Events belonging to this span, ordered by timestamp."
+              }
+            }
+          }
+        ],
+        "description": "A span with its child events, returned by `GET /api/v1/logs/spans/{id}`."
+      },
+      "LogSpanResponse": {
+        "type": "object",
+        "description": "A tracing span, returned by `GET /api/v1/logs/spans`.",
+        "required": ["id", "name", "level", "target", "started_at", "fields"],
+        "properties": {
+          "ended_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When the span ended, if it did."
+          },
+          "fields": {
+            "type": "object",
+            "description": "Span fields as a JSON object, if any.",
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "file": {
+            "type": ["string", "null"],
+            "description": "Source file, if available."
+          },
+          "id": {
+            "$ref": "#/components/schemas/DbId",
+            "description": "Span id."
+          },
+          "level": {
+            "$ref": "#/components/schemas/LevelResponse",
+            "description": "Severity level."
+          },
+          "line": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Source line, if available.",
+            "minimum": 0
+          },
+          "name": {
+            "type": "string",
+            "description": "Span name."
+          },
+          "parent_id": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DbId",
+                "description": "Parent span id, if any."
+              }
+            ]
           },
           "started_at": {
             "type": "string",
             "format": "date-time",
-            "description": "When the attempt started."
+            "description": "When the span started."
           },
-          "status": {
-            "$ref": "#/components/schemas/DownloadStatusResponse",
-            "description": "Lifecycle state."
+          "target": {
+            "type": "string",
+            "description": "Module path that created the span."
           }
         }
       },
-      "DownloadStatusResponse": {
+      "OrderParam": {
         "type": "string",
-        "description": "Lifecycle state of a download attempt.",
-        "enum": ["running", "succeeded", "failed", "interrupted"]
+        "description": "Sort direction shared by list endpoints.",
+        "enum": ["asc", "desc"]
       },
       "Page_ArtifactSummaryResponse": {
         "type": "object",
@@ -527,7 +1248,7 @@
             "type": "array",
             "items": {
               "type": "object",
-              "description": "A distinct artifact key with its newest version, for `GET /api/v1/artifacts`.",
+              "description": "A distinct artifact key with its newest version, for `GET\n/api/v1/artifacts`.",
               "required": [
                 "key",
                 "version_count",
@@ -553,7 +1274,8 @@
                 "size_bytes": {
                   "type": "integer",
                   "format": "int64",
-                  "description": "Stored blob size of the newest version, in bytes."
+                  "description": "Stored blob size of the newest version, in bytes.",
+                  "minimum": 0
                 },
                 "source": {
                   "type": "string",
@@ -566,7 +1288,8 @@
                 "version_count": {
                   "type": "integer",
                   "format": "int64",
-                  "description": "How many versions of this key are stored."
+                  "description": "How many versions of this key are stored.",
+                  "minimum": 0
                 }
               }
             },
@@ -614,7 +1337,8 @@
                 "size_bytes": {
                   "type": "integer",
                   "format": "int64",
-                  "description": "Stored blob size in bytes."
+                  "description": "Stored blob size in bytes.",
+                  "minimum": 0
                 },
                 "source": {
                   "type": "string",
@@ -643,7 +1367,7 @@
           }
         }
       },
-      "Page_DownloadResponse": {
+      "Page_LogEventResponse": {
         "type": "object",
         "description": "A page of results plus the cursors for the neighbouring pages.",
         "required": ["items"],
@@ -652,12 +1376,175 @@
             "type": "array",
             "items": {
               "type": "object",
-              "description": "One download attempt, returned by `GET /api/v1/downloads`.",
-              "required": ["id", "key", "source", "status", "started_at"],
+              "description": "A single log event, returned by `GET /api/v1/logs`.",
+              "required": ["id", "level", "target", "timestamp", "boot_id", "fields"],
               "properties": {
-                "digest": {
+                "boot_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "Boot session this event belongs to, if known."
+                },
+                "fields": {
+                  "type": "object",
+                  "description": "Structured fields as a JSON object, if any.",
+                  "additionalProperties": {},
+                  "propertyNames": {
+                    "type": "string"
+                  }
+                },
+                "file": {
                   "type": ["string", "null"],
-                  "description": "Resolved content digest, if it got that far."
+                  "description": "Source file, if available."
+                },
+                "id": {
+                  "$ref": "#/components/schemas/DbId",
+                  "description": "Event id."
+                },
+                "level": {
+                  "$ref": "#/components/schemas/LevelResponse",
+                  "description": "Severity level."
+                },
+                "line": {
+                  "type": ["integer", "null"],
+                  "format": "int32",
+                  "description": "Source line, if available.",
+                  "minimum": 0
+                },
+                "message": {
+                  "type": ["string", "null"],
+                  "description": "Human-readable message, if any."
+                },
+                "span_id": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/DbId",
+                      "description": "Span this event belongs to, if any."
+                    }
+                  ]
+                },
+                "target": {
+                  "type": "string",
+                  "description": "Module path that emitted the event."
+                },
+                "timestamp": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "When the event was emitted."
+                }
+              }
+            },
+            "description": "The rows in this page."
+          },
+          "next_cursor": {
+            "type": ["string", "null"],
+            "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
+          },
+          "prev_cursor": {
+            "type": ["string", "null"],
+            "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
+          }
+        }
+      },
+      "Page_LogSpanResponse": {
+        "type": "object",
+        "description": "A page of results plus the cursors for the neighbouring pages.",
+        "required": ["items"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "A tracing span, returned by `GET /api/v1/logs/spans`.",
+              "required": ["id", "name", "level", "target", "started_at", "fields"],
+              "properties": {
+                "ended_at": {
+                  "type": ["string", "null"],
+                  "format": "date-time",
+                  "description": "When the span ended, if it did."
+                },
+                "fields": {
+                  "type": "object",
+                  "description": "Span fields as a JSON object, if any.",
+                  "additionalProperties": {},
+                  "propertyNames": {
+                    "type": "string"
+                  }
+                },
+                "file": {
+                  "type": ["string", "null"],
+                  "description": "Source file, if available."
+                },
+                "id": {
+                  "$ref": "#/components/schemas/DbId",
+                  "description": "Span id."
+                },
+                "level": {
+                  "$ref": "#/components/schemas/LevelResponse",
+                  "description": "Severity level."
+                },
+                "line": {
+                  "type": ["integer", "null"],
+                  "format": "int32",
+                  "description": "Source line, if available.",
+                  "minimum": 0
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Span name."
+                },
+                "parent_id": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/DbId",
+                      "description": "Parent span id, if any."
+                    }
+                  ]
+                },
+                "started_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "When the span started."
+                },
+                "target": {
+                  "type": "string",
+                  "description": "Module path that created the span."
+                }
+              }
+            },
+            "description": "The rows in this page."
+          },
+          "next_cursor": {
+            "type": ["string", "null"],
+            "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
+          },
+          "prev_cursor": {
+            "type": ["string", "null"],
+            "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
+          }
+        }
+      },
+      "Page_TaskResponse": {
+        "type": "object",
+        "description": "A page of results plus the cursors for the neighbouring pages.",
+        "required": ["items"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "One task invocation, returned by the task endpoints.",
+              "required": ["id", "kind", "status", "input", "created_at"],
+              "properties": {
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "When the invocation was recorded."
                 },
                 "error": {
                   "type": ["string", "null"],
@@ -669,13 +1556,29 @@
                   "description": "When it finished, if it did."
                 },
                 "id": {
-                  "type": "integer",
-                  "format": "int64",
-                  "description": "Attempt id."
+                  "$ref": "#/components/schemas/DbId",
+                  "description": "Invocation id."
                 },
-                "key": {
+                "input": {
+                  "description": "The input the task was created with."
+                },
+                "kind": {
                   "type": "string",
-                  "description": "Logical artifact key."
+                  "description": "The kind of task."
+                },
+                "output": {
+                  "description": "The output, once the task succeeds."
+                },
+                "parent_id": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/DbId",
+                      "description": "The parent invocation, if this task was spawned by another."
+                    }
+                  ]
                 },
                 "progress": {
                   "oneOf": [
@@ -683,27 +1586,18 @@
                       "type": "null"
                     },
                     {
-                      "$ref": "#/components/schemas/DownloadProgressResponse",
-                      "description": "Live byte progress, present only while running."
+                      "$ref": "#/components/schemas/ProgressResponse",
+                      "description": "Live progress, present only while running."
                     }
                   ]
                 },
-                "size_bytes": {
-                  "type": ["integer", "null"],
-                  "format": "int64",
-                  "description": "Bytes transferred, recorded on completion."
-                },
-                "source": {
-                  "type": "string",
-                  "description": "Where it was fetched from."
-                },
                 "started_at": {
-                  "type": "string",
+                  "type": ["string", "null"],
                   "format": "date-time",
-                  "description": "When the attempt started."
+                  "description": "When it started running, if it did."
                 },
                 "status": {
-                  "$ref": "#/components/schemas/DownloadStatusResponse",
+                  "$ref": "#/components/schemas/TaskStatusResponse",
                   "description": "Lifecycle state."
                 }
               }
@@ -720,31 +1614,186 @@
           }
         }
       },
+      "ProgressMessageResponse": {
+        "type": "object",
+        "description": "A localizable progress message: a translation key and its arguments.",
+        "required": ["key", "args"],
+        "properties": {
+          "args": {
+            "type": "object",
+            "description": "Arguments to interpolate into the resolved message.",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "key": {
+            "type": "string",
+            "description": "Translation key for the current step."
+          }
+        }
+      },
+      "ProgressResponse": {
+        "type": "object",
+        "description": "Live progress of a running task.",
+        "properties": {
+          "done": {
+            "type": ["integer", "null"],
+            "format": "int64",
+            "description": "Units of work completed so far.",
+            "minimum": 0
+          },
+          "message": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ProgressMessageResponse",
+                "description": "A localizable description of the current step."
+              }
+            ]
+          },
+          "total": {
+            "type": ["integer", "null"],
+            "format": "int64",
+            "description": "Total units of work expected, if known.",
+            "minimum": 0
+          }
+        }
+      },
+      "TaskDefinitionResponse": {
+        "type": "object",
+        "description": "A registered task kind, with its capabilities and JSON Schemas.",
+        "required": ["kind", "cancellable", "resumable", "input_schema", "output_schema"],
+        "properties": {
+          "cancellable": {
+            "type": "boolean",
+            "description": "Whether the kind can be cancelled."
+          },
+          "input_schema": {
+            "description": "JSON Schema of the kind's input."
+          },
+          "kind": {
+            "type": "string",
+            "description": "The kind string."
+          },
+          "output_schema": {
+            "description": "JSON Schema of the kind's output."
+          },
+          "resumable": {
+            "type": "boolean",
+            "description": "Whether the kind is safe to interrupt across a restart."
+          }
+        }
+      },
+      "TaskResponse": {
+        "type": "object",
+        "description": "One task invocation, returned by the task endpoints.",
+        "required": ["id", "kind", "status", "input", "created_at"],
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the invocation was recorded."
+          },
+          "error": {
+            "type": ["string", "null"],
+            "description": "Failure detail, if any."
+          },
+          "finished_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When it finished, if it did."
+          },
+          "id": {
+            "$ref": "#/components/schemas/DbId",
+            "description": "Invocation id."
+          },
+          "input": {
+            "description": "The input the task was created with."
+          },
+          "kind": {
+            "type": "string",
+            "description": "The kind of task."
+          },
+          "output": {
+            "description": "The output, once the task succeeds."
+          },
+          "parent_id": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DbId",
+                "description": "The parent invocation, if this task was spawned by another."
+              }
+            ]
+          },
+          "progress": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ProgressResponse",
+                "description": "Live progress, present only while running."
+              }
+            ]
+          },
+          "started_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When it started running, if it did."
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatusResponse",
+            "description": "Lifecycle state."
+          }
+        }
+      },
+      "TaskStatusParam": {
+        "type": "string",
+        "description": "Filter for task status, including the `active` and `finished` groups.",
+        "enum": [
+          "active",
+          "finished",
+          "pending",
+          "running",
+          "succeeded",
+          "failed",
+          "cancelled",
+          "interrupted"
+        ]
+      },
+      "TaskStatusResponse": {
+        "type": "string",
+        "description": "Lifecycle state of a task invocation.",
+        "enum": ["pending", "running", "succeeded", "failed", "cancelled", "interrupted"]
+      },
       "VersionResponse": {
         "type": "object",
         "description": "Version information returned by `GET /api/v1/version`.",
-        "required": ["aperture"],
+        "required": ["aperture", "boot_id"],
         "properties": {
           "aperture": {
             "type": "string",
             "description": "Version of the Aperture gateway."
+          },
+          "boot_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique id of this gateway boot session."
           }
         }
       },
-      "OrderParam": {
-        "type": "string",
-        "enum": ["asc", "desc"],
-        "description": "Sort direction shared by list endpoints."
-      },
       "VersionSortParam": {
         "type": "string",
-        "enum": ["downloaded_at", "size_bytes"],
-        "description": "Field a version listing is sorted by."
-      },
-      "DownloadStatusParam": {
-        "type": "string",
-        "enum": ["running", "succeeded", "failed", "interrupted"],
-        "description": "Filter for download status."
+        "description": "Field a version listing is sorted by.",
+        "enum": ["downloaded_at", "size_bytes"]
       }
     }
   }

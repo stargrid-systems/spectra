@@ -86,5 +86,12 @@
       },
       "unitKw": "kW"
     }
+  },
+  "units": {
+    "kilowatt": {
+      "long": "{n} Kilowatt | {n} Kilowatt",
+      "short": "{n} kW",
+      "narrow": "{n}kW"
+    }
   }
 }
