@@ -26,6 +26,3 @@ eslint.sarif
 .env
 .env.*
 !.env.example
-
-# Generated OpenAPI types
-modules/aperture/runtime/generated.ts
