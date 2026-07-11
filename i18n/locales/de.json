@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "Spectra",
-    "description": "Universelle Benutzeroberfläche für das eCube-Energiespeichersystem"
+    "description": "Universelle Benutzeroberfläche für das eCube-Energiespeichersystem",
+    "titleWithPage": "{page} – @:app.name"
   },
   "home": "Startseite",
   "go-to": "Gehe zu",
@@ -84,6 +85,13 @@
         "5y": "Letzte 5 Jahre"
       },
       "unitKw": "kW"
+    }
+  },
+  "units": {
+    "kilowatt": {
+      "long": "{n} Kilowatt | {n} Kilowatt",
+      "short": "{n} kW",
+      "narrow": "{n}kW"
     }
   }
 }

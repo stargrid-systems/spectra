@@ -22,6 +22,7 @@ export default defineNuxtConfig({
     "@nuxtjs/i18n",
     "nuxt-charts",
     "~~/modules/aperture/module",
+    "~~/modules/format/module",
   ],
   css: ["~/assets/css/main.css"],
   i18n: {

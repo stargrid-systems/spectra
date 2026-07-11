@@ -1,38 +1,38 @@
 <script setup lang="ts">
-type TimeRange = "1h" | "24h" | "7d" | "30d" | "1y" | "5y";
 type DataPoint = { label: string; usage: number };
 
 defineProps<{
   deviceId: string;
 }>();
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
+const fmt = useFormatter();
 
-const timeRanges: { value: TimeRange; labelKey: string }[] = [
+const timeRanges = [
   { value: "1h", labelKey: "devices.meter.range.1h" },
   { value: "24h", labelKey: "devices.meter.range.24h" },
   { value: "7d", labelKey: "devices.meter.range.7d" },
   { value: "30d", labelKey: "devices.meter.range.30d" },
   { value: "1y", labelKey: "devices.meter.range.1y" },
   { value: "5y", labelKey: "devices.meter.range.5y" },
-];
+] as const satisfies readonly { value: string; labelKey: string }[];
+
+type TimeRange = (typeof timeRanges)[number]["value"];
+
+const narrowOpts = { unitDisplay: "narrow" } as const;
 
 const timeLabels: Record<TimeRange, (index: number, total: number) => string> = {
-  "1h": (idx, total) => `${(total - idx - 1) * 5}m`,
-  "24h": (idx, total) => `${total - idx - 1}h`,
-  "7d": (idx, total) => `${total - idx - 1}d`,
-  "30d": (idx, total) => `${total - idx - 1}d`,
+  "1h": (idx, total) => fmt.unit((total - idx - 1) * 5, "minute", narrowOpts),
+  "24h": (idx, total) => fmt.unit(total - idx - 1, "hour", narrowOpts),
+  "7d": (idx, total) => fmt.unit(total - idx - 1, "day", narrowOpts),
+  "30d": (idx, total) => fmt.unit(total - idx - 1, "day", narrowOpts),
   "1y": (idx, total) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() - (total - idx - 1));
-    return date.toLocaleString(locale.value, { month: "short" });
+    const past = Temporal.Now.plainDateISO().subtract({ months: total - idx - 1 });
+    return fmt.date(past, { month: "short" });
   },
   "5y": (idx, total) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() - (total - idx - 1));
-    const month = date.toLocaleString(locale.value, { month: "short" });
-    const year = String(date.getFullYear()).slice(-2);
-    return `${month} '${year}`;
+    const past = Temporal.Now.plainDateISO().subtract({ months: total - idx - 1 });
+    return fmt.date(past, { month: "short", year: "2-digit" });
   },
 };
 
@@ -87,7 +87,11 @@ const formatTickLabel = (tick: number) => {
   return xLabels.value[index] ?? "";
 };
 
-const formatKw = (value: number) => `${value.toFixed(1)} ${t("devices.meter.unitKw")}`;
+const formatKw = (value: number) =>
+  fmt.unit(value, "kilowatt", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+const formatPower = (value: number) =>
+  fmt.number(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 </script>
 
 <template>
@@ -101,7 +105,7 @@ const formatKw = (value: number) => `${value.toFixed(1)} ${t("devices.meter.unit
       </template>
       <div class="space-y-2">
         <p class="text-4xl font-semibold tracking-tight">
-          {{ currentPower.toFixed(2) }}
+          {{ formatPower(currentPower) }}
           <span class="text-base font-medium text-muted-foreground">
             {{ $t("devices.meter.unitKw") }}
           </span>
