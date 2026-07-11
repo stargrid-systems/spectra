@@ -12,7 +12,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "openapi:generate": "openapi-typescript openapi/openapi.json -o app/utils/api/generated.ts",
+    "openapi:generate": "openapi-typescript modules/aperture/openapi.json -o modules/aperture/runtime/generated.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:ci": "eslint . --format @microsoft/eslint-formatter-sarif -o eslint.sarif",
@@ -44,6 +44,7 @@
     "playwright-core": "1.61.1",
     "prettier": "3.9.4",
     "typescript": "6.0.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.10",
+    "vue-tsc": "^3.3.7"
   }
 }
