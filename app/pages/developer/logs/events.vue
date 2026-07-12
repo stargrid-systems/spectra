@@ -49,11 +49,7 @@ watch(logsParams, () => {
 
 watch(data, (newData) => {
   if (!newData) return;
-  if (allItems.value.length === 0) {
-    allItems.value = newData.items;
-  } else {
-    allItems.value = [...allItems.value, ...newData.items];
-  }
+  allItems.value = newData.items;
   nextCursor.value = newData.next_cursor;
 });
 

@@ -22,6 +22,7 @@ export default withNuxt(
   },
   {
     plugins: {
+      // Plugin type doesn't match ESLint's flat config plugin type.
       "@intlify/vue-i18n": vueI18n as never,
     },
     settings: {

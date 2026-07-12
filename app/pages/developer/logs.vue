@@ -123,8 +123,10 @@ function selectBoot(bootId: string | undefined) {
 }
 
 function focusSpan(spanId: string) {
-  filters.spanId = spanId;
-  void router.push(localePath("/developer/logs/spans"));
+  void router.push({
+    path: localePath("/developer/logs/spans"),
+    query: { ...route.query, span: spanId },
+  });
 }
 
 function showAllSpans() {

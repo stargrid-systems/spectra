@@ -53,8 +53,12 @@ export function queryStringDefault(def: string) {
 
 export function queryOptionalString() {
   return z.codec(z.array(z.string()), z.optional(z.string()), {
-    decode: (arr: string[]) => arr[0],
-    encode: (s: string | undefined): string[] => (s != null ? [s] : []),
+    decode: (arr: string[]) => {
+      const v = arr[0];
+      return v === undefined || v === "" ? undefined : v;
+    },
+    encode: (s: string | undefined): string[] =>
+      s != null && s !== "" ? [s] : [],
   });
 }
 
