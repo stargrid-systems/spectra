@@ -1,22 +1,16 @@
-import type { QuerySchema } from "~/composables/useRouteQueryState";
+import * as z from "zod/v4/mini";
 import type { ListLogsParams } from "~~/modules/aperture/runtime/types";
+import { instantCodec } from "~/utils/temporalCodecs";
+import {
+  queryOptionalString,
+  querySingle,
+  queryStringArray,
+  queryStringDefault,
+} from "~/composables/useRouteQueryState";
 
 export interface FieldFilter {
   key: string;
   value: string;
-}
-
-export interface LogsState {
-  level: string;
-  target: string[];
-  search: string | undefined;
-  timeRange: string | undefined;
-  bootId: string | undefined;
-  fieldFilters: FieldFilter[];
-  spanId: string | undefined;
-  expand: { events: string[]; spans: string[] };
-  since: Temporal.Instant | undefined;
-  until: Temporal.Instant | undefined;
 }
 
 const DEFAULT_LEVEL = "info";
@@ -40,12 +34,10 @@ export function encodeFields(filters: FieldFilter[]): string | undefined {
   return Object.keys(obj).length > 0 ? JSON.stringify(obj) : undefined;
 }
 
-export function parseExpand(values: unknown): { events: string[]; spans: string[] } {
+export function parseExpand(values: string[]): { events: string[]; spans: string[] } {
   const events: string[] = [];
   const spans: string[] = [];
-  const arr = Array.isArray(values) ? values : values ? [values] : [];
-  for (const v of arr) {
-    if (typeof v !== "string") continue;
+  for (const v of values) {
     let prefix: "e" | "s" | null = null;
     if (v.startsWith("e-")) prefix = "e";
     else if (v.startsWith("s-")) prefix = "s";
@@ -62,90 +54,56 @@ export function encodeExpand(events: string[], spans: string[]): string[] {
   return [...events.map((e) => `e-${e}`), ...spans.map((s) => `s-${s}`)];
 }
 
-function serializeExpand(value: { events: string[]; spans: string[] }): string[] | undefined {
-  const arr = encodeExpand(value.events, value.spans);
-  return arr.length ? arr : undefined;
-}
+const fieldFiltersCodec = z.codec(
+  z.array(z.string()),
+  z.array(z.object({ key: z.string(), value: z.string() })),
+  {
+    decode: (arr) => {
+      if (!arr[0]) return [];
+      try {
+        const obj = JSON.parse(arr[0]) as Record<string, string>;
+        return Object.entries(obj).map(([key, value]) => ({ key, value }));
+      } catch {
+        return [];
+      }
+    },
+    encode: (filters) => {
+      const obj: Record<string, string> = {};
+      for (const f of filters) if (f.key && f.value) obj[f.key] = f.value;
+      return Object.keys(obj).length > 0 ? [JSON.stringify(obj)] : [];
+    },
+  },
+);
 
-function parseInstant(value: string | string[] | undefined): Temporal.Instant | undefined {
-  if (typeof value !== "string") return undefined;
-  return Temporal.Instant.from(value);
-}
+const expandCodec = z.codec(
+  z.array(z.string()),
+  z.object({ events: z.array(z.string()), spans: z.array(z.string()) }),
+  {
+    decode: (arr) => parseExpand(arr),
+    encode: ({ events, spans }) => encodeExpand(events, spans),
+  },
+);
 
-function serializeInstant(value: Temporal.Instant | undefined): string | undefined {
-  return value?.toString();
-}
+export const schema = z.object({
+  level: queryStringDefault(DEFAULT_LEVEL),
+  target: queryStringArray(),
+  search: queryOptionalString(),
+  timeRange: queryOptionalString(),
+  bootId: queryOptionalString(),
+  spanId: queryOptionalString(),
+  fieldFilters: fieldFiltersCodec,
+  expand: expandCodec,
+  since: querySingle(instantCodec),
+  until: querySingle(instantCodec),
+});
 
-function parseString(value: string | string[] | undefined): string | undefined {
-  return typeof value === "string" ? value : undefined;
-}
+export type LogsState = z.infer<typeof schema>;
 
-function parseStringArray(value: string | string[] | undefined): string[] {
-  if (Array.isArray(value)) return value;
-  if (typeof value === "string") return [value];
-  return [];
-}
-
-function parseFieldsFromQuery(value: string | string[] | undefined): FieldFilter[] {
-  if (typeof value !== "string") return [];
-  return parseFields(value);
-}
-
-function serializeFields(filters: FieldFilter[]): string | undefined {
-  return encodeFields(filters);
-}
-
-export const schema: QuerySchema<LogsState> = {
-  level: {
-    key: "level",
-    parse: (v) => (typeof v === "string" ? v : DEFAULT_LEVEL),
-    serialize: (v) => (v && v !== DEFAULT_LEVEL ? v : undefined),
-  },
-  target: {
-    key: "target",
-    parse: parseStringArray,
-    serialize: (v) => (v.length ? v : undefined),
-  },
-  search: {
-    key: "q",
-    parse: parseString,
-    serialize: (v) => v ?? undefined,
-  },
-  timeRange: {
-    key: "range",
-    parse: parseString,
-    serialize: (v) => v ?? undefined,
-  },
-  bootId: {
-    key: "boot",
-    parse: parseString,
-    serialize: (v) => v ?? undefined,
-  },
-  spanId: {
-    key: "span",
-    parse: parseString,
-    serialize: (v) => v ?? undefined,
-  },
-  fieldFilters: {
-    key: "fields",
-    parse: parseFieldsFromQuery,
-    serialize: serializeFields,
-  },
-  expand: {
-    key: "expand",
-    parse: parseExpand,
-    serialize: serializeExpand,
-  },
-  since: {
-    key: "since",
-    parse: parseInstant,
-    serialize: serializeInstant,
-  },
-  until: {
-    key: "until",
-    parse: parseInstant,
-    serialize: serializeInstant,
-  },
+export const queryKeys: Partial<Record<keyof LogsState, string>> = {
+  search: "q",
+  timeRange: "range",
+  bootId: "boot",
+  spanId: "span",
 };
 
 export function logsParamsFromFilters(filters: LogsState): ListLogsParams | undefined {

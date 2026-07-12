@@ -78,8 +78,8 @@ describe("encodeExpand / parseExpand round trip", () => {
     expect(encodeExpand(["1", "2"], ["3"])).toEqual(["e-1", "e-2", "s-3"]);
   });
 
-  it("parses a single string value", () => {
-    expect(parseExpand("e-5")).toEqual({ events: ["5"], spans: [] });
+  it("parses a single-element array", () => {
+    expect(parseExpand(["e-5"])).toEqual({ events: ["5"], spans: [] });
   });
 
   it("parses an array of values", () => {
@@ -90,7 +90,7 @@ describe("encodeExpand / parseExpand round trip", () => {
   });
 
   it("ignores garbage", () => {
-    expect(parseExpand(["foo", "e-", 42, null])).toEqual({
+    expect(parseExpand(["foo", "e-", "42"])).toEqual({
       events: [],
       spans: [],
     });

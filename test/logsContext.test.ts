@@ -53,11 +53,11 @@ describe("formatFieldsInline", () => {
 });
 
 describe("sortedFields", () => {
-  it("returns all fields", () => {
+  it("returns all fields sorted by key", () => {
     const sorted = sortedFields({ message: "m", addr: "1" });
     expect(sorted).toEqual([
-      { key: "message", value: "m" },
       { key: "addr", value: "1" },
+      { key: "message", value: "m" },
     ]);
   });
 

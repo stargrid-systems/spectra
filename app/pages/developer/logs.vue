@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BootResponse } from "~~/modules/aperture/runtime/types";
-import { schema } from "~/composables/useLogsFilters";
+import { queryKeys, schema } from "~/composables/useLogsFilters";
 import { timeRangeDurations, useLogsContextKey } from "~/composables/useLogsContext";
 
 const { t } = useI18n();
@@ -9,7 +9,7 @@ const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
 
-const filters = useRouteQueryState(schema);
+const filters = useRouteQueryState(schema, { keys: queryKeys });
 
 const { data: targetOptions } = useLogTargets();
 const { data: bootsData } = useBoots();
