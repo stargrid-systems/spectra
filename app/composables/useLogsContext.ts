@@ -15,6 +15,7 @@ export interface LogsContext {
     "error" | "primary" | "secondary" | "success" | "info" | "warning" | "neutral"
   >;
   computedSince: ComputedRef<string | undefined>;
+  formatTimestamp: (ts: Temporal.Instant) => string;
   formatDuration: (startedAt: Temporal.Instant, endedAt?: Temporal.Instant | null) => string;
   focusSpan: (spanId: string) => void;
   showAllSpans: () => void;
@@ -43,16 +44,6 @@ export const timeRangeDurations: Record<string, Temporal.Duration> = {
   "30d": Temporal.Duration.from({ days: 30 }),
 };
 
-export function formatTimestamp(ts: Temporal.Instant): string {
-  return ts.toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-}
-
 export function asFields(value: unknown): Record<string, unknown> | undefined {
   if (value && typeof value === "object" && !Array.isArray(value)) {
     return value as Record<string, unknown>;
@@ -72,7 +63,6 @@ export function formatFieldsInline(fields: unknown): string {
   if (!f) return "";
   const parts: string[] = [];
   for (const [key, value] of Object.entries(f)) {
-    if (key === "message") continue;
     parts.push(`${key}=${formatValue(value)}`);
   }
   return parts.join("  ");
@@ -81,7 +71,5 @@ export function formatFieldsInline(fields: unknown): string {
 export function sortedFields(fields: unknown): { key: string; value: unknown }[] {
   const f = asFields(fields);
   if (!f) return [];
-  return Object.entries(f)
-    .filter(([key]) => key !== "message")
-    .map(([key, value]) => ({ key, value }));
+  return Object.entries(f).map(([key, value]) => ({ key, value }));
 }

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   asFields,
   formatFieldsInline,
-  formatTimestamp,
   formatValue,
   sortedFields,
 } from "~/composables/useLogsContext";
@@ -44,8 +43,8 @@ describe("formatFieldsInline", () => {
     expect(formatFieldsInline({})).toBe("");
   });
 
-  it("skips message", () => {
-    expect(formatFieldsInline({ message: "m", addr: "1.2.3.4" })).toBe("addr=1.2.3.4");
+  it("includes all fields", () => {
+    expect(formatFieldsInline({ message: "m", addr: "1.2.3.4" })).toBe("message=m  addr=1.2.3.4");
   });
 
   it("joins with double spaces", () => {
@@ -54,20 +53,15 @@ describe("formatFieldsInline", () => {
 });
 
 describe("sortedFields", () => {
-  it("filters out message", () => {
+  it("returns all fields", () => {
     const sorted = sortedFields({ message: "m", addr: "1" });
-    expect(sorted).toEqual([{ key: "addr", value: "1" }]);
+    expect(sorted).toEqual([
+      { key: "message", value: "m" },
+      { key: "addr", value: "1" },
+    ]);
   });
 
   it("returns empty for non-object input", () => {
     expect(sortedFields("hello")).toEqual([]);
-  });
-});
-
-describe("formatTimestamp", () => {
-  it("renders a date in short month day h:mm:ss format", () => {
-    const s = formatTimestamp(Temporal.Instant.from("2026-07-04T23:04:59.253Z"));
-    expect(typeof s).toBe("string");
-    expect(s.length).toBeGreaterThan(8);
   });
 });

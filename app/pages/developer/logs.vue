@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BootResponse } from "~~/modules/aperture/runtime/types";
-import { useLogsFilters } from "~/composables/useLogsFilters";
+import { schema } from "~/composables/useLogsFilters";
 import { useLogsContextKey, timeRangeDurations } from "~/composables/useLogsContext";
 
 const { t } = useI18n();
@@ -9,7 +9,7 @@ const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
 
-const { filters } = useLogsFilters();
+const filters = useRouteQueryState(schema);
 
 const { data: targetOptions } = useLogTargets();
 const { data: bootsData } = useBoots();
@@ -87,6 +87,16 @@ function formatDuration(
   return fmt.duration(endedAt.since(startedAt), { precision: 1 });
 }
 
+function formatTimestamp(ts: Temporal.Instant): string {
+  return fmt.date(ts, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
 function formatBootLabel(boot: BootResponse): string {
   const start = fmt.date(boot.first_seen, {
     month: "short",
@@ -150,6 +160,7 @@ const logsContext = {
   targetOptions,
   levelColors,
   computedSince,
+  formatTimestamp,
   formatDuration,
   focusSpan,
   showAllSpans,

@@ -5,7 +5,7 @@ import { useLogsContext } from "~/composables/useLogsContext";
 import { logsParamsFromFilters } from "~/composables/useLogsFilters";
 
 const ctx = useLogsContext();
-const { filters, inlineFields, levelColors, focusSpan } = ctx;
+const { filters, inlineFields, levelColors, focusSpan, formatTimestamp } = ctx;
 
 const logsParams = computed<ListLogsParams | undefined>(() => {
   const p = logsParamsFromFilters(filters) ?? ({} as ListLogsParams);

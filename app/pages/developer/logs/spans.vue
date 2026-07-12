@@ -4,7 +4,7 @@ import { useLogsContext } from "~/composables/useLogsContext";
 import { fieldFiltersJson } from "~/composables/useLogsFilters";
 
 const ctx = useLogsContext();
-const { filters, inlineFields, levelColors, focusSpan, showAllSpans } = ctx;
+const { filters, inlineFields, levelColors, focusSpan, showAllSpans, formatTimestamp } = ctx;
 
 const spansParams = computed<ListLogSpansParams | undefined>(() => {
   const base = {} as ListLogSpansParams;

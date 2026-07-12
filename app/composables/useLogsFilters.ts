@@ -96,7 +96,7 @@ function serializeFields(filters: FieldFilter[]): string | undefined {
   return encodeFields(filters);
 }
 
-const schema: QuerySchema<LogsState> = {
+export const schema: QuerySchema<LogsState> = {
   level: {
     key: "level",
     parse: (v) => (typeof v === "string" ? v : DEFAULT_LEVEL),
@@ -148,11 +148,6 @@ const schema: QuerySchema<LogsState> = {
     serialize: serializeInstant,
   },
 };
-
-export function useLogsFilters() {
-  const filters = useRouteQueryState<LogsState>(schema);
-  return { filters };
-}
 
 export function logsParamsFromFilters(filters: LogsState): ListLogsParams | undefined {
   const p: ListLogsParams = {};
