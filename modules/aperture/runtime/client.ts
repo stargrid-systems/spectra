@@ -107,7 +107,7 @@ export const apertureApi = {
   },
 
   getSpan: async (id: string): Promise<LogSpanDetail> => {
-    const raw = await $fetch<RawLogSpanDetail>(`${BASE}/logs/spans/${id}`);
+    const raw = await $fetch<RawLogSpanDetail>(`${BASE}/logs/spans/${encodeURIComponent(id)}`);
     return toLogSpanDetail(raw);
   },
 };

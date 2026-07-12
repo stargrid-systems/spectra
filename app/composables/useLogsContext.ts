@@ -71,5 +71,7 @@ export function formatFieldsInline(fields: unknown): string {
 export function sortedFields(fields: unknown): { key: string; value: unknown }[] {
   const f = asFields(fields);
   if (!f) return [];
-  return Object.entries(f).map(([key, value]) => ({ key, value }));
+  return Object.entries(f)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => ({ key, value }));
 }

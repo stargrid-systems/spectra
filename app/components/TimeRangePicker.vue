@@ -80,7 +80,7 @@ function applyRelative() {
     emit("update:until", undefined);
   } else {
     emit("update:modelValue", r);
-    emit("update:since", Temporal.Now.instant().subtract(timeRangeDurations[r]!));
+    emit("update:since", undefined);
     emit("update:until", undefined);
   }
 }

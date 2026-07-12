@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BootResponse } from "~~/modules/aperture/runtime/types";
 import { schema } from "~/composables/useLogsFilters";
-import { useLogsContextKey } from "~/composables/useLogsContext";
+import { timeRangeDurations, useLogsContextKey } from "~/composables/useLogsContext";
 
 const { t } = useI18n();
 const fmt = useFormatter();
@@ -22,14 +22,14 @@ const targetItems = computed(() =>
 const inlineFields = ref(true);
 const showFieldFilter = ref(filters.fieldFilters.length > 0);
 
-const refreshHandlers: (() => void)[] = [];
+const refreshHandler = ref<(() => void) | null>(null);
 
 function onRefresh(fn: () => void) {
-  refreshHandlers.push(fn);
+  refreshHandler.value = fn;
 }
 
 function refresh() {
-  for (const fn of refreshHandlers) fn();
+  refreshHandler.value?.();
 }
 
 const newFieldKey = ref("");
@@ -144,7 +144,13 @@ const activeTab = computed({
   },
 });
 
-const computedSince = computed(() => filters.since?.toString());
+const computedSince = computed(() => {
+  const r = filters.timeRange;
+  if (r && timeRangeDurations[r]) {
+    return Temporal.Now.instant().subtract(timeRangeDurations[r]).toString();
+  }
+  return filters.since?.toString();
+});
 
 const logsContext = {
   filters,
