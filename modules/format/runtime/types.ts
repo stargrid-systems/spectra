@@ -65,6 +65,10 @@ export type UnitFormatOptions = Omit<Intl.NumberFormatOptions, "style" | "unit">
 
 export type PercentFormatOptions = Omit<Intl.NumberFormatOptions, "style">;
 
+export interface DurationFormatOptions {
+  precision?: number;
+}
+
 export type TemporalDate =
   | Temporal.Instant
   | Temporal.ZonedDateTime
@@ -79,6 +83,14 @@ export interface Formatter {
   unit(value: number, unit: UnitIdentifier, options?: UnitFormatOptions): string;
   percent(value: number, options?: PercentFormatOptions): string;
   date(value: TemporalDate, options?: Intl.DateTimeFormatOptions): string;
+  dateRange(
+    start: Temporal.Instant,
+    end: Temporal.Instant,
+    options?: Intl.DateTimeFormatOptions,
+  ): string;
+  duration(value: Temporal.Duration, options?: DurationFormatOptions): string;
   relativeTime(duration: Temporal.Duration, options?: Intl.RelativeTimeFormatOptions): string;
   list(items: Iterable<string>, options?: Intl.ListFormatOptions): string;
+  toInputDatetimeLocal(value: Temporal.Instant): string;
+  fromInputDatetimeLocal(value: string): Temporal.Instant | undefined;
 }

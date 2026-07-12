@@ -1,4 +1,10 @@
-import type { Formatter, TemporalDate, UnitIdentifier } from "../types";
+import type {
+  DurationFormatOptions,
+  Formatter,
+  SimpleUnit,
+  TemporalDate,
+  UnitIdentifier,
+} from "../types";
 import type { PolyfilledUnit } from "../units";
 import { polyfilledUnits } from "../units";
 import { useI18n } from "#imports";
@@ -35,6 +41,38 @@ export function useFormatter(): Formatter {
 
     date: (value: TemporalDate, options) => value.toLocaleString(locale.value, options),
 
+    dateRange: (start: Temporal.Instant, end: Temporal.Instant, options) =>
+      new Intl.DateTimeFormat(locale.value, options).formatRange(
+        new Date(start.epochMilliseconds),
+        new Date(end.epochMilliseconds),
+      ),
+
+    duration: (value: Temporal.Duration, options: DurationFormatOptions) => {
+      const precision = options?.precision ?? 1;
+      const unitOpts = { minimumFractionDigits: 0, maximumFractionDigits: precision };
+      const units: Array<["hour" | "minute" | "second" | "millisecond", SimpleUnit]> = [
+        ["hour", "hour"],
+        ["minute", "minute"],
+        ["second", "second"],
+        ["millisecond", "millisecond"],
+      ];
+      for (const [totalUnit, displayUnit] of units) {
+        const total = value.total(totalUnit);
+        if (Math.abs(total) >= 1) {
+          return new Intl.NumberFormat(locale.value, {
+            ...unitOpts,
+            style: "unit",
+            unit: displayUnit,
+          }).format(total);
+        }
+      }
+      return new Intl.NumberFormat(locale.value, {
+        ...unitOpts,
+        style: "unit",
+        unit: "millisecond",
+      }).format(0);
+    },
+
     relativeTime: (duration: Temporal.Duration, options) => {
       const entries: Array<[number, Intl.RelativeTimeFormatUnit]> = [
         [duration.years, "year"],
@@ -54,5 +92,18 @@ export function useFormatter(): Formatter {
     },
 
     list: (items, options) => new Intl.ListFormat(locale.value, options).format(items),
+
+    toInputDatetimeLocal: (value: Temporal.Instant) =>
+      value
+        .toZonedDateTimeISO(Temporal.Now.timeZoneId())
+        .toPlainDateTime()
+        .toString({ smallestUnit: "minute" }),
+
+    fromInputDatetimeLocal: (value: string) => {
+      if (!value) return undefined;
+      return Temporal.PlainDateTime.from(value)
+        .toZonedDateTime(Temporal.Now.timeZoneId())
+        .toInstant();
+    },
   };
 }

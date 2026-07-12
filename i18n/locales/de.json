@@ -42,14 +42,90 @@
   },
   "developer": {
     "title": "Entwicklertools",
-    "description": "Low-Level-Werkzeuge zum Prüfen von Logs, Events und Diagnosen.",
+    "description": "Low-Level-Werkzeuge zum Prüfen von Logs und Diagnosen.",
     "logs": {
       "title": "Logs",
-      "body": "System-Logs ansehen und filtern, um Verhalten nachzuvollziehen und Probleme zu diagnostizieren."
-    },
-    "events": {
-      "title": "Events",
-      "body": "Aktuelle System-Events, BMS-Signale und Steueraktionen inspizieren."
+      "body": "System-Logs ansehen und filtern, um Verhalten nachzuvollziehen und Probleme zu diagnostizieren.",
+      "filters": {
+        "level": "Level",
+        "target": "Ziel",
+        "targetAll": "Alle Ziele",
+        "search": "Nachricht, Ziel oder Felder durchsuchen",
+        "timeRange": "Zeitbereich",
+        "fields": "Feldfilter",
+        "fieldKey": "Schlüssel",
+        "fieldValue": "Wert",
+        "addField": "Feldfilter hinzufügen",
+        "removeField": "Entfernen",
+        "hideFields": "Feldfilter ausblenden",
+        "clear": "Filter zurücksetzen",
+        "bootOnly": "Nur dieser Boot"
+      },
+      "bootSelect": {
+        "allBoots": "Alle Boots",
+        "current": "aktuell",
+        "empty": "Keine Boots aufgezeichnet"
+      },
+      "inlineFields": "Strukturierte Felder inline",
+      "refresh": "Aktualisieren",
+      "views": {
+        "events": "Ereignisse",
+        "spans": "Spans"
+      },
+      "levels": {
+        "trace": "Trace",
+        "debug": "Debug",
+        "info": "Info",
+        "warn": "Warn",
+        "error": "Error"
+      },
+      "timeRanges": {
+        "5m": "Letzte 5 Minuten",
+        "15m": "Letzte 15 Minuten",
+        "1h": "Letzte Stunde",
+        "6h": "Letzte 6 Stunden",
+        "12h": "Letzte 12 Stunden",
+        "24h": "Letzte 24 Stunden",
+        "7d": "Letzte 7 Tage",
+        "30d": "Letzte 30 Tage",
+        "all": "Gesamte Zeit"
+      },
+      "timeRange": {
+        "relative": "Relativ",
+        "absolute": "Absolut",
+        "from": "Von",
+        "to": "Bis",
+        "apply": "Anwenden",
+        "previewFrom": "Von {date}",
+        "previewUntil": "Bis {date}"
+      },
+      "empty": "Keine Log-Ereignisse gefunden",
+      "emptySpans": "Keine Spans gefunden",
+      "error": "Logs konnten nicht geladen werden",
+      "retry": "Erneut versuchen",
+      "noMore": "Keine weiteren Ereignisse",
+      "running": "läuft",
+      "loadingMore": "Lade weitere...",
+      "columns": {
+        "timestamp": "Zeit",
+        "level": "Level",
+        "target": "Ziel",
+        "message": "Nachricht",
+        "duration": "Dauer",
+        "name": "Span"
+      },
+      "fields": "Strukturierte Felder",
+      "noFields": "Keine strukturierten Felder",
+      "spanChain": "Span-Kette",
+      "noSpan": "Kein Span",
+      "loadingSpan": "Lade Span...",
+      "spanFocus": "Fokussierter Span",
+      "showAllSpans": "Alle Spans anzeigen",
+      "events": "Ereignisse",
+      "noEvents": "Keine Ereignisse in diesem Span",
+      "spanId": "Span",
+      "childSpans": "Untergeordnete Spans",
+      "noChildSpans": "Keine untergeordneten Spans"
     }
   },
   "devices": {

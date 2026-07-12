@@ -42,14 +42,90 @@
   },
   "developer": {
     "title": "Developer tools",
-    "description": "Low-level tools for inspecting logs, events, and diagnostics.",
+    "description": "Low-level tools for inspecting logs and diagnostics.",
     "logs": {
       "title": "Logs",
-      "body": "View and filter system logs to trace behaviors and diagnose issues."
-    },
-    "events": {
-      "title": "Events",
-      "body": "Inspect recent system events, BMS signals, and control actions."
+      "body": "View and filter system logs to trace behaviors and diagnose issues.",
+      "filters": {
+        "level": "Level",
+        "target": "Target",
+        "targetAll": "All targets",
+        "search": "Search message, target, or fields",
+        "timeRange": "Time range",
+        "fields": "Field filter",
+        "fieldKey": "Key",
+        "fieldValue": "Value",
+        "addField": "Add field filter",
+        "removeField": "Remove",
+        "hideFields": "Hide field filter",
+        "clear": "Clear filters",
+        "bootOnly": "This boot only"
+      },
+      "bootSelect": {
+        "allBoots": "All boots",
+        "current": "current",
+        "empty": "No boots recorded"
+      },
+      "inlineFields": "Inline structured fields",
+      "refresh": "Refresh",
+      "views": {
+        "events": "Events",
+        "spans": "Spans"
+      },
+      "levels": {
+        "trace": "Trace",
+        "debug": "Debug",
+        "info": "Info",
+        "warn": "Warn",
+        "error": "Error"
+      },
+      "timeRanges": {
+        "5m": "Last 5 minutes",
+        "15m": "Last 15 minutes",
+        "1h": "Last hour",
+        "6h": "Last 6 hours",
+        "12h": "Last 12 hours",
+        "24h": "Last 24 hours",
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "all": "All time"
+      },
+      "timeRange": {
+        "relative": "Relative",
+        "absolute": "Absolute",
+        "from": "From",
+        "to": "To",
+        "apply": "Apply",
+        "previewFrom": "From {date}",
+        "previewUntil": "To {date}"
+      },
+      "empty": "No log events found",
+      "emptySpans": "No spans found",
+      "error": "Failed to load logs",
+      "retry": "Retry",
+      "noMore": "No more events",
+      "running": "running",
+      "loadingMore": "Loading more...",
+      "columns": {
+        "timestamp": "Time",
+        "level": "Level",
+        "target": "Target",
+        "message": "Message",
+        "duration": "Duration",
+        "name": "Span"
+      },
+      "fields": "Structured fields",
+      "noFields": "No structured fields",
+      "spanChain": "Span chain",
+      "noSpan": "No span",
+      "loadingSpan": "Loading span...",
+      "spanFocus": "Focused span",
+      "showAllSpans": "Show all spans",
+      "events": "Events",
+      "noEvents": "No events in this span",
+      "spanId": "Span",
+      "childSpans": "Child spans",
+      "noChildSpans": "No child spans"
     }
   },
   "devices": {
