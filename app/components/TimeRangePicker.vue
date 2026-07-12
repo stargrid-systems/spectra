@@ -20,7 +20,7 @@ const fmt = useFormatter();
 
 const open = ref(false);
 
-const mode = ref<"relative" | "absolute">(props.since || props.until ? "absolute" : "relative");
+const mode = ref<"relative" | "absolute">("relative");
 
 const relativeRanges: { label: string; value: Range }[] = [
   { label: t("developer.logs.timeRanges.5m"), value: "5m" },
@@ -34,7 +34,9 @@ const relativeRanges: { label: string; value: Range }[] = [
   { label: t("developer.logs.timeRanges.all"), value: "all" },
 ];
 
-const selectedRange = ref<Range>((props.modelValue as Range) || "all");
+const rangeKeys = new Set(relativeRanges.map((r) => r.value));
+
+const selectedRange = ref<Range>("all");
 
 const previewDateOptions: Intl.DateTimeFormatOptions = {
   month: "short",
@@ -43,15 +45,24 @@ const previewDateOptions: Intl.DateTimeFormatOptions = {
   minute: "2-digit",
 };
 
-const absoluteSince = ref(props.since ? fmt.toInputDatetimeLocal(props.since) : "");
-const absoluteUntil = ref(props.until ? fmt.toInputDatetimeLocal(props.until) : "");
+const absoluteSince = ref("");
+const absoluteUntil = ref("");
+
+watch(
+  () => [props.modelValue, props.since, props.until] as const,
+  ([mv, since, until]) => {
+    selectedRange.value = mv && rangeKeys.has(mv as Range) ? (mv as Range) : "all";
+    absoluteSince.value = since ? fmt.toInputDatetimeLocal(since) : "";
+    absoluteUntil.value = until ? fmt.toInputDatetimeLocal(until) : "";
+    mode.value = mv === "custom" || (!mv && (!!since || !!until)) ? "absolute" : "relative";
+  },
+  { immediate: true },
+);
 
 function selectRelative(r: Range) {
   selectedRange.value = r;
   mode.value = "relative";
-  emit("update:modelValue", r === "all" ? undefined : r);
-  emit("update:since", undefined);
-  emit("update:until", undefined);
+  applyRelative();
 }
 
 function switchMode(m: "relative" | "absolute") {

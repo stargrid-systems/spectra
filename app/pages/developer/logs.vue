@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BootResponse } from "~~/modules/aperture/runtime/types";
 import { schema } from "~/composables/useLogsFilters";
-import { useLogsContextKey, timeRangeDurations } from "~/composables/useLogsContext";
+import { useLogsContextKey } from "~/composables/useLogsContext";
 
 const { t } = useI18n();
 const fmt = useFormatter();
@@ -144,14 +144,7 @@ const activeTab = computed({
   },
 });
 
-const computedSince = computed(() => {
-  if (filters.since) return filters.since.toString();
-  const range = filters.timeRange;
-  if (!range || range === "all") return undefined;
-  const duration = timeRangeDurations[range];
-  if (!duration) return undefined;
-  return Temporal.Now.instant().subtract(duration).toString();
-});
+const computedSince = computed(() => filters.since?.toString());
 
 const logsContext = {
   filters,

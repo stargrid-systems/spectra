@@ -41,7 +41,6 @@ export function encodeFields(filters: FieldFilter[]): string | undefined {
 }
 
 export function parseExpand(values: unknown): { events: string[]; spans: string[] } {
-  if (typeof document === "undefined") return { events: [], spans: [] };
   const events: string[] = [];
   const spans: string[] = [];
   const arr = Array.isArray(values) ? values : values ? [values] : [];
