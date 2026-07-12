@@ -7,10 +7,9 @@ const ctx = useLogsContext();
 const { filters, inlineFields, levelColors, focusSpan, showAllSpans, formatTimestamp } = ctx;
 
 const spansParams = computed<ListLogSpansParams | undefined>(() => {
-  const base = {} as ListLogSpansParams;
-  if (filters.level) base.min_level = filters.level as ListLogSpansParams["min_level"];
-  if (filters.target.length)
-    base.target = filters.target.join(",") as unknown as ListLogSpansParams["target"];
+  const base: ListLogSpansParams = {};
+  if (filters.level) base.min_level = filters.level;
+  if (filters.target.length) base.target = filters.target;
   if (filters.spanId !== undefined) {
     base.parent_id = filters.spanId;
   } else {
@@ -100,9 +99,8 @@ watch(
     if (!cached) {
       try {
         const detail = await apertureApi.getSpan(id);
-        const { events, ...rest } = detail;
-        void events;
-        spanCache.value.set(id, rest as LogSpan);
+        const { events: _events, ...rest } = detail;
+        spanCache.value.set(id, rest);
       } catch (err) {
         console.error("Failed to load focused span", id, err);
         return;
@@ -113,7 +111,7 @@ watch(
 );
 
 const focusedSpanDetail = computed<LogSpan | undefined>(() =>
-  filters.spanId ? (spanCache.value.get(filters.spanId) as LogSpan | undefined) : undefined,
+  filters.spanId ? spanCache.value.get(filters.spanId) : undefined,
 );
 
 function retry() {
@@ -222,9 +220,11 @@ ctx.onRefresh(() => {
           </div>
           <div class="flex-1 min-w-0 text-sm font-mono pt-0.5">
             <span>{{ span.name }}</span>
-            <span v-if="inlineFields && span.fields" class="text-muted-foreground text-xs ms-1">
-              {{ formatFieldsInline(span.fields) }}
-            </span>
+            <FieldsDisplay
+              v-if="inlineFields && span.fields"
+              :fields="span.fields"
+              inline
+            />
           </div>
         </div>
 
@@ -232,17 +232,7 @@ ctx.onRefresh(() => {
           v-if="expandedSpans.has(span.id)"
           class="px-3 pb-3 pt-1 border-t border-default bg-elevated/25 space-y-3"
         >
-          <div v-if="span.fields">
-            <div class="text-xs font-semibold text-muted-foreground mb-1">
-              {{ $t("developer.logs.fields") }}
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-xs font-mono">
-              <div v-for="entry in sortedFields(span.fields)" :key="entry.key" class="flex gap-2">
-                <span class="text-muted-foreground">{{ entry.key }}:</span>
-                <span>{{ formatValue(entry.value) }}</span>
-              </div>
-            </div>
-          </div>
+          <FieldsDisplay v-if="span.fields" :fields="span.fields" />
 
           <div>
             <div class="text-xs font-semibold text-muted-foreground mb-1">

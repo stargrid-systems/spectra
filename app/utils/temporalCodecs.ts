@@ -6,18 +6,7 @@ export const instantCodec = z.codec(
   z.string(),
   z.custom<Temporal.Instant>((value) => value instanceof Temporal.Instant),
   {
-    decode: (value, ctx) => {
-      try {
-        return Temporal.Instant.from(value);
-      } catch {
-        ctx.issues.push({
-          code: "custom",
-          message: "Invalid instant",
-          input: ctx.value,
-        });
-        return undefined as never;
-      }
-    },
+    decode: (value) => Temporal.Instant.from(value),
     encode: (value) => value.toString(),
   },
 );

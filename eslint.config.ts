@@ -10,6 +10,17 @@ export default withNuxt(
     },
   },
   {
+    rules: {
+      "@typescript-eslint/consistent-type-assertions": [
+        "warn",
+        {
+          assertionStyle: "as",
+          objectLiteralTypeAssertions: "never",
+        },
+      ],
+    },
+  },
+  {
     plugins: {
       "@intlify/vue-i18n": vueI18n as never,
     },
@@ -24,7 +35,6 @@ export default withNuxt(
         {
           src: "./app",
           extensions: [".vue", ".ts"],
-          ignores: ["/devices\\.types\\./", "/devices\\.status\\./", "/units\\./"],
         },
       ],
       "@intlify/vue-i18n/no-missing-keys-in-other-locales": "warn",

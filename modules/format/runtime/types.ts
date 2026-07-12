@@ -65,8 +65,11 @@ export type UnitFormatOptions = Omit<Intl.NumberFormatOptions, "style" | "unit">
 
 export type PercentFormatOptions = Omit<Intl.NumberFormatOptions, "style">;
 
+export type DurationUnit = "hour" | "minute" | "second" | "millisecond";
+
 export interface DurationFormatOptions {
-  precision?: number;
+  maxPrecision?: DurationUnit;
+  fractionDigits?: number;
 }
 
 export type TemporalDate =

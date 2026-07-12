@@ -84,7 +84,7 @@ function formatDuration(
   endedAt?: Temporal.Instant | null,
 ): string {
   if (!endedAt) return t("developer.logs.running");
-  return fmt.duration(endedAt.since(startedAt), { precision: 1 });
+  return fmt.duration(endedAt.since(startedAt), { fractionDigits: 1 });
 }
 
 function formatTimestamp(ts: Temporal.Instant): string {
@@ -252,28 +252,26 @@ provide(useLogsContextKey, logsContext);
           class="w-60"
           value-key="value"
         >
-          <template #default="{ modelValue }">
+          <template #default>
             <span
-              v-if="!(modelValue as string[])?.length"
+              v-if="!filters.target.length"
               class="text-muted-foreground text-xs truncate"
             >
               {{ $t("developer.logs.filters.targetAll") }}
             </span>
             <span v-else class="font-mono text-xs truncate">
-              {{ (modelValue as string[]).join(", ") }}
+              {{ filters.target.join(", ") }}
             </span>
           </template>
           <template #item="{ item }">
             <div class="flex items-center gap-2 w-full">
               <UIcon
-                v-if="filters.target.includes((item as { value: string }).value)"
+                v-if="filters.target.includes(item.value)"
                 name="i-lucide-check"
                 class="text-primary shrink-0 size-3.5"
               />
               <span v-else class="size-3.5 shrink-0" />
-              <span class="font-mono text-xs truncate">{{
-                (item as { label: string }).label
-              }}</span>
+              <span class="font-mono text-xs truncate">{{ item.label }}</span>
             </div>
           </template>
         </USelectMenu>

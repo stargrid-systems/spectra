@@ -7,3 +7,9 @@
 export const polyfilledUnits = ["kilowatt"] as const;
 
 export type PolyfilledUnit = (typeof polyfilledUnits)[number];
+
+const polyfilledUnitSet: ReadonlySet<string> = new Set(polyfilledUnits);
+
+export function isPolyfilledUnit(unit: string): unit is PolyfilledUnit {
+  return polyfilledUnitSet.has(unit);
+}

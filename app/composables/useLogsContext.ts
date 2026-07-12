@@ -45,7 +45,7 @@ export const timeRangeDurations: Record<string, Temporal.Duration> = {
 };
 
 export function asFields(value: unknown): Record<string, unknown> | undefined {
-  if (value && typeof value === "object" && !Array.isArray(value)) {
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
     return value as Record<string, unknown>;
   }
   return undefined;

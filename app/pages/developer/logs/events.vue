@@ -8,7 +8,7 @@ const ctx = useLogsContext();
 const { filters, inlineFields, levelColors, focusSpan, formatTimestamp } = ctx;
 
 const logsParams = computed<ListLogsParams | undefined>(() => {
-  const p = logsParamsFromFilters(filters) ?? ({} as ListLogsParams);
+  const p = logsParamsFromFilters(filters) ?? {};
   if (ctx.computedSince.value) p.since = ctx.computedSince.value;
   if (filters.until) p.until = filters.until.toString();
   return Object.keys(p).length > 0 ? p : undefined;
@@ -203,12 +203,11 @@ async function loadEventSpanChain(event: LogEvent) {
           </div>
           <div class="flex-1 min-w-0 text-sm pt-0.5">
             <span>{{ event.message }}</span>
-            <span
+            <FieldsDisplay
               v-if="inlineFields && event.fields"
-              class="text-muted-foreground font-mono text-xs ms-2"
-            >
-              {{ formatFieldsInline(event.fields) }}
-            </span>
+              :fields="event.fields"
+              inline
+            />
           </div>
           <UIcon
             v-if="event.fields"
@@ -221,27 +220,7 @@ async function loadEventSpanChain(event: LogEvent) {
           v-if="expandedRows.has(event.id)"
           class="px-3 pb-3 pt-1 border-t border-default bg-elevated/25 space-y-3"
         >
-          <div>
-            <div class="text-xs font-semibold text-muted-foreground mb-1">
-              {{ $t("developer.logs.fields") }}
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-xs font-mono">
-              <div
-                v-for="entry in sortedFields(event.fields ?? {})"
-                :key="entry.key"
-                class="flex gap-2"
-              >
-                <span class="text-muted-foreground">{{ entry.key }}:</span>
-                <span>{{ formatValue(entry.value) }}</span>
-              </div>
-              <div
-                v-if="sortedFields(event.fields ?? {}).length === 0"
-                class="text-muted-foreground col-span-2"
-              >
-                {{ $t("developer.logs.noFields") }}
-              </div>
-            </div>
-          </div>
+          <FieldsDisplay :fields="event.fields" />
 
           <div>
             <div class="text-xs font-semibold text-muted-foreground mb-1">

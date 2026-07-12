@@ -8,7 +8,7 @@ const locales = computed(() => availableLocales.map((loc) => allLocales[loc]));
 type AvailableLocale = (typeof availableLocales)[number];
 
 const isAvailableLocale = (value: string): value is AvailableLocale =>
-  (availableLocales as string[]).includes(value);
+  availableLocales.some((l) => l === value);
 
 const handleLocaleChange = (value: string) => {
   if (isAvailableLocale(value)) {

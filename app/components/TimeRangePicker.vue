@@ -45,15 +45,19 @@ const previewDateOptions: Intl.DateTimeFormatOptions = {
   minute: "2-digit",
 };
 
-const absoluteSince = ref("");
-const absoluteUntil = ref("");
+const draftSince = ref<Temporal.Instant | undefined>(undefined);
+const draftUntil = ref<Temporal.Instant | undefined>(undefined);
+
+function isRange(mv: string | undefined): mv is Range {
+  return mv !== undefined && rangeKeys.has(mv as Range);
+}
 
 watch(
   () => [props.modelValue, props.since, props.until] as const,
   ([mv, since, until]) => {
-    selectedRange.value = mv && rangeKeys.has(mv as Range) ? (mv as Range) : "all";
-    absoluteSince.value = since ? fmt.toInputDatetimeLocal(since) : "";
-    absoluteUntil.value = until ? fmt.toInputDatetimeLocal(until) : "";
+    selectedRange.value = isRange(mv) ? mv : "all";
+    draftSince.value = since;
+    draftUntil.value = until;
     mode.value = mv === "custom" || (!mv && (!!since || !!until)) ? "absolute" : "relative";
   },
   { immediate: true },
@@ -87,8 +91,8 @@ function applyRelative() {
 
 function applyAbsolute() {
   emit("update:modelValue", "custom");
-  emit("update:since", fmt.fromInputDatetimeLocal(absoluteSince.value));
-  emit("update:until", fmt.fromInputDatetimeLocal(absoluteUntil.value));
+  emit("update:since", draftSince.value);
+  emit("update:until", draftUntil.value);
   open.value = false;
 }
 
@@ -117,8 +121,8 @@ const preview = computed(() => {
 function clear() {
   selectedRange.value = "all";
   mode.value = "relative";
-  absoluteSince.value = "";
-  absoluteUntil.value = "";
+  draftSince.value = undefined;
+  draftUntil.value = undefined;
   emit("update:modelValue", undefined);
   emit("update:since", undefined);
   emit("update:until", undefined);
@@ -184,10 +188,10 @@ const hasActiveFilter = computed(() => !!props.modelValue || !!props.since || !!
 
         <div v-else class="space-y-2">
           <UFormField :label="$t('developer.logs.timeRange.from')" size="sm">
-            <UInput v-model="absoluteSince" type="datetime-local" class="w-full" />
+            <TemporalDatetimeInput v-model="draftSince" />
           </UFormField>
           <UFormField :label="$t('developer.logs.timeRange.to')" size="sm">
-            <UInput v-model="absoluteUntil" type="datetime-local" class="w-full" />
+            <TemporalDatetimeInput v-model="draftUntil" />
           </UFormField>
           <UButton
             size="sm"

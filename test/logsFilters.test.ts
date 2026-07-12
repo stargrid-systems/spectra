@@ -120,12 +120,12 @@ describe("logsParamsFromFilters", () => {
     const p = logsParamsFromFilters(
       baseFilters({ search: "abc", target: ["aperture"], spanId: "7" }),
     );
-    expect(p).toEqual({ min_level: "info", q: "abc", target: "aperture", span_id: "7" });
+    expect(p).toEqual({ min_level: "info", q: "abc", target: ["aperture"], span_id: "7" });
   });
 
-  it("serializes multi-target as comma-separated string", () => {
+  it("passes multi-target as array", () => {
     const p = logsParamsFromFilters(baseFilters({ target: ["aperture", "turso"] }));
-    expect(p).toEqual({ min_level: "info", target: "aperture,turso" });
+    expect(p).toEqual({ min_level: "info", target: ["aperture", "turso"] });
   });
 
   it("emits boot_id as a separate query param", () => {

@@ -5,7 +5,6 @@ import {
   queryOptionalString,
   querySingle,
   queryStringArray,
-  queryStringDefault,
 } from "~/composables/useRouteQueryState";
 
 export interface FieldFilter {
@@ -13,13 +12,38 @@ export interface FieldFilter {
   value: string;
 }
 
-const DEFAULT_LEVEL = "info";
+const LOG_LEVELS = ["trace", "debug", "info", "warn", "error"] as const;
+type LogLevel = (typeof LOG_LEVELS)[number];
+const DEFAULT_LEVEL: LogLevel = "info";
+
+function isLogLevel(value: string): value is LogLevel {
+  return (LOG_LEVELS as readonly string[]).includes(value);
+}
+
+function fieldsFromJson(json: string): FieldFilter[] {
+  const parsed: unknown = JSON.parse(json);
+  if (typeof parsed !== "object" || parsed === null) return [];
+  const result: FieldFilter[] = [];
+  for (const [k, v] of Object.entries(parsed)) {
+    if (typeof v === "string") result.push({ key: k, value: v });
+  }
+  return result;
+}
+
+function queryLogLevel(defaultValue: LogLevel) {
+  return z.codec(z.array(z.string()), z.custom<LogLevel>(), {
+    decode: (arr) => {
+      const v = arr[0] ?? defaultValue;
+      return isLogLevel(v) ? v : defaultValue;
+    },
+    encode: (s: LogLevel) => (s === defaultValue ? [] : [s]),
+  });
+}
 
 export function parseFields(value: string): FieldFilter[] {
   if (!value) return [];
   try {
-    const obj = JSON.parse(value) as Record<string, string>;
-    return Object.entries(obj).map(([key, value]) => ({ key, value }));
+    return fieldsFromJson(value);
   } catch {
     return [];
   }
@@ -61,8 +85,7 @@ const fieldFiltersCodec = z.codec(
     decode: (arr) => {
       if (!arr[0]) return [];
       try {
-        const obj = JSON.parse(arr[0]) as Record<string, string>;
-        return Object.entries(obj).map(([key, value]) => ({ key, value }));
+        return fieldsFromJson(arr[0]);
       } catch {
         return [];
       }
@@ -85,7 +108,7 @@ const expandCodec = z.codec(
 );
 
 export const schema = z.object({
-  level: queryStringDefault(DEFAULT_LEVEL),
+  level: queryLogLevel(DEFAULT_LEVEL),
   target: queryStringArray(),
   search: queryOptionalString(),
   timeRange: queryOptionalString(),
@@ -108,9 +131,8 @@ export const queryKeys: Partial<Record<keyof LogsState, string>> = {
 
 export function logsParamsFromFilters(filters: LogsState): ListLogsParams | undefined {
   const p: ListLogsParams = {};
-  if (filters.level) p.min_level = filters.level as ListLogsParams["min_level"];
-  if (filters.target.length)
-    p.target = filters.target.join(",") as unknown as ListLogsParams["target"];
+  if (filters.level) p.min_level = filters.level;
+  if (filters.target.length) p.target = filters.target;
   if (filters.search) p.q = filters.search;
   if (filters.spanId !== undefined) p.span_id = filters.spanId;
   if (filters.bootId) p.boot_id = filters.bootId;

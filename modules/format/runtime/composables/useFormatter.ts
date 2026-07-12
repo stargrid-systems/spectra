@@ -1,12 +1,12 @@
 import type {
   DurationFormatOptions,
+  DurationUnit,
   Formatter,
   SimpleUnit,
   TemporalDate,
   UnitIdentifier,
 } from "../types";
-import type { PolyfilledUnit } from "../units";
-import { polyfilledUnits } from "../units";
+import { isPolyfilledUnit } from "../units";
 import { useI18n } from "#imports";
 
 export function useFormatter(): Formatter {
@@ -14,7 +14,7 @@ export function useFormatter(): Formatter {
 
   function formatPolyfilled(
     value: number,
-    unit: PolyfilledUnit,
+    unit: import("../units").PolyfilledUnit,
     options: Intl.NumberFormatOptions | undefined,
   ): string {
     const display = options?.unitDisplay ?? "short";
@@ -26,8 +26,8 @@ export function useFormatter(): Formatter {
     number: (value, options) => new Intl.NumberFormat(locale.value, options).format(value),
 
     unit: (value, unit: UnitIdentifier, options) => {
-      if ((polyfilledUnits as readonly string[]).includes(unit)) {
-        return formatPolyfilled(value, unit as PolyfilledUnit, options);
+      if (isPolyfilledUnit(unit)) {
+        return formatPolyfilled(value, unit, options);
       }
       const opts: Intl.NumberFormatOptions = { ...options, style: "unit", unit };
       return new Intl.NumberFormat(locale.value, opts).format(value);
@@ -48,14 +48,17 @@ export function useFormatter(): Formatter {
       ),
 
     duration: (value: Temporal.Duration, options: DurationFormatOptions) => {
-      const precision = options?.precision ?? 1;
-      const unitOpts = { minimumFractionDigits: 0, maximumFractionDigits: precision };
-      const units: Array<["hour" | "minute" | "second" | "millisecond", SimpleUnit]> = [
+      const fractionDigits = options?.fractionDigits ?? 1;
+      const unitOpts = { minimumFractionDigits: 0, maximumFractionDigits: fractionDigits };
+      const maxPrecision: DurationUnit = options?.maxPrecision ?? "millisecond";
+      const allUnits: Array<[DurationUnit, SimpleUnit]> = [
         ["hour", "hour"],
         ["minute", "minute"],
         ["second", "second"],
         ["millisecond", "millisecond"],
       ];
+      const cutoff = allUnits.findIndex(([u]) => u === maxPrecision);
+      const units = cutoff >= 0 ? allUnits.slice(0, cutoff + 1) : allUnits;
       for (const [totalUnit, displayUnit] of units) {
         const total = value.total(totalUnit);
         if (Math.abs(total) >= 1) {
@@ -66,10 +69,11 @@ export function useFormatter(): Formatter {
           }).format(total);
         }
       }
+      const fallbackUnit = units[units.length - 1]?.[1] ?? "millisecond";
       return new Intl.NumberFormat(locale.value, {
         ...unitOpts,
         style: "unit",
-        unit: "millisecond",
+        unit: fallbackUnit,
       }).format(0);
     },
 

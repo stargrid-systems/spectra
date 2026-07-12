@@ -138,7 +138,7 @@ export function useRouteQueryState<S extends z.core.$ZodObject>(
       cachedQuery = incoming;
       const result = z.safeDecode(schema, rawStateKeyed as z.input<S>);
       if (result.success) {
-        Object.assign(state as object, result.data);
+        Object.assign(state, result.data);
       }
     },
     { deep: true },
