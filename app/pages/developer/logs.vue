@@ -81,10 +81,7 @@ const levelOptions = computed(() => [
   { label: t("developer.logs.levels.error"), value: "error" },
 ]);
 
-function formatDuration(
-  startedAt: Temporal.Instant,
-  endedAt?: Temporal.Instant | null,
-): string {
+function formatDuration(startedAt: Temporal.Instant, endedAt?: Temporal.Instant | null): string {
   if (!endedAt) return t("developer.logs.running");
   return fmt.duration(endedAt.since(startedAt), { fractionDigits: 1 });
 }
@@ -258,10 +255,7 @@ provide(useLogsContextKey, logsContext);
           value-key="value"
         >
           <template #default>
-            <span
-              v-if="!filters.target.length"
-              class="text-muted-foreground text-xs truncate"
-            >
+            <span v-if="!filters.target.length" class="text-muted-foreground text-xs truncate">
               {{ $t("developer.logs.filters.targetAll") }}
             </span>
             <span v-else class="font-mono text-xs truncate">

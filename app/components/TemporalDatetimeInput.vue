@@ -28,10 +28,5 @@ function onInput(value: string) {
 </script>
 
 <template>
-  <UInput
-    :model-value="text"
-    type="datetime-local"
-    class="w-full"
-    @update:model-value="onInput"
-  />
+  <UInput :model-value="text" type="datetime-local" class="w-full" @update:model-value="onInput" />
 </template>

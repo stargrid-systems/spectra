@@ -9,10 +9,7 @@ function getAll(raw: RouteQueryRaw): string[] {
   return [raw];
 }
 
-function queryEquals(
-  a: Record<string, string[]>,
-  b: Record<string, string[]>,
-): boolean {
+function queryEquals(a: Record<string, string[]>, b: Record<string, string[]>): boolean {
   const aKeys = Object.keys(a);
   const bKeys = Object.keys(b);
   if (aKeys.length !== bKeys.length) return false;
@@ -26,22 +23,18 @@ function queryEquals(
 }
 
 export function querySingle<T extends z.core.$ZodType>(inner: T) {
-  return z.codec(
-    z.array(z.string()),
-    z.custom<z.output<T> | undefined>(),
-    {
-      decode: (arr: string[]) => {
-        const first = arr[0];
-        if (first === undefined || first === "") return undefined;
-        const r = z.safeDecode(inner, first as z.input<T>);
-        return r.success ? (r.data as z.output<T>) : undefined;
-      },
-      encode: (v: z.output<T> | undefined): string[] => {
-        if (v == null) return [];
-        return [z.encode(inner, v as z.output<T>) as string];
-      },
+  return z.codec(z.array(z.string()), z.custom<z.output<T> | undefined>(), {
+    decode: (arr: string[]) => {
+      const first = arr[0];
+      if (first === undefined || first === "") return undefined;
+      const r = z.safeDecode(inner, first as z.input<T>);
+      return r.success ? (r.data as z.output<T>) : undefined;
     },
-  );
+    encode: (v: z.output<T> | undefined): string[] => {
+      if (v == null) return [];
+      return [z.encode(inner, v as z.output<T>) as string];
+    },
+  });
 }
 
 export function queryStringDefault(def: string) {
@@ -57,8 +50,7 @@ export function queryOptionalString() {
       const v = arr[0];
       return v === undefined || v === "" ? undefined : v;
     },
-    encode: (s: string | undefined): string[] =>
-      s != null && s !== "" ? [s] : [],
+    encode: (s: string | undefined): string[] => (s != null && s !== "" ? [s] : []),
   });
 }
 
@@ -90,9 +82,7 @@ export function useRouteQueryState<S extends z.core.$ZodObject>(
     return result;
   }
 
-  function toUrlKeyed(
-    stateKeyed: Record<string, string[]>,
-  ): Record<string, string[]> {
+  function toUrlKeyed(stateKeyed: Record<string, string[]>): Record<string, string[]> {
     const result: Record<string, string[]> = {};
     for (const k of stateKeys) {
       result[toUrlKey(k)] = stateKeyed[k]!;

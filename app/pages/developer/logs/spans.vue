@@ -220,11 +220,7 @@ ctx.onRefresh(() => {
           </div>
           <div class="flex-1 min-w-0 text-sm font-mono pt-0.5">
             <span>{{ span.name }}</span>
-            <FieldsDisplay
-              v-if="inlineFields && span.fields"
-              :fields="span.fields"
-              inline
-            />
+            <FieldsDisplay v-if="inlineFields && span.fields" :fields="span.fields" inline />
           </div>
         </div>
 

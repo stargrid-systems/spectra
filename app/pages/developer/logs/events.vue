@@ -202,11 +202,7 @@ async function loadEventSpanChain(event: LogEvent) {
           </div>
           <div class="flex-1 min-w-0 text-sm pt-0.5">
             <span>{{ event.message }}</span>
-            <FieldsDisplay
-              v-if="inlineFields && event.fields"
-              :fields="event.fields"
-              inline
-            />
+            <FieldsDisplay v-if="inlineFields && event.fields" :fields="event.fields" inline />
           </div>
           <UIcon
             v-if="event.fields"

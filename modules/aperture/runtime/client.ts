@@ -81,32 +81,26 @@ export const apertureApi = {
     return data!;
   },
 
-  listVersions: async (
-    key: string,
-    params?: ListVersionsParams,
-  ): Promise<ArtifactVersionPage> => {
-    const { data, error } = await client.GET(
-      "/api/v1/artifacts/{key}/versions",
-      { params: { path: { key }, query: params } },
-    );
+  listVersions: async (key: string, params?: ListVersionsParams): Promise<ArtifactVersionPage> => {
+    const { data, error } = await client.GET("/api/v1/artifacts/{key}/versions", {
+      params: { path: { key }, query: params },
+    });
     if (error) throw error;
     return data!;
   },
 
   getVersionDetail: async (key: string, digest: string): Promise<ArtifactVersion> => {
-    const { data, error } = await client.GET(
-      "/api/v1/artifacts/{key}/versions/{digest}",
-      { params: { path: { key, digest } } },
-    );
+    const { data, error } = await client.GET("/api/v1/artifacts/{key}/versions/{digest}", {
+      params: { path: { key, digest } },
+    });
     if (error) throw error;
     return data!;
   },
 
   deleteVersion: async (key: string, digest: string): Promise<void> => {
-    const { error } = await client.DELETE(
-      "/api/v1/artifacts/{key}/versions/{digest}",
-      { params: { path: { key, digest } } },
-    );
+    const { error } = await client.DELETE("/api/v1/artifacts/{key}/versions/{digest}", {
+      params: { path: { key, digest } },
+    });
     if (error) throw error;
   },
 
