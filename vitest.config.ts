@@ -4,5 +4,6 @@ export default defineVitestConfig({
   test: {
     environment: "happy-dom",
     setupFiles: ["./test/setup.ts"],
+    exclude: ["**/node_modules/**", "**/dist/**", "**/.nuxt/**", "e2e/**"],
   },
 });

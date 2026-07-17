@@ -1,11 +1,5 @@
-import type {
-  DurationFormatOptions,
-  DurationUnit,
-  Formatter,
-  SimpleUnit,
-  TemporalDate,
-  UnitIdentifier,
-} from "../types";
+import type { Formatter, TemporalDate, UnitIdentifier } from "../types";
+import { formatDuration } from "../duration";
 import { isPolyfilledUnit } from "../units";
 import { useI18n } from "#imports";
 
@@ -47,30 +41,7 @@ export function useFormatter(): Formatter {
         new Date(end.epochMilliseconds),
       ),
 
-    duration: (value: Temporal.Duration, options: DurationFormatOptions) => {
-      const fractionDigits = options?.fractionDigits ?? 1;
-      const unitOpts = { minimumFractionDigits: 0, maximumFractionDigits: fractionDigits };
-      const maxPrecision: DurationUnit = options?.maxPrecision ?? "millisecond";
-      const allUnits: Array<[DurationUnit, SimpleUnit]> = [
-        ["hour", "hour"],
-        ["minute", "minute"],
-        ["second", "second"],
-        ["millisecond", "millisecond"],
-      ];
-      const cutoff = allUnits.findIndex(([u]) => u === maxPrecision);
-      const units = cutoff >= 0 ? allUnits.slice(0, cutoff + 1) : allUnits;
-      for (const [i, [totalUnit, displayUnit]] of units.entries()) {
-        const total = value.total(totalUnit);
-        if (i === units.length - 1 || Math.abs(total) >= 1) {
-          return new Intl.NumberFormat(locale.value, {
-            ...unitOpts,
-            style: "unit",
-            unit: displayUnit,
-          }).format(total);
-        }
-      }
-      return "";
-    },
+    duration: (value, options) => formatDuration(value, locale.value, options),
 
     relativeTime: (duration: Temporal.Duration, options) => {
       const entries: Array<[number, Intl.RelativeTimeFormatUnit]> = [
