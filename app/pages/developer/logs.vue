@@ -23,12 +23,14 @@ const inlineFields = ref(true);
 const showFieldFilter = ref(filters.fieldFilters.length > 0);
 
 const refreshHandler = ref<(() => void) | null>(null);
+const refreshTick = ref(0);
 
 function onRefresh(fn: () => void) {
   refreshHandler.value = fn;
 }
 
 function refresh() {
+  refreshTick.value++;
   refreshHandler.value?.();
 }
 
@@ -147,6 +149,7 @@ const activeTab = computed({
 });
 
 const computedSince = computed(() => {
+  void refreshTick.value;
   const r = filters.timeRange;
   if (r && timeRangeDurations[r]) {
     return Temporal.Now.instant().subtract(timeRangeDurations[r]).toString();

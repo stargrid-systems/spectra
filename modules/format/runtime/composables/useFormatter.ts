@@ -59,9 +59,9 @@ export function useFormatter(): Formatter {
       ];
       const cutoff = allUnits.findIndex(([u]) => u === maxPrecision);
       const units = cutoff >= 0 ? allUnits.slice(0, cutoff + 1) : allUnits;
-      for (const [totalUnit, displayUnit] of units) {
+      for (const [i, [totalUnit, displayUnit]] of units.entries()) {
         const total = value.total(totalUnit);
-        if (Math.abs(total) >= 1) {
+        if (i === units.length - 1 || Math.abs(total) >= 1) {
           return new Intl.NumberFormat(locale.value, {
             ...unitOpts,
             style: "unit",
@@ -69,12 +69,7 @@ export function useFormatter(): Formatter {
           }).format(total);
         }
       }
-      const fallbackUnit = units[units.length - 1]?.[1] ?? "millisecond";
-      return new Intl.NumberFormat(locale.value, {
-        ...unitOpts,
-        style: "unit",
-        unit: fallbackUnit,
-      }).format(0);
+      return "";
     },
 
     relativeTime: (duration: Temporal.Duration, options) => {

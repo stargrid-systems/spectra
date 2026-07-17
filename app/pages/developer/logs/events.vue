@@ -37,6 +37,7 @@ function toggleRow(event: LogEvent) {
 const allItems = ref<LogEvent[]>([]);
 const nextCursor = ref<string | null | undefined>(undefined);
 const isLoadingMore = ref(false);
+let loadMoreGen = 0;
 
 function resetItems() {
   allItems.value = [];
@@ -44,6 +45,7 @@ function resetItems() {
 }
 
 watch(logsParams, () => {
+  loadMoreGen++;
   resetItems();
 });
 
@@ -55,10 +57,12 @@ watch(data, (newData) => {
 
 async function loadMore() {
   if (!nextCursor.value || isLoadingMore.value || status.value === "pending") return;
+  const myGen = ++loadMoreGen;
   isLoadingMore.value = true;
   try {
     const params = { ...logsParams.value, cursor: nextCursor.value };
     const result = await apertureApi.listLogs(params);
+    if (myGen !== loadMoreGen) return;
     allItems.value = [...allItems.value, ...result.items];
     nextCursor.value = result.next_cursor;
   } catch (err) {
@@ -109,7 +113,6 @@ async function loadSpanIntoCache(id: string): Promise<LogSpan | null> {
   try {
     const detail = await apertureApi.getSpan(id);
     const { events: _events, ...span } = detail;
-    void _events;
     spanCache.value.set(id, span);
     return span;
   } catch (err) {
