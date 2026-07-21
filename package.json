@@ -33,7 +33,7 @@
     "vue": "^3.5.38"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "1.2.117",
+    "@iconify-json/lucide": "1.2.118",
     "@microsoft/eslint-formatter-sarif": "3.1.0",
     "@nuxt/eslint": "1.16.0",
     "@nuxt/test-utils": "4.0.3",
