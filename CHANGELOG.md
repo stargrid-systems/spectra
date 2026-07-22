@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.4.0](https://github.com/stargrid-systems/spectra/compare/v0.3.1...v0.4.0) (2026-07-22)
+
+
+### Features
+
+* add dev proxy for /api to aperture backend ([18a7cd4](https://github.com/stargrid-systems/spectra/commit/18a7cd4fcf4d77cf9202cc6a34346e84b80d03fb))
+* add favicon ([#158](https://github.com/stargrid-systems/spectra/issues/158)) ([42a469a](https://github.com/stargrid-systems/spectra/commit/42a469a143fc90aaf0b92851602b23b14ec18aa1))
+* add format module with typed Intl helpers ([#167](https://github.com/stargrid-systems/spectra/issues/167)) ([d06ba66](https://github.com/stargrid-systems/spectra/commit/d06ba66be342dbe7a3e62fe11c124a1eca08327d))
+* add OpenAPI codegen and typed API composables ([8e2950b](https://github.com/stargrid-systems/spectra/commit/8e2950bff3f1b6720f13171a14a05caba80c2d35))
+* add theme config, SEO defaults, and docs ([6af3101](https://github.com/stargrid-systems/spectra/commit/6af310146bfd667b54d8667bdb05137448942981))
+
+
+### Bug Fixes
+
+* developer child pages hanging on navigation ([45ec80a](https://github.com/stargrid-systems/spectra/commit/45ec80a19bab7c7cced0cc9eb96fdf1ca279aef3))
+* i18n reactivity and route param safety ([3124e06](https://github.com/stargrid-systems/spectra/commit/3124e0610c2b101bf6feb7e575800648c54626bb))
+* include /api prefix in devProxy target ([7689061](https://github.com/stargrid-systems/spectra/commit/7689061601f6b9223308e6b3ff24c73867d7d63e))
+* make SEO meta i18n-aware ([4fbc922](https://github.com/stargrid-systems/spectra/commit/4fbc922c2a0dd5c58ad80d3a04141a83ca5826d3))
+* MeterChart click handler return type ([5ca6e1b](https://github.com/stargrid-systems/spectra/commit/5ca6e1b605b350dec689535f46ad11e7827b7a4d))
+
 ## [0.3.1](https://github.com/stargrid-systems/spectra/compare/v0.3.0...v0.3.1) (2026-06-24)
 
 
