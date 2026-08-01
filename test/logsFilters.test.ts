@@ -2,66 +2,15 @@ import { describe, expect, it } from "vitest";
 import {
   defaultLogsState,
   encodeExpand,
-  encodeFields,
-  fieldFiltersJson,
   logsParamsFromFilters,
   parseExpand,
-  parseFields,
   spansParamsFromFilters,
-  type FieldFilter,
   type LogsState,
 } from "~/composables/useLogsFilters";
 
 function baseFilters(overrides: Partial<LogsState> = {}): LogsState {
   return { ...defaultLogsState(), ...overrides };
 }
-
-describe("parseFields", () => {
-  it("returns empty for empty input", () => {
-    expect(parseFields("")).toEqual([]);
-  });
-
-  it("returns empty for malformed JSON", () => {
-    expect(parseFields("{not json")).toEqual([]);
-  });
-
-  it("parses a flat object into pairs", () => {
-    expect(parseFields('{"a":"1","b":"two"}')).toEqual([
-      { key: "a", value: "1" },
-      { key: "b", value: "two" },
-    ]);
-  });
-});
-
-describe("encodeFields", () => {
-  it("returns undefined for empty input", () => {
-    expect(encodeFields([])).toBeUndefined();
-  });
-
-  it("returns undefined when all pairs have empty values", () => {
-    const filters: FieldFilter[] = [
-      { key: "", value: "" },
-      { key: "k", value: "" },
-    ];
-    expect(encodeFields(filters)).toBeUndefined();
-  });
-
-  it("drops pairs with empty values", () => {
-    const filters: FieldFilter[] = [
-      { key: "a", value: "1" },
-      { key: "k", value: "" },
-    ];
-    expect(encodeFields(filters)).toBe('{"a":"1"}');
-  });
-
-  it("encodes all valid pairs", () => {
-    const filters: FieldFilter[] = [
-      { key: "a", value: "1" },
-      { key: "b", value: "two" },
-    ];
-    expect(encodeFields(filters)).toBe('{"a":"1","b":"two"}');
-  });
-});
 
 describe("encodeExpand / parseExpand round trip", () => {
   it("encodes events and spans", () => {
@@ -119,22 +68,8 @@ describe("logsParamsFromFilters", () => {
   });
 
   it("emits boot_id as a separate query param", () => {
-    const p = logsParamsFromFilters(
-      baseFilters({ bootId: "BOOT", fieldFilters: [{ key: "k", value: "v" }] }),
-    );
+    const p = logsParamsFromFilters(baseFilters({ bootId: "BOOT", fieldFilters: { k: "v" } }));
     expect(p).toEqual({ min_level: "info", boot_id: "BOOT", fields: '{"k":"v"}' });
-  });
-});
-
-describe("fieldFiltersJson", () => {
-  it("returns undefined when no filters", () => {
-    expect(fieldFiltersJson(baseFilters())).toBeUndefined();
-  });
-
-  it("encodes field filters without boot_id", () => {
-    expect(
-      fieldFiltersJson(baseFilters({ bootId: "B", fieldFilters: [{ key: "addr", value: "1" }] })),
-    ).toBe('{"addr":"1"}');
   });
 });
 
@@ -146,7 +81,7 @@ describe("defaultLogsState", () => {
       search: undefined,
       timeRange: undefined,
       bootId: undefined,
-      fieldFilters: [],
+      fieldFilters: {},
       spanId: undefined,
       expand: { events: [], spans: [] },
       since: undefined,

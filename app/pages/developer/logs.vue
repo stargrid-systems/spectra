@@ -21,7 +21,7 @@ const targetItems = computed(() =>
 );
 
 const inlineFields = ref(true);
-const showFieldFilter = ref(filters.fieldFilters.length > 0);
+const showFieldFilter = ref(Object.keys(filters.fieldFilters).length > 0);
 
 const refreshHandler = ref<(() => void) | null>(null);
 const refreshTick = ref(0);
@@ -40,14 +40,15 @@ const newFieldValue = ref("");
 
 function addFieldFilter() {
   if (newFieldKey.value && newFieldValue.value) {
-    filters.fieldFilters.push({ key: newFieldKey.value, value: newFieldValue.value });
+    filters.fieldFilters[newFieldKey.value] = newFieldValue.value;
     newFieldKey.value = "";
     newFieldValue.value = "";
   }
 }
 
-function removeFieldFilter(idx: number) {
-  filters.fieldFilters.splice(idx, 1);
+function removeFieldFilter(key: string) {
+  const { [key]: _, ...rest } = filters.fieldFilters;
+  filters.fieldFilters = rest;
 }
 
 function clearFilters() {
@@ -293,7 +294,9 @@ provide(useLogsContextKey, logsContext);
           <UButton
             size="sm"
             color="neutral"
-            :variant="showFieldFilter || filters.fieldFilters.length ? 'soft' : 'outline'"
+            :variant="
+              showFieldFilter || Object.keys(filters.fieldFilters).length ? 'soft' : 'outline'
+            "
             icon="i-lucide-sliders-horizontal"
             :label="$t('developer.logs.filters.addField')"
           />
@@ -315,24 +318,24 @@ provide(useLogsContextKey, logsContext);
                 />
                 <UButton icon="i-lucide-plus" size="sm" variant="soft" @click="addFieldFilter" />
               </div>
-              <div v-if="filters.fieldFilters.length" class="flex flex-wrap gap-1">
+              <div v-if="Object.keys(filters.fieldFilters).length" class="flex flex-wrap gap-1">
                 <UBadge
-                  v-for="(f, idx) in filters.fieldFilters"
-                  :key="idx"
+                  v-for="(value, key) in filters.fieldFilters"
+                  :key="key"
                   variant="subtle"
                   class="gap-1 font-mono"
                 >
-                  <span>{{ f.key }}={{ f.value }}</span>
+                  <span>{{ key }}={{ value }}</span>
                   <UButton
                     icon="i-lucide-x"
                     size="xs"
                     variant="link"
-                    @click="removeFieldFilter(idx)"
+                    @click="removeFieldFilter(key)"
                   />
                 </UBadge>
               </div>
               <UButton
-                v-if="filters.fieldFilters.length"
+                v-if="Object.keys(filters.fieldFilters).length"
                 size="xs"
                 color="neutral"
                 variant="ghost"
