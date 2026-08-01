@@ -15,12 +15,6 @@ const links = computed(() => [
       to: localePath("/"),
       onSelect: closeSidebar,
     },
-    {
-      label: t("devices.title"),
-      icon: "i-lucide-network",
-      to: localePath("/devices"),
-      onSelect: closeSidebar,
-    },
   ],
   [
     {

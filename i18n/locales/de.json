@@ -128,41 +128,6 @@
       "noChildSpans": "Keine untergeordneten Spans"
     }
   },
-  "devices": {
-    "title": "Geräte",
-    "description": "Alle verbundenen Geräte in deinem Energiesystem verwalten und überwachen",
-    "empty": "Keine Geräte gefunden",
-    "error": "Geräte konnten nicht geladen werden",
-    "types": {
-      "meter": "Energiezähler",
-      "ecube": "Batteriemanagementsystem (eCube)",
-      "inverter": "Wechselrichter"
-    },
-    "status": {
-      "online": "Online",
-      "offline": "Offline"
-    },
-    "details": {
-      "title": "Gerätedetails",
-      "id": "Geräte-ID",
-      "type": "Gerätetyp",
-      "placeholder": "Detaillierte Geräteinformationen und Steuerungen werden verfügbar, sobald die aperture API integriert ist."
-    },
-    "meter": {
-      "currentPower": "Aktuelle Leistung",
-      "currentPowerLive": "Echtzeitmessung",
-      "consumption": "Leistungsverlauf",
-      "range": {
-        "1h": "Letzte Stunde",
-        "24h": "Letzte 24 Stunden",
-        "7d": "Letzte 7 Tage",
-        "30d": "Letzte 30 Tage",
-        "1y": "Letztes Jahr",
-        "5y": "Letzte 5 Jahre"
-      },
-      "unitKw": "kW"
-    }
-  },
   "units": {
     "kilowatt": {
       "long": "{n} Kilowatt | {n} Kilowatt",

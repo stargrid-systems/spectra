@@ -128,41 +128,6 @@
       "noChildSpans": "No child spans"
     }
   },
-  "devices": {
-    "title": "Devices",
-    "description": "Manage and monitor all connected devices in your energy system",
-    "empty": "No devices found",
-    "error": "Failed to load devices",
-    "types": {
-      "meter": "Energy Meter",
-      "ecube": "Battery Management System (eCube)",
-      "inverter": "Inverter"
-    },
-    "status": {
-      "online": "Online",
-      "offline": "Offline"
-    },
-    "details": {
-      "title": "Device Details",
-      "id": "Device ID",
-      "type": "Device Type",
-      "placeholder": "Detailed device information and controls will be available once the aperture API is integrated."
-    },
-    "meter": {
-      "currentPower": "Current power",
-      "currentPowerLive": "Real-time reading",
-      "consumption": "Power usage",
-      "range": {
-        "1h": "Last hour",
-        "24h": "Last 24 hours",
-        "7d": "Last 7 days",
-        "30d": "Last 30 days",
-        "1y": "Last year",
-        "5y": "Last 5 years"
-      },
-      "unitKw": "kW"
-    }
-  },
   "units": {
     "kilowatt": {
       "long": "{n} kilowatt | {n} kilowatts",
