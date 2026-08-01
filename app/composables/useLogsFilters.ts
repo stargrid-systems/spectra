@@ -127,6 +127,15 @@ export const queryKeys: Partial<Record<keyof LogsState, string>> = {
   spanId: "span",
 };
 
+export function defaultLogsState(): LogsState {
+  const shape = schema._zod.def.shape;
+  const empty = Object.fromEntries(Object.keys(shape).map((k) => [k, []])) as unknown as z.input<
+    typeof schema
+  >;
+  const result = z.safeDecode(schema, empty);
+  return (result.success ? result.data : {}) as LogsState;
+}
+
 export function fieldFiltersJson(filters: LogsState): string | undefined {
   return fieldsToJson(filters.fieldFilters);
 }

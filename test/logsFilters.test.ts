@@ -1,29 +1,19 @@
 import { describe, expect, it } from "vitest";
 import {
+  defaultLogsState,
   encodeExpand,
   encodeFields,
   fieldFiltersJson,
   logsParamsFromFilters,
   parseExpand,
   parseFields,
+  spansParamsFromFilters,
   type FieldFilter,
   type LogsState,
 } from "~/composables/useLogsFilters";
 
 function baseFilters(overrides: Partial<LogsState> = {}): LogsState {
-  return {
-    level: "info",
-    target: [],
-    search: undefined,
-    timeRange: undefined,
-    bootId: undefined,
-    fieldFilters: [],
-    spanId: undefined,
-    expand: { events: [], spans: [] },
-    since: undefined,
-    until: undefined,
-    ...overrides,
-  };
+  return { ...defaultLogsState(), ...overrides };
 }
 
 describe("parseFields", () => {
@@ -145,5 +135,38 @@ describe("fieldFiltersJson", () => {
     expect(
       fieldFiltersJson(baseFilters({ bootId: "B", fieldFilters: [{ key: "addr", value: "1" }] })),
     ).toBe('{"addr":"1"}');
+  });
+});
+
+describe("defaultLogsState", () => {
+  it("returns the schema defaults", () => {
+    expect(defaultLogsState()).toEqual({
+      level: "info",
+      target: [],
+      search: undefined,
+      timeRange: undefined,
+      bootId: undefined,
+      fieldFilters: [],
+      spanId: undefined,
+      expand: { events: [], spans: [] },
+      since: undefined,
+      until: undefined,
+    });
+  });
+});
+
+describe("spansParamsFromFilters", () => {
+  it("emits parent_null when no spanId", () => {
+    expect(spansParamsFromFilters(baseFilters())).toEqual({
+      min_level: "info",
+      parent_null: true,
+    });
+  });
+
+  it("emits parent_id when spanId set", () => {
+    expect(spansParamsFromFilters(baseFilters({ spanId: "9" }))).toEqual({
+      min_level: "info",
+      parent_id: "9",
+    });
   });
 });

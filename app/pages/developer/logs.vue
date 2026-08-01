@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BootResponse, LogEvent, LogSpan } from "~~/modules/aperture/runtime/types";
-import { queryKeys, schema } from "~/composables/useLogsFilters";
+import { defaultLogsState, queryKeys, schema } from "~/composables/useLogsFilters";
 import { timeRangeDurations, useLogsContextKey } from "~/composables/useLogsContext";
 import { LEVEL_COLORS, LOG_LEVELS } from "~/utils/logLevels";
 
@@ -51,16 +51,7 @@ function removeFieldFilter(idx: number) {
 }
 
 function clearFilters() {
-  filters.level = "info";
-  filters.target = [];
-  filters.search = undefined;
-  filters.timeRange = undefined;
-  filters.bootId = undefined;
-  filters.fieldFilters = [];
-  filters.spanId = undefined;
-  filters.expand = { events: [], spans: [] };
-  filters.since = undefined;
-  filters.until = undefined;
+  Object.assign(filters, defaultLogsState());
 }
 
 const levelOptions = computed(() =>
