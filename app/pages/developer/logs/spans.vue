@@ -1,26 +1,18 @@
 <script setup lang="ts">
 import type { ListLogSpansParams, LogEvent, LogSpan } from "~~/modules/aperture/runtime/types";
 import { useLogsContext } from "~/composables/useLogsContext";
-import { fieldFiltersJson } from "~/composables/useLogsFilters";
+import { spansParamsFromFilters } from "~/composables/useLogsFilters";
 
 const ctx = useLogsContext();
 const { filters, inlineFields, levelColors, focusSpan, showAllSpans, formatTimestamp } = ctx;
 
 const spansParams = computed<ListLogSpansParams | undefined>(() => {
-  const base: ListLogSpansParams = {};
-  if (filters.level) base.min_level = filters.level;
-  if (filters.target.length) base.target = filters.target;
-  if (filters.spanId !== undefined) {
-    base.parent_id = filters.spanId;
-  } else {
-    base.parent_null = true;
-  }
-  if (filters.bootId) base.boot_id = filters.bootId;
-  if (ctx.computedSince.value) base.since = ctx.computedSince.value;
-  if (filters.until) base.until = filters.until.toString();
-  const fieldsJson = fieldFiltersJson(filters);
-  if (fieldsJson) base.fields = fieldsJson;
-  return Object.keys(base).length > 0 ? base : undefined;
+  const base = spansParamsFromFilters(filters);
+  if (!ctx.computedSince.value && !filters.until) return base;
+  const p: ListLogSpansParams = { ...base };
+  if (ctx.computedSince.value) p.since = ctx.computedSince.value;
+  if (filters.until) p.until = filters.until.toString();
+  return p;
 });
 
 const {

@@ -1,5 +1,5 @@
 import * as z from "zod/v4/mini";
-import type { ListLogsParams } from "~~/modules/aperture/runtime/types";
+import type { ListLogSpansParams, ListLogsParams } from "~~/modules/aperture/runtime/types";
 import { instantCodec } from "~/utils/temporalCodecs";
 import {
   queryOptionalString,
@@ -30,6 +30,27 @@ function fieldsFromJson(json: string): FieldFilter[] {
   return result;
 }
 
+function fieldsToObject(filters: FieldFilter[]): Record<string, string> {
+  const obj: Record<string, string> = {};
+  for (const f of filters) {
+    if (f.key && f.value) obj[f.key] = f.value;
+  }
+  return obj;
+}
+
+function fieldsToJson(filters: FieldFilter[]): string | undefined {
+  const obj = fieldsToObject(filters);
+  return Object.keys(obj).length > 0 ? JSON.stringify(obj) : undefined;
+}
+
+function parseFieldsJson(json: string): FieldFilter[] {
+  try {
+    return fieldsFromJson(json);
+  } catch {
+    return [];
+  }
+}
+
 function queryLogLevel(defaultValue: LogLevel) {
   return z.codec(z.array(z.string()), z.custom<LogLevel>(), {
     decode: (arr) => {
@@ -41,21 +62,11 @@ function queryLogLevel(defaultValue: LogLevel) {
 }
 
 export function parseFields(value: string): FieldFilter[] {
-  if (!value) return [];
-  try {
-    return fieldsFromJson(value);
-  } catch {
-    return [];
-  }
+  return value ? parseFieldsJson(value) : [];
 }
 
 export function encodeFields(filters: FieldFilter[]): string | undefined {
-  if (filters.length === 0) return undefined;
-  const obj: Record<string, string> = {};
-  for (const f of filters) {
-    if (f.key && f.value) obj[f.key] = f.value;
-  }
-  return Object.keys(obj).length > 0 ? JSON.stringify(obj) : undefined;
+  return fieldsToJson(filters);
 }
 
 export function parseExpand(values: string[]): { events: string[]; spans: string[] } {
@@ -82,18 +93,10 @@ const fieldFiltersCodec = z.codec(
   z.array(z.string()),
   z.array(z.object({ key: z.string(), value: z.string() })),
   {
-    decode: (arr) => {
-      if (!arr[0]) return [];
-      try {
-        return fieldsFromJson(arr[0]);
-      } catch {
-        return [];
-      }
-    },
+    decode: (arr) => parseFields(arr[0] ?? ""),
     encode: (filters) => {
-      const obj: Record<string, string> = {};
-      for (const f of filters) if (f.key && f.value) obj[f.key] = f.value;
-      return Object.keys(obj).length > 0 ? [JSON.stringify(obj)] : [];
+      const json = fieldsToJson(filters);
+      return json ? [json] : [];
     },
   },
 );
@@ -129,6 +132,10 @@ export const queryKeys: Partial<Record<keyof LogsState, string>> = {
   spanId: "span",
 };
 
+export function fieldFiltersJson(filters: LogsState): string | undefined {
+  return fieldsToJson(filters.fieldFilters);
+}
+
 export function logsParamsFromFilters(filters: LogsState): ListLogsParams | undefined {
   const p: ListLogsParams = {};
   if (filters.level) p.min_level = filters.level;
@@ -136,21 +143,22 @@ export function logsParamsFromFilters(filters: LogsState): ListLogsParams | unde
   if (filters.search) p.q = filters.search;
   if (filters.spanId !== undefined) p.span_id = filters.spanId;
   if (filters.bootId) p.boot_id = filters.bootId;
-
-  const fields: Record<string, string> = {};
-  for (const f of filters.fieldFilters) {
-    if (f.key && f.value) fields[f.key] = f.value;
-  }
-  if (Object.keys(fields).length > 0) {
-    p.fields = JSON.stringify(fields);
-  }
+  const fields = fieldFiltersJson(filters);
+  if (fields) p.fields = fields;
   return Object.keys(p).length > 0 ? p : undefined;
 }
 
-export function fieldFiltersJson(filters: LogsState): string | undefined {
-  const fields: Record<string, string> = {};
-  for (const f of filters.fieldFilters) {
-    if (f.key && f.value) fields[f.key] = f.value;
+export function spansParamsFromFilters(filters: LogsState): ListLogSpansParams | undefined {
+  const p: ListLogSpansParams = {};
+  if (filters.level) p.min_level = filters.level;
+  if (filters.target.length) p.target = filters.target;
+  if (filters.spanId !== undefined) {
+    p.parent_id = filters.spanId;
+  } else {
+    p.parent_null = true;
   }
-  return Object.keys(fields).length > 0 ? JSON.stringify(fields) : undefined;
+  if (filters.bootId) p.boot_id = filters.bootId;
+  const fields = fieldFiltersJson(filters);
+  if (fields) p.fields = fields;
+  return Object.keys(p).length > 0 ? p : undefined;
 }
