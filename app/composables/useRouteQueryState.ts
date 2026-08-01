@@ -78,7 +78,8 @@ export function useRouteQueryState<S extends z.core.$ZodObject>(
   function toUrlKeyed(stateKeyed: Record<string, string[]>): Record<string, string[]> {
     const result: Record<string, string[]> = {};
     for (const k of stateKeys) {
-      result[toUrlKey(k)] = stateKeyed[k]!;
+      const arr = stateKeyed[k]!;
+      if (arr.length > 0) result[toUrlKey(k)] = arr;
     }
     return result;
   }
