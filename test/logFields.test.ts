@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  asFields,
-  formatFieldsInline,
-  formatValue,
-  sortedFields,
-} from "~/utils/logFields";
+import { asFields, formatFieldsInline, formatValue, sortedFields } from "~/utils/logFields";
 
 describe("asFields", () => {
   it("returns undefined for primitives", () => {

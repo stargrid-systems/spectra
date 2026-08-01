@@ -60,8 +60,7 @@ function toBootResponse(b: RawBootResponse): BootResponse {
 }
 
 export const apertureApi = {
-  getVersion: async (): Promise<VersionResponse> =>
-    unwrap(await client.GET("/api/v1/version")),
+  getVersion: async (): Promise<VersionResponse> => unwrap(await client.GET("/api/v1/version")),
 
   listLogs: async (params?: ListLogsParams): Promise<LogEventPage> => {
     const data = unwrap(await client.GET("/api/v1/logs", { params: { query: params } }));
@@ -80,5 +79,7 @@ export const apertureApi = {
   },
 
   getSpan: async (id: string): Promise<LogSpanDetail> =>
-    toLogSpanDetail(unwrap(await client.GET("/api/v1/logs/spans/{id}", { params: { path: { id } } }))),
+    toLogSpanDetail(
+      unwrap(await client.GET("/api/v1/logs/spans/{id}", { params: { path: { id } } })),
+    ),
 };

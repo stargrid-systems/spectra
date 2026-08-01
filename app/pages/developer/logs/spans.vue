@@ -7,7 +7,6 @@ const ctx = useLogsContext();
 const {
   filters,
   inlineFields,
-  levelColors,
   focusSpan,
   showAllSpans,
   formatTimestamp,
@@ -126,27 +125,15 @@ ctx.onRefresh(() => {
       />
     </div>
 
-    <div v-if="spansStatus === 'pending'" class="flex justify-center py-12">
-      <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin text-muted-foreground" />
-    </div>
-    <div v-else-if="spansError" class="text-center py-12 text-error">
-      <p>{{ $t("developer.logs.error") }}</p>
-      <UButton
-        variant="soft"
-        color="primary"
-        size="sm"
-        :label="$t('developer.logs.retry')"
-        class="mt-2"
-        @click="retry"
-      />
-    </div>
-    <div
-      v-else-if="rootSpans.length === 0 && !filters.spanId"
-      class="text-center py-12 text-muted-foreground"
+    <DataState
+      :pending="spansStatus === 'pending'"
+      :error="spansError"
+      :empty="rootSpans.length === 0 && !filters.spanId"
+      :error-text="$t('developer.logs.error')"
+      :empty-text="$t('developer.logs.emptySpans')"
+      :retry-text="$t('developer.logs.retry')"
+      @retry="retry"
     >
-      <p>{{ $t("developer.logs.emptySpans") }}</p>
-    </div>
-    <template v-else>
       <div
         class="flex items-center gap-3 px-3 py-1.5 text-xs font-semibold text-muted-foreground border-b border-default sticky top-0 bg-default z-10"
       >
@@ -184,14 +171,7 @@ ctx.onRefresh(() => {
             {{ formatTimestamp(span.started_at) }}
           </div>
           <div class="flex-shrink-0 w-16">
-            <UBadge
-              :color="levelColors[span.level] ?? 'neutral'"
-              variant="subtle"
-              size="sm"
-              class="font-mono"
-            >
-              {{ span.level }}
-            </UBadge>
+            <LevelBadge :level="span.level" />
           </div>
           <div
             class="flex-shrink-0 w-44 text-xs text-muted-foreground truncate pt-0.5"
@@ -237,9 +217,7 @@ ctx.onRefresh(() => {
                 @click.stop="focusSpan(child.id)"
               >
                 <span class="text-muted-foreground">{{ formatTimestamp(child.started_at) }}</span>
-                <UBadge :color="levelColors[child.level] ?? 'neutral'" variant="subtle" size="xs">
-                  {{ child.level }}
-                </UBadge>
+                <LevelBadge :level="child.level" size="xs" />
                 <span>{{ child.name }}</span>
               </div>
             </div>
@@ -261,14 +239,7 @@ ctx.onRefresh(() => {
                 <span class="text-muted-foreground font-mono">{{
                   formatTimestamp(event.timestamp)
                 }}</span>
-                <UBadge
-                  :color="levelColors[event.level] ?? 'neutral'"
-                  variant="subtle"
-                  size="xs"
-                  class="font-mono"
-                >
-                  {{ event.level }}
-                </UBadge>
+                <LevelBadge :level="event.level" size="xs" />
                 <span>{{ event.message }}</span>
               </div>
               <div
@@ -281,6 +252,6 @@ ctx.onRefresh(() => {
           </div>
         </div>
       </div>
-    </template>
+    </DataState>
   </UScrollArea>
 </template>

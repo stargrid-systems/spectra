@@ -1,10 +1,6 @@
 import type { ComputedRef, InjectionKey, Ref } from "vue";
 import { inject } from "vue";
-import type {
-  BootResponse,
-  LogEvent,
-  LogSpan,
-} from "~~/modules/aperture/runtime/types";
+import type { BootResponse, LogEvent, LogSpan } from "~~/modules/aperture/runtime/types";
 import type { LogsState } from "~/composables/useLogsFilters";
 import type { BadgeColor } from "~/utils/logLevels";
 

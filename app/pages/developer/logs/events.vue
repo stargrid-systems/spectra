@@ -5,7 +5,7 @@ import { useLogsContext } from "~/composables/useLogsContext";
 import { logsParamsFromFilters } from "~/composables/useLogsFilters";
 
 const ctx = useLogsContext();
-const { filters, inlineFields, levelColors, focusSpan, formatTimestamp, ensureSpan } = ctx;
+const { filters, inlineFields, focusSpan, formatTimestamp, ensureSpan } = ctx;
 
 const logsParams = computed<ListLogsParams | undefined>(() => {
   const p = logsParamsFromFilters(filters) ?? {};
@@ -124,24 +124,15 @@ async function loadEventSpanChain(event: LogEvent) {
 
 <template>
   <UScrollArea ref="scrollArea" class="h-full" :ui="{ viewport: 'gap-1 p-4' }">
-    <div v-if="status === 'pending' && allItems.length === 0" class="flex justify-center py-12">
-      <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin text-muted-foreground" />
-    </div>
-    <div v-else-if="error" class="text-center py-12 text-error">
-      <p>{{ $t("developer.logs.error") }}</p>
-      <UButton
-        variant="soft"
-        color="primary"
-        size="sm"
-        :label="$t('developer.logs.retry')"
-        class="mt-2"
-        @click="retry"
-      />
-    </div>
-    <div v-else-if="allItems.length === 0" class="text-center py-12 text-muted-foreground">
-      <p>{{ $t("developer.logs.empty") }}</p>
-    </div>
-    <template v-else>
+    <DataState
+      :pending="status === 'pending' && allItems.length === 0"
+      :error="error"
+      :empty="allItems.length === 0"
+      :error-text="$t('developer.logs.error')"
+      :empty-text="$t('developer.logs.empty')"
+      :retry-text="$t('developer.logs.retry')"
+      @retry="retry"
+    >
       <div
         class="flex items-center gap-3 px-3 py-1.5 text-xs font-semibold text-muted-foreground border-b border-default sticky top-0 bg-default z-10"
       >
@@ -166,14 +157,7 @@ async function loadEventSpanChain(event: LogEvent) {
             {{ formatTimestamp(event.timestamp) }}
           </div>
           <div class="flex-shrink-0 w-16">
-            <UBadge
-              :color="levelColors[event.level] ?? 'neutral'"
-              variant="subtle"
-              size="sm"
-              class="font-mono"
-            >
-              {{ event.level }}
-            </UBadge>
+            <LevelBadge :level="event.level" />
           </div>
           <div
             class="flex-shrink-0 w-44 text-xs text-muted-foreground truncate pt-0.5"
@@ -212,7 +196,7 @@ async function loadEventSpanChain(event: LogEvent) {
               v-else-if="pendingEventIds.has(event.id)"
               class="flex items-center gap-2 text-xs text-muted-foreground"
             >
-              <UIcon name="i-lucide-loader-circle" class="size-3.5 animate-spin" />
+              <LoadingSpinner class="size-3.5" />
               <span>{{ $t("developer.logs.loadingSpan") }}</span>
             </div>
             <div
@@ -242,10 +226,10 @@ async function loadEventSpanChain(event: LogEvent) {
           </div>
         </div>
       </div>
-    </template>
+    </DataState>
 
     <div v-if="isLoadingMore" class="flex justify-center py-4">
-      <UIcon name="i-lucide-loader-circle" class="size-5 animate-spin text-muted-foreground" />
+      <LoadingSpinner class="size-5 text-muted-foreground" />
     </div>
     <div
       v-if="!nextCursor && allItems.length > 0"

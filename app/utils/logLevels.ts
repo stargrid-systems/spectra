@@ -1,11 +1,5 @@
 export type BadgeColor =
-  | "error"
-  | "primary"
-  | "secondary"
-  | "success"
-  | "info"
-  | "warning"
-  | "neutral";
+  "error" | "primary" | "secondary" | "success" | "info" | "warning" | "neutral";
 
 export const LOG_LEVELS = ["trace", "debug", "info", "warn", "error"] as const;
 export type LogLevel = (typeof LOG_LEVELS)[number];
