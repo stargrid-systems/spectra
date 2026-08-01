@@ -1,10 +1,21 @@
 <script setup lang="ts">
-import type { ListLogSpansParams, LogEvent, LogSpan } from "~~/modules/aperture/runtime/types";
+import type { ListLogSpansParams, LogSpan } from "~~/modules/aperture/runtime/types";
 import { useLogsContext } from "~/composables/useLogsContext";
 import { spansParamsFromFilters } from "~/composables/useLogsFilters";
 
 const ctx = useLogsContext();
-const { filters, inlineFields, levelColors, focusSpan, showAllSpans, formatTimestamp } = ctx;
+const {
+  filters,
+  inlineFields,
+  levelColors,
+  focusSpan,
+  showAllSpans,
+  formatTimestamp,
+  spanCache,
+  spanEventsCache,
+  ensureSpan,
+  ensureSpanEvents,
+} = ctx;
 
 const spansParams = computed<ListLogSpansParams | undefined>(() => {
   const base = spansParamsFromFilters(filters);
@@ -24,8 +35,6 @@ const {
 
 const rootSpans = computed<LogSpan[]>(() => spansData.value?.items ?? []);
 
-// Shared span detail cache (span id -> bare span info without events).
-const spanCache = ref<Map<string, LogSpan>>(new Map());
 watch(rootSpans, (rows) => {
   for (const s of rows) spanCache.value.set(s.id, s);
 });
@@ -48,20 +57,13 @@ async function loadChildren(parentId: string) {
   }
 }
 
-const spanEventsCache = ref<Map<string, LogEvent[]>>(new Map());
 const loadingEvents = ref<Set<string>>(new Set());
 
 async function loadEvents(spanId: string) {
   if (spanEventsCache.value.has(spanId) || loadingEvents.value.has(spanId)) return;
   loadingEvents.value.add(spanId);
-  try {
-    const detail = await apertureApi.getSpan(spanId);
-    spanEventsCache.value.set(spanId, detail.events ?? []);
-  } catch (err) {
-    console.error("Failed to load span events", spanId, err);
-  } finally {
-    loadingEvents.value.delete(spanId);
-  }
+  await ensureSpanEvents(spanId);
+  loadingEvents.value.delete(spanId);
 }
 
 const expandedSpans = computed(() => new Set(filters.expand.spans));
@@ -82,22 +84,10 @@ async function toggleSpan(span: LogSpan) {
   void loadEvents(span.id);
 }
 
-// Focus support: jump to a specific span via filters.spanId, show its subtree.
 watch(
   () => filters.spanId,
   async (id) => {
-    if (!id) return;
-    const cached = spanCache.value.get(id);
-    if (!cached) {
-      try {
-        const detail = await apertureApi.getSpan(id);
-        const { events: _events, ...rest } = detail;
-        spanCache.value.set(id, rest);
-      } catch (err) {
-        console.error("Failed to load focused span", id, err);
-        return;
-      }
-    }
+    if (id) await ensureSpan(id);
   },
   { immediate: true },
 );
@@ -107,10 +97,14 @@ const focusedSpanDetail = computed<LogSpan | undefined>(() =>
 );
 
 function retry() {
+  childrenCache.value.clear();
+  spanEventsCache.value.clear();
   void refreshSpans();
 }
 
 ctx.onRefresh(() => {
+  childrenCache.value.clear();
+  spanEventsCache.value.clear();
   void refreshSpans();
 });
 </script>

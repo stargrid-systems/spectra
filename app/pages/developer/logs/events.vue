@@ -5,7 +5,7 @@ import { useLogsContext } from "~/composables/useLogsContext";
 import { logsParamsFromFilters } from "~/composables/useLogsFilters";
 
 const ctx = useLogsContext();
-const { filters, inlineFields, levelColors, focusSpan, formatTimestamp } = ctx;
+const { filters, inlineFields, levelColors, focusSpan, formatTimestamp, ensureSpan } = ctx;
 
 const logsParams = computed<ListLogsParams | undefined>(() => {
   const p = logsParamsFromFilters(filters) ?? {};
@@ -97,26 +97,10 @@ ctx.onRefresh(() => {
   void refresh();
 });
 
-// Span chain (event -> span -> ancestors) loaded on expand, cached by event id and
-// span id.
+// Span chain (event -> span -> ancestors) loaded on expand, cached by event id.
 
-const spanCache = ref<Map<string, LogSpan>>(new Map());
 const eventChainCache = ref<Map<string, LogSpan[]>>(new Map());
 const pendingEventIds = ref<Set<string>>(new Set());
-
-async function loadSpanIntoCache(id: string): Promise<LogSpan | null> {
-  const cached = spanCache.value.get(id);
-  if (cached) return cached;
-  try {
-    const detail = await apertureApi.getSpan(id);
-    const { events: _events, ...span } = detail;
-    spanCache.value.set(id, span);
-    return span;
-  } catch (err) {
-    console.error("Failed to load span", id, err);
-    return null;
-  }
-}
 
 async function loadEventSpanChain(event: LogEvent) {
   if (!event.span_id) {
@@ -128,7 +112,7 @@ async function loadEventSpanChain(event: LogEvent) {
   const visited = new Set<string>();
   while (currentId && !visited.has(currentId)) {
     visited.add(currentId);
-    const span = await loadSpanIntoCache(currentId);
+    const span = await ensureSpan(currentId);
     if (!span) break;
     chain.unshift(span);
     currentId = span.parent_id ?? undefined;

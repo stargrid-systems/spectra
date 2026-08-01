@@ -1,6 +1,10 @@
 import type { ComputedRef, InjectionKey, Ref } from "vue";
 import { inject } from "vue";
-import type { BootResponse } from "~~/modules/aperture/runtime/types";
+import type {
+  BootResponse,
+  LogEvent,
+  LogSpan,
+} from "~~/modules/aperture/runtime/types";
 import type { LogsState } from "~/composables/useLogsFilters";
 
 type TargetOptionsRef = ReturnType<typeof useLogTargets>["data"];
@@ -21,6 +25,10 @@ export interface LogsContext {
   showAllSpans: () => void;
   onRefresh: (fn: () => void) => void;
   refresh: () => void;
+  spanCache: Ref<Map<string, LogSpan>>;
+  spanEventsCache: Ref<Map<string, LogEvent[]>>;
+  ensureSpan: (id: string) => Promise<LogSpan | null>;
+  ensureSpanEvents: (id: string) => Promise<LogEvent[]>;
 }
 
 export const useLogsContextKey = Symbol() as InjectionKey<LogsContext>;

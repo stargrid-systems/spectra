@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BootResponse } from "~~/modules/aperture/runtime/types";
+import type { BootResponse, LogEvent, LogSpan } from "~~/modules/aperture/runtime/types";
 import { queryKeys, schema } from "~/composables/useLogsFilters";
 import { timeRangeDurations, useLogsContextKey } from "~/composables/useLogsContext";
 
@@ -154,6 +154,31 @@ const computedSince = computed(() => {
   return filters.since?.toString();
 });
 
+const spanCache = ref<Map<string, LogSpan>>(new Map());
+const spanEventsCache = ref<Map<string, LogEvent[]>>(new Map());
+
+async function ensureSpan(id: string): Promise<LogSpan | null> {
+  const cached = spanCache.value.get(id);
+  if (cached) return cached;
+  try {
+    const detail = await apertureApi.getSpan(id);
+    const { events, ...span } = detail;
+    spanCache.value.set(id, span);
+    spanEventsCache.value.set(id, events);
+    return span;
+  } catch (err) {
+    console.error("Failed to load span", id, err);
+    return null;
+  }
+}
+
+async function ensureSpanEvents(id: string): Promise<LogEvent[]> {
+  const cached = spanEventsCache.value.get(id);
+  if (cached) return cached;
+  await ensureSpan(id);
+  return spanEventsCache.value.get(id) ?? [];
+}
+
 const logsContext = {
   filters,
   inlineFields,
@@ -167,6 +192,10 @@ const logsContext = {
   showAllSpans,
   onRefresh,
   refresh,
+  spanCache,
+  spanEventsCache,
+  ensureSpan,
+  ensureSpanEvents,
 };
 
 provide(useLogsContextKey, logsContext);
