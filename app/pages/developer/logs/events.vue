@@ -8,6 +8,7 @@ const ctx = useLogsContext();
 const { filters, inlineFields, focusSpan, formatTimestamp, ensureSpan } = ctx;
 
 const logsParams = computed<ListLogsParams | undefined>(() => {
+  void ctx.refreshTick.value;
   const p = logsParamsFromFilters(filters) ?? {};
   if (ctx.computedSince.value) p.since = ctx.computedSince.value;
   if (filters.until) p.until = filters.until.toString();
@@ -53,6 +54,17 @@ watch(data, (newData) => {
   if (!newData) return;
   allItems.value = newData.items;
   nextCursor.value = newData.next_cursor;
+  for (const event of newData.items) {
+    if (
+      expandedRows.value.has(event.id) &&
+      event.span_id &&
+      !eventChainCache.value.has(event.id) &&
+      !pendingEventIds.value.has(event.id)
+    ) {
+      pendingEventIds.value.add(event.id);
+      void loadEventSpanChain(event);
+    }
+  }
 });
 
 async function loadMore() {
@@ -91,11 +103,6 @@ function retry() {
   resetItems();
   void refresh();
 }
-
-ctx.onRefresh(() => {
-  resetItems();
-  void refresh();
-});
 
 // Span chain (event -> span -> ancestors) loaded on expand, cached by event id.
 

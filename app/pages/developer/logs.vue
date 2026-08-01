@@ -23,16 +23,10 @@ const targetItems = computed(() =>
 const inlineFields = ref(true);
 const showFieldFilter = ref(Object.keys(filters.fieldFilters).length > 0);
 
-const refreshHandler = ref<(() => void) | null>(null);
 const refreshTick = ref(0);
-
-function onRefresh(fn: () => void) {
-  refreshHandler.value = fn;
-}
 
 function refresh() {
   refreshTick.value++;
-  refreshHandler.value?.();
 }
 
 const newFieldKey = ref("");
@@ -168,8 +162,8 @@ const logsContext = {
   formatDuration,
   focusSpan,
   showAllSpans,
-  onRefresh,
   refresh,
+  refreshTick,
   spanCache,
   spanEventsCache,
   ensureSpan,

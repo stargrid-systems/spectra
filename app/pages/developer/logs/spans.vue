@@ -17,6 +17,7 @@ const {
 } = ctx;
 
 const spansParams = computed<ListLogSpansParams | undefined>(() => {
+  void ctx.refreshTick.value;
   const base = spansParamsFromFilters(filters);
   if (!ctx.computedSince.value && !filters.until) return base;
   const p: ListLogSpansParams = { ...base };
@@ -35,18 +36,27 @@ const {
 const rootSpans = computed<LogSpan[]>(() => spansData.value?.items ?? []);
 
 watch(rootSpans, (rows) => {
-  for (const s of rows) spanCache.value.set(s.id, s);
+  for (const s of rows) {
+    spanCache.value.set(s.id, s);
+    if (expandedSpans.value.has(s.id)) {
+      void loadChildren(s.id);
+      void loadEvents(s.id);
+    }
+  }
 });
 
 const childrenCache = ref<Map<string, LogSpan[]>>(new Map());
 const loadingChildren = ref<Set<string>>(new Set());
+let childrenGen = 0;
 
 async function loadChildren(parentId: string) {
   if (childrenCache.value.has(parentId) || loadingChildren.value.has(parentId)) return;
   loadingChildren.value.add(parentId);
+  const myGen = childrenGen;
   try {
     const { parent_null: _, ...rest } = { ...spansParams.value, parent_id: parentId };
     const result = await apertureApi.listSpans(rest);
+    if (myGen !== childrenGen) return;
     const children = result.items ?? [];
     for (const c of children) spanCache.value.set(c.id, c);
     childrenCache.value.set(parentId, children);
@@ -98,16 +108,20 @@ const focusedSpanDetail = computed<LogSpan | undefined>(() =>
 );
 
 function retry() {
+  childrenGen++;
   childrenCache.value.clear();
   spanEventsCache.value.clear();
   void refreshSpans();
 }
 
-ctx.onRefresh(() => {
-  childrenCache.value.clear();
-  spanEventsCache.value.clear();
-  void refreshSpans();
-});
+watch(
+  () => ctx.refreshTick.value,
+  () => {
+    childrenGen++;
+    childrenCache.value.clear();
+    spanEventsCache.value.clear();
+  },
+);
 </script>
 
 <template>

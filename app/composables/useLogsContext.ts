@@ -17,8 +17,8 @@ export interface LogsContext {
   formatDuration: (startedAt: Temporal.Instant, endedAt?: Temporal.Instant | null) => string;
   focusSpan: (spanId: string) => void;
   showAllSpans: () => void;
-  onRefresh: (fn: () => void) => void;
   refresh: () => void;
+  refreshTick: Ref<number>;
   spanCache: Ref<Map<string, LogSpan>>;
   spanEventsCache: Ref<Map<string, LogEvent[]>>;
   ensureSpan: (id: string) => Promise<LogSpan | null>;
