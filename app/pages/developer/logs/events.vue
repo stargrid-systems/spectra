@@ -74,20 +74,17 @@ async function loadMore() {
 
 const scrollArea = useTemplateRef("scrollArea");
 
-watch(
+useInfiniteScroll(
   () => scrollArea.value?.$el,
-  (el) => {
-    if (!el) return;
-    useInfiniteScroll(el, () => loadMore(), {
-      distance: 200,
-      canLoadMore: () =>
-        nextCursor.value !== null &&
-        nextCursor.value !== undefined &&
-        status.value !== "pending" &&
-        !isLoadingMore.value,
-    });
+  () => loadMore(),
+  {
+    distance: 200,
+    canLoadMore: () =>
+      nextCursor.value !== null &&
+      nextCursor.value !== undefined &&
+      status.value !== "pending" &&
+      !isLoadingMore.value,
   },
-  { immediate: true },
 );
 
 function retry() {
