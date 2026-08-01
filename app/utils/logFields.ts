@@ -9,7 +9,11 @@ export function formatValue(value: unknown): string {
   if (value === null) return "null";
   if (typeof value === "string") return value;
   if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return JSON.stringify(value) ?? "null";
+  try {
+    return JSON.stringify(value) ?? "null";
+  } catch {
+    return "[object]";
+  }
 }
 
 export function formatFieldsInline(fields: unknown): string {

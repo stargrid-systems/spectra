@@ -85,12 +85,18 @@ export const queryKeys: Partial<Record<keyof LogsState, string>> = {
 };
 
 export function defaultLogsState(): LogsState {
-  const shape = schema._zod.def.shape;
-  const empty = Object.fromEntries(Object.keys(shape).map((k) => [k, []])) as unknown as z.input<
-    typeof schema
-  >;
-  const result = z.safeDecode(schema, empty);
-  return (result.success ? result.data : {}) as LogsState;
+  return {
+    level: DEFAULT_LEVEL,
+    target: [],
+    search: undefined,
+    timeRange: undefined,
+    bootId: undefined,
+    spanId: undefined,
+    fieldFilters: {},
+    expand: { events: [], spans: [] },
+    since: undefined,
+    until: undefined,
+  };
 }
 
 export function logsParamsFromFilters(filters: LogsState): ListLogsParams | undefined {

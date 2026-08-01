@@ -1,6 +1,6 @@
 import type { Formatter, TemporalDate, UnitIdentifier } from "../types";
 import { formatDuration } from "../duration";
-import { isPolyfilledUnit } from "../units";
+import { isPolyfilledUnit, type PolyfilledUnit } from "../units";
 import { useI18n } from "#imports";
 
 export function useFormatter(): Formatter {
@@ -8,7 +8,7 @@ export function useFormatter(): Formatter {
 
   function formatPolyfilled(
     value: number,
-    unit: import("../units").PolyfilledUnit,
+    unit: PolyfilledUnit,
     options: Intl.NumberFormatOptions | undefined,
   ): string {
     const display = options?.unitDisplay ?? "short";
