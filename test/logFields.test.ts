@@ -4,7 +4,7 @@ import {
   formatFieldsInline,
   formatValue,
   sortedFields,
-} from "~/composables/useLogsContext";
+} from "~/utils/logFields";
 
 describe("asFields", () => {
   it("returns undefined for primitives", () => {

@@ -22,6 +22,13 @@ const client = createClient<paths>({
   querySerializer: { array: { style: "form", explode: false } },
 });
 
+function unwrap<T>(res: { data?: T; error?: unknown }): T {
+  if (res.data === undefined) {
+    throw res.error ?? new Error("aperture returned an empty response");
+  }
+  return res.data;
+}
+
 function toLogEvent(e: RawLogEvent): LogEvent {
   return { ...e, timestamp: Temporal.Instant.from(e.timestamp) };
 }
@@ -53,47 +60,25 @@ function toBootResponse(b: RawBootResponse): BootResponse {
 }
 
 export const apertureApi = {
-  getVersion: async (): Promise<VersionResponse> => {
-    const { data, error } = await client.GET("/api/v1/version");
-    if (error) throw error;
-    return data!;
-  },
+  getVersion: async (): Promise<VersionResponse> =>
+    unwrap(await client.GET("/api/v1/version")),
 
   listLogs: async (params?: ListLogsParams): Promise<LogEventPage> => {
-    const { data, error } = await client.GET("/api/v1/logs", {
-      params: { query: params },
-    });
-    if (error) throw error;
-    return { ...data!, items: data!.items.map(toLogEvent) };
+    const data = unwrap(await client.GET("/api/v1/logs", { params: { query: params } }));
+    return { ...data, items: data.items.map(toLogEvent) };
   },
 
-  listLogTargets: async (params?: ListLogTargetsParams): Promise<string[]> => {
-    const { data, error } = await client.GET("/api/v1/logs/targets", {
-      params: { query: params },
-    });
-    if (error) throw error;
-    return data!;
-  },
+  listLogTargets: async (params?: ListLogTargetsParams): Promise<string[]> =>
+    unwrap(await client.GET("/api/v1/logs/targets", { params: { query: params } })),
 
-  listLogBoots: async (): Promise<BootList> => {
-    const { data, error } = await client.GET("/api/v1/logs/boots");
-    if (error) throw error;
-    return data!.map(toBootResponse);
-  },
+  listLogBoots: async (): Promise<BootList> =>
+    unwrap(await client.GET("/api/v1/logs/boots")).map(toBootResponse),
 
   listSpans: async (params?: ListLogSpansParams): Promise<LogSpanPage> => {
-    const { data, error } = await client.GET("/api/v1/logs/spans", {
-      params: { query: params },
-    });
-    if (error) throw error;
-    return { ...data!, items: data!.items.map(toLogSpan) };
+    const data = unwrap(await client.GET("/api/v1/logs/spans", { params: { query: params } }));
+    return { ...data, items: data.items.map(toLogSpan) };
   },
 
-  getSpan: async (id: string): Promise<LogSpanDetail> => {
-    const { data, error } = await client.GET("/api/v1/logs/spans/{id}", {
-      params: { path: { id } },
-    });
-    if (error) throw error;
-    return toLogSpanDetail(data!);
-  },
+  getSpan: async (id: string): Promise<LogSpanDetail> =>
+    toLogSpanDetail(unwrap(await client.GET("/api/v1/logs/spans/{id}", { params: { path: { id } } }))),
 };

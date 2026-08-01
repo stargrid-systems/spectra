@@ -43,35 +43,3 @@ export const timeRangeDurations: Record<string, Temporal.Duration> = {
   "7d": Temporal.Duration.from({ days: 7 }),
   "30d": Temporal.Duration.from({ days: 30 }),
 };
-
-export function asFields(value: unknown): Record<string, unknown> | undefined {
-  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-    return value as Record<string, unknown>;
-  }
-  return undefined;
-}
-
-export function formatValue(value: unknown): string {
-  if (value === null) return "null";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return JSON.stringify(value);
-}
-
-export function formatFieldsInline(fields: unknown): string {
-  const f = asFields(fields);
-  if (!f) return "";
-  const parts: string[] = [];
-  for (const [key, value] of Object.entries(f)) {
-    parts.push(`${key}=${formatValue(value)}`);
-  }
-  return parts.join("  ");
-}
-
-export function sortedFields(fields: unknown): { key: string; value: unknown }[] {
-  const f = asFields(fields);
-  if (!f) return [];
-  return Object.entries(f)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, value]) => ({ key, value }));
-}
