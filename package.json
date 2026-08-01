@@ -37,21 +37,21 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "1.2.116",
+    "@iconify-json/lucide": "1.2.120",
     "@intlify/eslint-plugin-vue-i18n": "^4.5.1",
     "@microsoft/eslint-formatter-sarif": "3.1.0",
     "@nuxt/eslint": "1.16.0",
     "@nuxt/test-utils": "4.0.3",
     "@playwright/test": "^1.61.1",
     "@vue/test-utils": "2.4.11",
-    "eslint": "10.6.0",
+    "eslint": "10.8.0",
     "eslint-config-prettier": "10.1.8",
     "happy-dom": "20.10.6",
     "openapi-typescript": "7.13.0",
     "playwright-core": "1.61.1",
-    "prettier": "3.9.4",
+    "prettier": "3.9.6",
     "typescript": "6.0.3",
     "vitest": "4.1.10",
-    "vue-tsc": "3.3.7"
+    "vue-tsc": "3.3.8"
   }
 }
