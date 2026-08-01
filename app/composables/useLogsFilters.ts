@@ -1,6 +1,7 @@
 import * as z from "zod/v4/mini";
 import type { ListLogSpansParams, ListLogsParams } from "~~/modules/aperture/runtime/types";
 import { instantCodec } from "~/utils/temporalCodecs";
+import { isLogLevel, type LogLevel } from "~/utils/logLevels";
 import {
   queryOptionalString,
   querySingle,
@@ -12,13 +13,7 @@ export interface FieldFilter {
   value: string;
 }
 
-const LOG_LEVELS = ["trace", "debug", "info", "warn", "error"] as const;
-type LogLevel = (typeof LOG_LEVELS)[number];
 const DEFAULT_LEVEL: LogLevel = "info";
-
-function isLogLevel(value: string): value is LogLevel {
-  return (LOG_LEVELS as readonly string[]).includes(value);
-}
 
 function fieldsFromJson(json: string): FieldFilter[] {
   const parsed: unknown = JSON.parse(json);

@@ -6,6 +6,7 @@ import type {
   LogSpan,
 } from "~~/modules/aperture/runtime/types";
 import type { LogsState } from "~/composables/useLogsFilters";
+import type { BadgeColor } from "~/utils/logLevels";
 
 type TargetOptionsRef = ReturnType<typeof useLogTargets>["data"];
 
@@ -14,10 +15,7 @@ export interface LogsContext {
   inlineFields: Ref<boolean>;
   boots: Ref<BootResponse[]>;
   targetOptions: TargetOptionsRef;
-  levelColors: Record<
-    string,
-    "error" | "primary" | "secondary" | "success" | "info" | "warning" | "neutral"
-  >;
+  levelColors: Record<string, BadgeColor>;
   computedSince: ComputedRef<string | undefined>;
   formatTimestamp: (ts: Temporal.Instant) => string;
   formatDuration: (startedAt: Temporal.Instant, endedAt?: Temporal.Instant | null) => string;

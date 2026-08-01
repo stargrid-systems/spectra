@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { timeRangeDurations } from "~/composables/useLogsContext";
 
-type Range = "5m" | "15m" | "1h" | "6h" | "12h" | "24h" | "7d" | "30d" | "all" | "custom";
+type Range = (keyof typeof timeRangeDurations) | "all" | "custom";
 
 const props = defineProps<{
   modelValue: string | undefined;

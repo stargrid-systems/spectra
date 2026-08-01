@@ -2,6 +2,7 @@
 import type { BootResponse, LogEvent, LogSpan } from "~~/modules/aperture/runtime/types";
 import { queryKeys, schema } from "~/composables/useLogsFilters";
 import { timeRangeDurations, useLogsContextKey } from "~/composables/useLogsContext";
+import { LEVEL_COLORS, LOG_LEVELS } from "~/utils/logLevels";
 
 const { t } = useI18n();
 const fmt = useFormatter();
@@ -62,24 +63,9 @@ function clearFilters() {
   filters.until = undefined;
 }
 
-const levelColors: Record<
-  string,
-  "error" | "primary" | "secondary" | "success" | "info" | "warning" | "neutral"
-> = {
-  trace: "neutral",
-  debug: "info",
-  info: "primary",
-  warn: "warning",
-  error: "error",
-};
-
-const levelOptions = computed(() => [
-  { label: t("developer.logs.levels.trace"), value: "trace" },
-  { label: t("developer.logs.levels.debug"), value: "debug" },
-  { label: t("developer.logs.levels.info"), value: "info" },
-  { label: t("developer.logs.levels.warn"), value: "warn" },
-  { label: t("developer.logs.levels.error"), value: "error" },
-]);
+const levelOptions = computed(() =>
+  LOG_LEVELS.map((value) => ({ label: t(`developer.logs.levels.${value}`), value })),
+);
 
 function formatDuration(startedAt: Temporal.Instant, endedAt?: Temporal.Instant | null): string {
   if (!endedAt) return t("developer.logs.running");
@@ -184,7 +170,7 @@ const logsContext = {
   inlineFields,
   boots,
   targetOptions,
-  levelColors,
+  levelColors: LEVEL_COLORS,
   computedSince,
   formatTimestamp,
   formatDuration,
