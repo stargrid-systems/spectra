@@ -37,13 +37,6 @@ export function querySingle<T extends z.core.$ZodType>(inner: T) {
   });
 }
 
-export function queryStringDefault(def: string) {
-  return z.codec(z.array(z.string()), z.string(), {
-    decode: (arr: string[]) => arr[0] ?? def,
-    encode: (s: string) => (s === def ? [] : [s]),
-  });
-}
-
 export function queryOptionalString() {
   return z.codec(z.array(z.string()), z.optional(z.string()), {
     decode: (arr: string[]) => {

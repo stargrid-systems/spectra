@@ -1,17 +1,11 @@
 import createClient from "openapi-fetch";
 import type { paths } from "./generated";
 import type {
-  ArtifactPage,
-  ArtifactSummary,
-  ArtifactVersion,
-  ArtifactVersionPage,
   BootList,
   BootResponse,
-  ListArtifactsParams,
   ListLogSpansParams,
   ListLogTargetsParams,
   ListLogsParams,
-  ListVersionsParams,
   LogEvent,
   LogEventPage,
   LogSpan,
@@ -63,45 +57,6 @@ export const apertureApi = {
     const { data, error } = await client.GET("/api/v1/version");
     if (error) throw error;
     return data!;
-  },
-
-  listArtifacts: async (params?: ListArtifactsParams): Promise<ArtifactPage> => {
-    const { data, error } = await client.GET("/api/v1/artifacts", {
-      params: { query: params },
-    });
-    if (error) throw error;
-    return data!;
-  },
-
-  getArtifact: async (key: string): Promise<ArtifactSummary> => {
-    const { data, error } = await client.GET("/api/v1/artifacts/{key}", {
-      params: { path: { key } },
-    });
-    if (error) throw error;
-    return data!;
-  },
-
-  listVersions: async (key: string, params?: ListVersionsParams): Promise<ArtifactVersionPage> => {
-    const { data, error } = await client.GET("/api/v1/artifacts/{key}/versions", {
-      params: { path: { key }, query: params },
-    });
-    if (error) throw error;
-    return data!;
-  },
-
-  getVersionDetail: async (key: string, digest: string): Promise<ArtifactVersion> => {
-    const { data, error } = await client.GET("/api/v1/artifacts/{key}/versions/{digest}", {
-      params: { path: { key, digest } },
-    });
-    if (error) throw error;
-    return data!;
-  },
-
-  deleteVersion: async (key: string, digest: string): Promise<void> => {
-    const { error } = await client.DELETE("/api/v1/artifacts/{key}/versions/{digest}", {
-      params: { path: { key, digest } },
-    });
-    if (error) throw error;
   },
 
   listLogs: async (params?: ListLogsParams): Promise<LogEventPage> => {
