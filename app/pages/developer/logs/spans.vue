@@ -45,7 +45,8 @@ async function loadChildren(parentId: string) {
   if (childrenCache.value.has(parentId) || loadingChildren.value.has(parentId)) return;
   loadingChildren.value.add(parentId);
   try {
-    const result = await apertureApi.listSpans({ parent_id: parentId });
+    const { parent_null: _, ...rest } = { ...spansParams.value, parent_id: parentId };
+    const result = await apertureApi.listSpans(rest);
     const children = result.items ?? [];
     for (const c of children) spanCache.value.set(c.id, c);
     childrenCache.value.set(parentId, children);
@@ -67,8 +68,9 @@ async function loadEvents(spanId: string) {
 
 const expandedSpans = computed(() => new Set(filters.expand.spans));
 
-function spanHasChildren(span: LogSpan): boolean {
-  return childrenCache.value.get(span.id)?.length !== 0;
+function spanExpandable(span: LogSpan): boolean {
+  const children = childrenCache.value.get(span.id);
+  return children === undefined || children.length > 0;
 }
 
 async function toggleSpan(span: LogSpan) {
@@ -159,7 +161,7 @@ ctx.onRefresh(() => {
             :name="
               expandedSpans.has(span.id)
                 ? 'i-lucide-chevron-down'
-                : spanHasChildren(span)
+                : spanExpandable(span)
                   ? 'i-lucide-chevron-right'
                   : 'i-lucide-dot'
             "
