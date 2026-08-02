@@ -1,16 +1,42 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
+  merge_queue:
 
 permissions:
   contents: read
   security-events: write
 
 jobs:
+  pr-title:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    steps:
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+        with:
+          types: |
+            feat
+            fix
+            chore
+            refactor
+            ci
+            docs
+            test
+            style
+            perf
+            build
+            revert
+          scopes: |
+            deps
+            ci
+            main
+          requireScope: false
+          subjectPattern: ^(?![A-Z]).+$
+
   quality:
     runs-on: ubuntu-26.04
     timeout-minutes: 25
@@ -51,11 +77,12 @@ jobs:
         run: npm run test
 
   e2e:
+    if: github.event_name == 'merge_queue'
     runs-on: ubuntu-26.04
     timeout-minutes: 25
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
@@ -71,3 +98,27 @@ jobs:
 
       - name: Run Playwright tests
         run: npm run test:e2e
+
+  gate:
+    name: Gate
+    needs: [pr-title, quality, e2e]
+    if: ${{ always() }}
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    steps:
+      - name: Verify required jobs
+        env:
+          PR_TITLE: ${{ needs.pr-title.result }}
+          QUALITY: ${{ needs.quality.result }}
+          E2E: ${{ needs.e2e.result }}
+        run: |
+          fail=0
+          for name in PR_TITLE QUALITY E2E; do
+            result="${!name}"
+            echo "${name}=${result}"
+            case "${result}" in
+              success|skipped) ;;
+              *) echo "::error::${name} did not pass (${result})"; fail=1 ;;
+            esac
+          done
+          exit "${fail}"
