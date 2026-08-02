@@ -13,7 +13,6 @@ dist
 node_modules
 
 # Logs
-logs
 *.log
 
 # Misc
@@ -26,3 +25,8 @@ eslint.sarif
 .env
 .env.*
 !.env.example
+
+# Playwright
+/playwright-report
+/test-results
+/playwright/.cache

@@ -1,6 +1,6 @@
 import type { Formatter, TemporalDate, UnitIdentifier } from "../types";
-import type { PolyfilledUnit } from "../units";
-import { polyfilledUnits } from "../units";
+import { formatDuration } from "../duration";
+import { isPolyfilledUnit, type PolyfilledUnit } from "../units";
 import { useI18n } from "#imports";
 
 export function useFormatter(): Formatter {
@@ -20,8 +20,8 @@ export function useFormatter(): Formatter {
     number: (value, options) => new Intl.NumberFormat(locale.value, options).format(value),
 
     unit: (value, unit: UnitIdentifier, options) => {
-      if ((polyfilledUnits as readonly string[]).includes(unit)) {
-        return formatPolyfilled(value, unit as PolyfilledUnit, options);
+      if (isPolyfilledUnit(unit)) {
+        return formatPolyfilled(value, unit, options);
       }
       const opts: Intl.NumberFormatOptions = { ...options, style: "unit", unit };
       return new Intl.NumberFormat(locale.value, opts).format(value);
@@ -34,6 +34,14 @@ export function useFormatter(): Formatter {
       }).format(value),
 
     date: (value: TemporalDate, options) => value.toLocaleString(locale.value, options),
+
+    dateRange: (start: Temporal.Instant, end: Temporal.Instant, options) =>
+      new Intl.DateTimeFormat(locale.value, options).formatRange(
+        new Date(start.epochMilliseconds),
+        new Date(end.epochMilliseconds),
+      ),
+
+    duration: (value, options) => formatDuration(value, locale.value, options),
 
     relativeTime: (duration: Temporal.Duration, options) => {
       const entries: Array<[number, Intl.RelativeTimeFormatUnit]> = [
@@ -54,5 +62,18 @@ export function useFormatter(): Formatter {
     },
 
     list: (items, options) => new Intl.ListFormat(locale.value, options).format(items),
+
+    toInputDatetimeLocal: (value: Temporal.Instant) =>
+      value
+        .toZonedDateTimeISO(Temporal.Now.timeZoneId())
+        .toPlainDateTime()
+        .toString({ smallestUnit: "minute" }),
+
+    fromInputDatetimeLocal: (value: string) => {
+      if (!value) return undefined;
+      return Temporal.PlainDateTime.from(value)
+        .toZonedDateTime(Temporal.Now.timeZoneId())
+        .toInstant();
+    },
   };
 }

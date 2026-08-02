@@ -35,10 +35,7 @@ const apertureVersion = computed(() => apertureData.value?.aperture ?? "—");
             $t("settings.sections.about.apertureVersion")
           }}</span>
           <div v-if="apertureStatus === 'pending'" class="flex items-center gap-2">
-            <UIcon
-              name="i-lucide-loader-circle"
-              class="size-4 animate-spin text-muted-foreground"
-            />
+            <LoadingSpinner class="size-4 text-muted-foreground" />
           </div>
           <UBadge v-else variant="soft" color="neutral">{{ apertureVersion }}</UBadge>
         </div>

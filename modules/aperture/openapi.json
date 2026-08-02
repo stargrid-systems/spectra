@@ -14,6 +14,78 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/api/v1/api-keys": {
+      "get": {
+        "summary": "Lists API keys for the authenticated actor.",
+        "operationId": "listApiKeys",
+        "responses": {
+          "200": {
+            "description": "API keys",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApiKeyResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a new API key for the authenticated actor.",
+        "operationId": "createApiKey",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApiKeyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "API key created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateApiKeyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/api-keys/{id}": {
+      "delete": {
+        "summary": "Deletes an API key.",
+        "operationId": "deleteApiKey",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "API key id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ApiKeyId"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "API key deleted"
+          },
+          "404": {
+            "description": "Unknown API key"
+          }
+        }
+      }
+    },
     "/api/v1/artifacts": {
       "get": {
         "summary": "Lists stored artifact keys, each with its newest version.",
@@ -85,7 +157,7 @@
             "description": "Artifact key",
             "required": true,
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/ArtifactKey"
             }
           }
         ],
@@ -104,6 +176,51 @@
             "description": "Unknown artifact"
           }
         }
+      },
+      "put": {
+        "summary": "Uploads a new artifact version.",
+        "description": "The request body is stored as a content-addressed blob. Subsequent uploads\nof identical bytes do not replace the prior version. Instead, a new\n`(key, digest)` row is recorded when the digest differs. This matches the\ncontent-addressed storage model but is not a strict RFC 9110 PUT (which\nwould replace prior state). Treat this endpoint as \"store these bytes under\nthis key\" rather than \"set this key to these bytes\".",
+        "operationId": "uploadArtifact",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "description": "Artifact key",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ArtifactKey"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Raw artifact bytes to store",
+          "content": {
+            "application/octet-stream": {}
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Version stored",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Path to the newly stored version"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactVersionResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body exceeded the maximum upload size"
+          }
+        }
       }
     },
     "/api/v1/artifacts/{key}/versions": {
@@ -117,7 +234,7 @@
             "description": "Artifact key",
             "required": true,
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/ArtifactKey"
             }
           },
           {
@@ -166,7 +283,7 @@
             "description": "Only versions with this exact media type.",
             "required": false,
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/MediaType"
             }
           },
           {
@@ -204,7 +321,7 @@
             "description": "Artifact key",
             "required": true,
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/ArtifactKey"
             }
           },
           {
@@ -213,7 +330,7 @@
             "description": "Content digest",
             "required": true,
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/Digest"
             }
           }
         ],
@@ -243,7 +360,7 @@
             "description": "Artifact key",
             "required": true,
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/ArtifactKey"
             }
           },
           {
@@ -252,7 +369,7 @@
             "description": "Content digest",
             "required": true,
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/Digest"
             }
           }
         ],
@@ -264,6 +381,190 @@
             "description": "Unknown version"
           }
         }
+      }
+    },
+    "/api/v1/artifacts/{key}/versions/{digest}/blob": {
+      "get": {
+        "summary": "Downloads the blob content of one stored version.",
+        "operationId": "downloadArtifactBlob",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "description": "Artifact key",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ArtifactKey"
+            }
+          },
+          {
+            "name": "digest",
+            "in": "path",
+            "description": "Content digest",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Digest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Blob content",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Immutable caching directive"
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Quoted content digest"
+              },
+              "Last-Modified": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "HTTP timestamp of the upload"
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Always `nosniff`"
+              }
+            }
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "404": {
+            "description": "Unknown version"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/change-password": {
+      "post": {
+        "summary": "Changes the password for the authenticated user.",
+        "operationId": "changePassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Password changed"
+          },
+          "401": {
+            "description": "Current password is incorrect"
+          },
+          "403": {
+            "description": "API-key authenticated callers cannot change a password"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "summary": "Authenticates a user and creates a session.",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "summary": "Destroys the current session.",
+        "operationId": "logout",
+        "responses": {
+          "204": {
+            "description": "Logged out"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/setup": {
+      "post": {
+        "summary": "Creates the initial admin user. Only available when no users exist.",
+        "operationId": "setup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Setup complete, session created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Setup already complete"
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/api/v1/auth/setup-status": {
+      "get": {
+        "summary": "Returns whether initial setup (creating the first admin user) is needed.",
+        "operationId": "getSetupStatus",
+        "responses": {
+          "200": {
+            "description": "Setup status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupStatusResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
       }
     },
     "/api/v1/logs": {
@@ -338,7 +639,7 @@
             "description": "Only events belonging to this span.",
             "required": false,
             "schema": {
-              "$ref": "#/components/schemas/DbId"
+              "$ref": "#/components/schemas/SpanId"
             }
           },
           {
@@ -509,7 +810,7 @@
             "description": "Only direct children of this span id.",
             "required": false,
             "schema": {
-              "$ref": "#/components/schemas/DbId"
+              "$ref": "#/components/schemas/SpanId"
             }
           },
           {
@@ -556,7 +857,7 @@
             "description": "Span id",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/DbId"
+              "$ref": "#/components/schemas/SpanId"
             }
           }
         ],
@@ -630,6 +931,178 @@
         }
       }
     },
+    "/api/v1/task-schedules": {
+      "get": {
+        "summary": "Lists every periodic task schedule.",
+        "operationId": "listTaskSchedules",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrderParam"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task schedules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_TaskScheduleResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a new periodic task schedule.",
+        "operationId": "createTaskSchedule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Task schedule created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskScheduleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    },
+    "/api/v1/task-schedules/{id}": {
+      "get": {
+        "summary": "Returns one task schedule.",
+        "operationId": "getTaskSchedule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Task schedule id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TaskScheduleId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task schedule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskScheduleResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown task schedule"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes a task schedule.",
+        "operationId": "deleteTaskSchedule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Task schedule id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TaskScheduleId"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Task schedule deleted"
+          },
+          "404": {
+            "description": "Unknown task schedule"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates a task schedule's interval and/or enabled flag.",
+        "operationId": "updateTaskSchedule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Task schedule id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TaskScheduleId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Task schedule updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskScheduleResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown task schedule"
+          }
+        }
+      }
+    },
     "/api/v1/tasks": {
       "get": {
         "summary": "Lists task invocations, optionally filtered by status, kind, and parent.\nRunning tasks carry live progress.",
@@ -690,7 +1163,7 @@
             "description": "Only children of this task.",
             "required": false,
             "schema": {
-              "$ref": "#/components/schemas/DbId"
+              "$ref": "#/components/schemas/TaskId"
             }
           },
           {
@@ -753,7 +1226,8 @@
         }
       },
       "post": {
-        "summary": "Creates a task of the given kind and starts it. The body input is validated\nagainst the kind's input schema.",
+        "summary": "Creates a task of the given kind and starts it.",
+        "description": "The body input is validated against the kind's input schema.",
         "operationId": "createTask",
         "requestBody": {
           "content": {
@@ -793,7 +1267,7 @@
             "description": "Task id",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/DbId"
+              "$ref": "#/components/schemas/TaskId"
             }
           }
         ],
@@ -825,7 +1299,7 @@
             "description": "Task id",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/DbId"
+              "$ref": "#/components/schemas/TaskId"
             }
           }
         ],
@@ -841,6 +1315,111 @@
           },
           "410": {
             "description": "Task has already finished"
+          }
+        }
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "summary": "Lists all users.",
+        "operationId": "listUsers",
+        "responses": {
+          "200": {
+            "description": "Users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a new user.",
+        "operationId": "createUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "User created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          }
+        }
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "summary": "Returns one user.",
+        "operationId": "getUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "User id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UserId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown user"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes a user.",
+        "operationId": "deleteUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "User id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UserId"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User deleted"
+          },
+          "404": {
+            "description": "Unknown user"
           }
         }
       }
@@ -866,13 +1445,40 @@
   },
   "components": {
     "schemas": {
+      "ApiKeyId": {
+        "type": "string",
+        "description": "Primary key of a row in the `api_keys` table."
+      },
+      "ApiKeyResponse": {
+        "type": "object",
+        "required": ["id", "name", "prefix"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "last_used_at": {
+            "type": ["string", "null"]
+          },
+          "name": {
+            "type": "string"
+          },
+          "prefix": {
+            "type": "string"
+          }
+        }
+      },
+      "ArtifactKey": {
+        "type": "string",
+        "description": "Logical artifact identifier, for example `spectra` or `tls_server-cert`.",
+        "maxLength": 1024
+      },
       "ArtifactSummaryResponse": {
         "type": "object",
         "description": "A distinct artifact key with its newest version, for `GET\n/api/v1/artifacts`.",
         "required": ["key", "version_count", "source", "digest", "size_bytes", "downloaded_at"],
         "properties": {
           "digest": {
-            "type": "string",
+            "$ref": "#/components/schemas/Digest",
             "description": "Content digest of the newest version."
           },
           "downloaded_at": {
@@ -912,7 +1518,7 @@
         "required": ["key", "digest", "source", "size_bytes", "downloaded_at"],
         "properties": {
           "digest": {
-            "type": "string",
+            "$ref": "#/components/schemas/Digest",
             "description": "Content digest of the stored blob."
           },
           "downloaded_at": {
@@ -925,8 +1531,15 @@
             "description": "Logical artifact key."
           },
           "media_type": {
-            "type": ["string", "null"],
-            "description": "OCI media type, if applicable."
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MediaType",
+                "description": "OCI media type, if applicable."
+              }
+            ]
           },
           "size_bytes": {
             "type": "integer",
@@ -981,6 +1594,57 @@
           }
         }
       },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "required": ["current_password", "new_password"],
+        "properties": {
+          "current_password": {
+            "$ref": "#/components/schemas/Password"
+          },
+          "new_password": {
+            "$ref": "#/components/schemas/Password"
+          }
+        }
+      },
+      "CreateApiKeyRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Role",
+                "description": "Optional role to assign to this key's casbin subject."
+              }
+            ]
+          }
+        }
+      },
+      "CreateApiKeyResponse": {
+        "type": "object",
+        "required": ["id", "name", "prefix", "key"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "key": {
+            "$ref": "#/components/schemas/RawApiKey",
+            "description": "The full key. Only visible at creation time."
+          },
+          "name": {
+            "type": "string"
+          },
+          "prefix": {
+            "type": "string"
+          }
+        }
+      },
       "CreateTaskInput": {
         "oneOf": [
           {
@@ -993,6 +1657,19 @@
               "kind": {
                 "type": "string",
                 "enum": ["download"]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": ["kind", "input"],
+            "properties": {
+              "input": {
+                "$ref": "#/components/schemas/RotateCertificateInput"
+              },
+              "kind": {
+                "type": "string",
+                "enum": ["rotate-certificate"]
               }
             }
           }
@@ -1015,9 +1692,45 @@
           }
         }
       },
-      "DbId": {
+      "CreateTaskScheduleRequest": {
+        "type": "object",
+        "description": "Body for `POST /api/v1/task-schedules`.",
+        "required": ["kind", "input", "interval"],
+        "properties": {
+          "input": {},
+          "interval": {
+            "$ref": "#/components/schemas/Interval"
+          },
+          "kind": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateUserRequest": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "password": {
+            "$ref": "#/components/schemas/Password"
+          },
+          "role": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Role"
+              }
+            ]
+          },
+          "username": {
+            "$ref": "#/components/schemas/Username"
+          }
+        }
+      },
+      "Digest": {
         "type": "string",
-        "description": "Primary key of a row in the database (SQLite rowid).\n\nWraps an [`i64`] so that parsing and display are centralized on the type\nitself rather than scattered as free functions. Serializes as a string to\nkeep the API representation opaque."
+        "description": "Content digest, e.g. `sha256:hex`."
       },
       "DownloadInput": {
         "type": "object",
@@ -1025,7 +1738,7 @@
         "required": ["key", "source"],
         "properties": {
           "key": {
-            "type": "string",
+            "$ref": "#/components/schemas/ArtifactKey",
             "description": "Logical key to record the artifact under."
           },
           "source": {
@@ -1040,7 +1753,7 @@
         "required": ["digest", "size_bytes"],
         "properties": {
           "digest": {
-            "type": "string",
+            "$ref": "#/components/schemas/Digest",
             "description": "Content digest of the stored blob."
           },
           "size_bytes": {
@@ -1063,7 +1776,7 @@
             "required": ["reference", "media_type", "type"],
             "properties": {
               "media_type": {
-                "type": "string",
+                "$ref": "#/components/schemas/MediaType",
                 "description": "The media type of the layer to pull."
               },
               "reference": {
@@ -1079,9 +1792,19 @@
         ],
         "description": "Where a download fetches from."
       },
+      "EventId": {
+        "type": "string",
+        "description": "Primary key of a row in the `log_events` table."
+      },
+      "Interval": {
+        "type": "string",
+        "format": "duration",
+        "description": "A strictly-positive span of time, stored as a whole number of microseconds.\n\nOn the wire an interval is an ISO 8601 duration such as `PT5M`. Jiff also\naccepts its friendlier form (`5m`) on input.",
+        "example": "PT5M"
+      },
       "JsonQueryString": {
         "type": "string",
-        "description": "A structured field filter passed as a string-encoded JSON object in a\nquery parameter, e.g. `{\"key\":\"value\"}`. The raw string is parsed into\nkey-value pairs during deserialization.",
+        "description": "A structured field filter passed as a string-encoded JSON object in a\nquery parameter, e.g. `{\"key\":\"value\"}`.\n\nThe raw string is parsed into key-value pairs during deserialization.",
         "example": "{\"status\":\"ok\"}"
       },
       "LevelResponse": {
@@ -1112,7 +1835,7 @@
             "description": "Source file, if available."
           },
           "id": {
-            "$ref": "#/components/schemas/DbId",
+            "$ref": "#/components/schemas/EventId",
             "description": "Event id."
           },
           "level": {
@@ -1135,7 +1858,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/DbId",
+                "$ref": "#/components/schemas/SpanId",
                 "description": "Span this event belongs to, if any."
               }
             ]
@@ -1195,7 +1918,7 @@
             "description": "Source file, if available."
           },
           "id": {
-            "$ref": "#/components/schemas/DbId",
+            "$ref": "#/components/schemas/SpanId",
             "description": "Span id."
           },
           "level": {
@@ -1218,7 +1941,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/DbId",
+                "$ref": "#/components/schemas/SpanId",
                 "description": "Parent span id, if any."
               }
             ]
@@ -1233,6 +1956,31 @@
             "description": "Module path that created the span."
           }
         }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "password": {
+            "$ref": "#/components/schemas/Password"
+          },
+          "username": {
+            "$ref": "#/components/schemas/Username"
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "required": ["must_change_password"],
+        "properties": {
+          "must_change_password": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MediaType": {
+        "type": "string",
+        "description": "A bare 'type/subtype' media type with no parameters."
       },
       "OrderParam": {
         "type": "string",
@@ -1259,7 +2007,7 @@
               ],
               "properties": {
                 "digest": {
-                  "type": "string",
+                  "$ref": "#/components/schemas/Digest",
                   "description": "Content digest of the newest version."
                 },
                 "downloaded_at": {
@@ -1318,7 +2066,7 @@
               "required": ["key", "digest", "source", "size_bytes", "downloaded_at"],
               "properties": {
                 "digest": {
-                  "type": "string",
+                  "$ref": "#/components/schemas/Digest",
                   "description": "Content digest of the stored blob."
                 },
                 "downloaded_at": {
@@ -1331,8 +2079,15 @@
                   "description": "Logical artifact key."
                 },
                 "media_type": {
-                  "type": ["string", "null"],
-                  "description": "OCI media type, if applicable."
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MediaType",
+                      "description": "OCI media type, if applicable."
+                    }
+                  ]
                 },
                 "size_bytes": {
                   "type": "integer",
@@ -1397,7 +2152,7 @@
                   "description": "Source file, if available."
                 },
                 "id": {
-                  "$ref": "#/components/schemas/DbId",
+                  "$ref": "#/components/schemas/EventId",
                   "description": "Event id."
                 },
                 "level": {
@@ -1420,7 +2175,7 @@
                       "type": "null"
                     },
                     {
-                      "$ref": "#/components/schemas/DbId",
+                      "$ref": "#/components/schemas/SpanId",
                       "description": "Span this event belongs to, if any."
                     }
                   ]
@@ -1478,7 +2233,7 @@
                   "description": "Source file, if available."
                 },
                 "id": {
-                  "$ref": "#/components/schemas/DbId",
+                  "$ref": "#/components/schemas/SpanId",
                   "description": "Span id."
                 },
                 "level": {
@@ -1501,7 +2256,7 @@
                       "type": "null"
                     },
                     {
-                      "$ref": "#/components/schemas/DbId",
+                      "$ref": "#/components/schemas/SpanId",
                       "description": "Parent span id, if any."
                     }
                   ]
@@ -1556,7 +2311,7 @@
                   "description": "When it finished, if it did."
                 },
                 "id": {
-                  "$ref": "#/components/schemas/DbId",
+                  "$ref": "#/components/schemas/TaskId",
                   "description": "Invocation id."
                 },
                 "input": {
@@ -1575,7 +2330,7 @@
                       "type": "null"
                     },
                     {
-                      "$ref": "#/components/schemas/DbId",
+                      "$ref": "#/components/schemas/TaskId",
                       "description": "The parent invocation, if this task was spawned by another."
                     }
                   ]
@@ -1613,6 +2368,78 @@
             "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
           }
         }
+      },
+      "Page_TaskScheduleResponse": {
+        "type": "object",
+        "description": "A page of results plus the cursors for the neighbouring pages.",
+        "required": ["items"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "kind",
+                "input",
+                "interval",
+                "next_run_at",
+                "enabled",
+                "created_at"
+              ],
+              "properties": {
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "enabled": {
+                  "type": "boolean"
+                },
+                "id": {
+                  "$ref": "#/components/schemas/TaskScheduleId"
+                },
+                "input": {},
+                "interval": {
+                  "$ref": "#/components/schemas/Interval"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "last_run_at": {
+                  "type": ["string", "null"],
+                  "format": "date-time"
+                },
+                "last_task_id": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/TaskId"
+                    }
+                  ]
+                },
+                "next_run_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "description": "The rows in this page."
+          },
+          "next_cursor": {
+            "type": ["string", "null"],
+            "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
+          },
+          "prev_cursor": {
+            "type": ["string", "null"],
+            "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
+          }
+        }
+      },
+      "Password": {
+        "type": "string",
+        "description": "A plaintext password. Redacts in Debug output to avoid accidental leakage.\n\nUnlike [`Username`](crate::Username), `Password` does NOT validate on\nconstruction or deserialization. This is deliberate: the login handler must\naccept any password string (even one below the minimum length) so the\nrequest reaches the handler body where the rate limiter is consulted.\nValidating at deserialization would let an attacker bypass rate limiting\nby sending short passwords (they would be rejected with a 400 before the\nhandler runs). Password validation happens in\n[`AuthHandle`](crate::AuthHandle) methods (`create_user`,\n`change_password`, `setup_admin`) instead."
       },
       "ProgressMessageResponse": {
         "type": "object",
@@ -1664,6 +2491,54 @@
           }
         }
       },
+      "RawApiKey": {
+        "type": "string",
+        "description": "A raw API key. Redacts in Debug output."
+      },
+      "Role": {
+        "type": "string",
+        "description": "A built-in role. Stored as its lowercase name in casbin grouping rules.",
+        "enum": ["admin", "operator", "viewer"]
+      },
+      "RotateCertificateInput": {
+        "type": "object",
+        "description": "Rotation takes no parameters (identity-preserving)."
+      },
+      "RotateCertificateOutput": {
+        "type": "object",
+        "required": ["rotated"],
+        "properties": {
+          "rotated": {
+            "type": "boolean",
+            "description": "Whether the leaf was actually re-issued."
+          }
+        }
+      },
+      "SetupRequest": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "password": {
+            "$ref": "#/components/schemas/Password"
+          },
+          "username": {
+            "$ref": "#/components/schemas/Username"
+          }
+        }
+      },
+      "SetupStatusResponse": {
+        "type": "object",
+        "required": ["setup_required"],
+        "properties": {
+          "setup_required": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SpanId": {
+        "type": "string",
+        "description": "Primary key of a row in the `log_spans` table."
+      },
       "TaskDefinitionResponse": {
         "type": "object",
         "description": "A registered task kind, with its capabilities and JSON Schemas.",
@@ -1689,6 +2564,10 @@
           }
         }
       },
+      "TaskId": {
+        "type": "string",
+        "description": "Primary key of a row in the `tasks` table."
+      },
       "TaskResponse": {
         "type": "object",
         "description": "One task invocation, returned by the task endpoints.",
@@ -1709,7 +2588,7 @@
             "description": "When it finished, if it did."
           },
           "id": {
-            "$ref": "#/components/schemas/DbId",
+            "$ref": "#/components/schemas/TaskId",
             "description": "Invocation id."
           },
           "input": {
@@ -1728,7 +2607,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/DbId",
+                "$ref": "#/components/schemas/TaskId",
                 "description": "The parent invocation, if this task was spawned by another."
               }
             ]
@@ -1755,6 +2634,51 @@
           }
         }
       },
+      "TaskScheduleId": {
+        "type": "string",
+        "description": "Primary key of a row in the `task_schedules` table."
+      },
+      "TaskScheduleResponse": {
+        "type": "object",
+        "required": ["id", "kind", "input", "interval", "next_run_at", "enabled", "created_at"],
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "id": {
+            "$ref": "#/components/schemas/TaskScheduleId"
+          },
+          "input": {},
+          "interval": {
+            "$ref": "#/components/schemas/Interval"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "last_run_at": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "last_task_id": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TaskId"
+              }
+            ]
+          },
+          "next_run_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "TaskStatusParam": {
         "type": "string",
         "description": "Filter for task status, including the `active` and `finished` groups.",
@@ -1773,6 +2697,51 @@
         "type": "string",
         "description": "Lifecycle state of a task invocation.",
         "enum": ["pending", "running", "succeeded", "failed", "cancelled", "interrupted"]
+      },
+      "UpdateTaskScheduleRequest": {
+        "type": "object",
+        "description": "Body for `PATCH /api/v1/task-schedules/{id}`.",
+        "properties": {
+          "enabled": {
+            "type": ["boolean", "null"]
+          },
+          "interval": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Interval"
+              }
+            ]
+          }
+        }
+      },
+      "UserId": {
+        "type": "string",
+        "description": "Primary key of a row in the `users` table."
+      },
+      "UserResponse": {
+        "type": "object",
+        "required": ["id", "actor_id", "username", "must_change_password"],
+        "properties": {
+          "actor_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "must_change_password": {
+            "type": "boolean"
+          },
+          "username": {
+            "type": "string"
+          }
+        }
+      },
+      "Username": {
+        "type": "string",
+        "description": "A login name that is guaranteed valid by construction.\n\nAllowed characters are ASCII letters, digits, and `_`, `-`, `.`. The length\nis bounded to 1..=64 characters. Because validation runs in [`TryFrom`] (and\ntherefore during deserialization), a request body with an invalid username\nis rejected at the extractor boundary with a `400` before any handler runs."
       },
       "VersionResponse": {
         "type": "object",
@@ -1795,6 +2764,25 @@
         "description": "Field a version listing is sorted by.",
         "enum": ["downloaded_at", "size_bytes"]
       }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "SessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "aperture_session"
+      }
     }
-  }
+  },
+  "security": [
+    {
+      "SessionCookie": []
+    },
+    {
+      "BearerAuth": []
+    }
+  ]
 }

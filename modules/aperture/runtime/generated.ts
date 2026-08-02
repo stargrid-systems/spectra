@@ -4,6 +4,41 @@
  */
 
 export interface paths {
+  "/api/v1/api-keys": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Lists API keys for the authenticated actor. */
+    get: operations["listApiKeys"];
+    put?: never;
+    /** Creates a new API key for the authenticated actor. */
+    post: operations["createApiKey"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/api-keys/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Deletes an API key. */
+    delete: operations["deleteApiKey"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/artifacts": {
     parameters: {
       query?: never;
@@ -30,7 +65,16 @@ export interface paths {
     };
     /** Returns one artifact key with its newest version. */
     get: operations["getArtifact"];
-    put?: never;
+    /**
+     * Uploads a new artifact version.
+     * @description The request body is stored as a content-addressed blob. Subsequent uploads
+     *     of identical bytes do not replace the prior version. Instead, a new
+     *     `(key, digest)` row is recorded when the digest differs. This matches the
+     *     content-addressed storage model but is not a strict RFC 9110 PUT (which
+     *     would replace prior state). Treat this endpoint as "store these bytes under
+     *     this key" rather than "set this key to these bytes".
+     */
+    put: operations["uploadArtifact"];
     post?: never;
     delete?: never;
     options?: never;
@@ -68,6 +112,108 @@ export interface paths {
     post?: never;
     /** Evicts one stored version and its blob, if no other version needs it. */
     delete: operations["deleteArtifactVersion"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/artifacts/{key}/versions/{digest}/blob": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Downloads the blob content of one stored version. */
+    get: operations["downloadArtifactBlob"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/change-password": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Changes the password for the authenticated user. */
+    post: operations["changePassword"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/login": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Authenticates a user and creates a session. */
+    post: operations["login"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/logout": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Destroys the current session. */
+    post: operations["logout"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/setup": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Creates the initial admin user. Only available when no users exist. */
+    post: operations["setup"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/setup-status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Returns whether initial setup (creating the first admin user) is needed. */
+    get: operations["getSetupStatus"];
+    put?: never;
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -175,6 +321,43 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/task-schedules": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Lists every periodic task schedule. */
+    get: operations["listTaskSchedules"];
+    put?: never;
+    /** Creates a new periodic task schedule. */
+    post: operations["createTaskSchedule"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/task-schedules/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Returns one task schedule. */
+    get: operations["getTaskSchedule"];
+    put?: never;
+    post?: never;
+    /** Deletes a task schedule. */
+    delete: operations["deleteTaskSchedule"];
+    options?: never;
+    head?: never;
+    /** Updates a task schedule's interval and/or enabled flag. */
+    patch: operations["updateTaskSchedule"];
+    trace?: never;
+  };
   "/api/v1/tasks": {
     parameters: {
       query?: never;
@@ -189,8 +372,8 @@ export interface paths {
     get: operations["listTasks"];
     put?: never;
     /**
-     * Creates a task of the given kind and starts it. The body input is validated
-     *     against the kind's input schema.
+     * Creates a task of the given kind and starts it.
+     * @description The body input is validated against the kind's input schema.
      */
     post: operations["createTask"];
     delete?: never;
@@ -233,6 +416,42 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/users": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Lists all users. */
+    get: operations["listUsers"];
+    put?: never;
+    /** Creates a new user. */
+    post: operations["createUser"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/users/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Returns one user. */
+    get: operations["getUser"];
+    put?: never;
+    post?: never;
+    /** Deletes a user. */
+    delete: operations["deleteUser"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/version": {
     parameters: {
       query?: never;
@@ -254,13 +473,23 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /** @description Primary key of a row in the `api_keys` table. */
+    ApiKeyId: string;
+    ApiKeyResponse: {
+      id: string;
+      last_used_at?: string | null;
+      name: string;
+      prefix: string;
+    };
+    /** @description Logical artifact identifier, for example `spectra` or `tls_server-cert`. */
+    ArtifactKey: string;
     /**
      * @description A distinct artifact key with its newest version, for `GET
      *     /api/v1/artifacts`.
      */
     ArtifactSummaryResponse: {
       /** @description Content digest of the newest version. */
-      digest: string;
+      digest: components["schemas"]["Digest"];
       /**
        * Format: date-time
        * @description When the newest version was downloaded.
@@ -286,7 +515,7 @@ export interface components {
     /** @description One stored version of an artifact. */
     ArtifactVersionResponse: {
       /** @description Content digest of the stored blob. */
-      digest: string;
+      digest: components["schemas"]["Digest"];
       /**
        * Format: date-time
        * @description When this version was downloaded.
@@ -294,8 +523,7 @@ export interface components {
       downloaded_at: string;
       /** @description Logical artifact key. */
       key: string;
-      /** @description OCI media type, if applicable. */
-      media_type?: string | null;
+      media_type?: null | components["schemas"]["MediaType"];
       /**
        * Format: int64
        * @description Stored blob size in bytes.
@@ -339,11 +567,32 @@ export interface components {
        */
       last_seen: string;
     };
-    CreateTaskInput: {
-      input: components["schemas"]["DownloadInput"];
-      /** @enum {string} */
-      kind: "download";
+    ChangePasswordRequest: {
+      current_password: components["schemas"]["Password"];
+      new_password: components["schemas"]["Password"];
     };
+    CreateApiKeyRequest: {
+      name: string;
+      role?: null | components["schemas"]["Role"];
+    };
+    CreateApiKeyResponse: {
+      id: string;
+      /** @description The full key. Only visible at creation time. */
+      key: components["schemas"]["RawApiKey"];
+      name: string;
+      prefix: string;
+    };
+    CreateTaskInput:
+      | {
+          input: components["schemas"]["DownloadInput"];
+          /** @enum {string} */
+          kind: "download";
+        }
+      | {
+          input: components["schemas"]["RotateCertificateInput"];
+          /** @enum {string} */
+          kind: "rotate-certificate";
+        };
     /** @description Body for `POST /api/v1/tasks`. */
     CreateTaskRequest: {
       /** @description The task input, matching the kind's input schema. */
@@ -351,25 +600,30 @@ export interface components {
       /** @description The kind of task to create. */
       kind: string;
     };
-    /**
-     * @description Primary key of a row in the database (SQLite rowid).
-     *
-     *     Wraps an [`i64`] so that parsing and display are centralized on the type
-     *     itself rather than scattered as free functions. Serializes as a string to
-     *     keep the API representation opaque.
-     */
-    DbId: string;
+    /** @description Body for `POST /api/v1/task-schedules`. */
+    CreateTaskScheduleRequest: {
+      input: unknown;
+      interval: components["schemas"]["Interval"];
+      kind: string;
+    };
+    CreateUserRequest: {
+      password: components["schemas"]["Password"];
+      role?: null | components["schemas"]["Role"];
+      username: components["schemas"]["Username"];
+    };
+    /** @description Content digest, e.g. `sha256:hex`. */
+    Digest: string;
     /** @description Input for a download task: what to fetch and where from. */
     DownloadInput: {
       /** @description Logical key to record the artifact under. */
-      key: string;
+      key: components["schemas"]["ArtifactKey"];
       /** @description Where and how to fetch it from. */
       source: components["schemas"]["DownloadSource"];
     };
     /** @description Output of a download task: the stored version that resulted. */
     DownloadOutput: {
       /** @description Content digest of the stored blob. */
-      digest: string;
+      digest: components["schemas"]["Digest"];
       /**
        * Format: int64
        * @description Stored blob size in bytes.
@@ -381,16 +635,28 @@ export interface components {
     /** @description Where a download fetches from. */
     DownloadSource: {
       /** @description The media type of the layer to pull. */
-      media_type: string;
+      media_type: components["schemas"]["MediaType"];
       /** @description The image reference, for example `ghcr.io/org/image:tag`. */
       reference: string;
       /** @enum {string} */
       type: "oci";
     };
+    /** @description Primary key of a row in the `log_events` table. */
+    EventId: string;
+    /**
+     * Format: duration
+     * @description A strictly-positive span of time, stored as a whole number of microseconds.
+     *
+     *     On the wire an interval is an ISO 8601 duration such as `PT5M`. Jiff also
+     *     accepts its friendlier form (`5m`) on input.
+     * @example PT5M
+     */
+    Interval: string;
     /**
      * @description A structured field filter passed as a string-encoded JSON object in a
-     *     query parameter, e.g. `{"key":"value"}`. The raw string is parsed into
-     *     key-value pairs during deserialization.
+     *     query parameter, e.g. `{"key":"value"}`.
+     *
+     *     The raw string is parsed into key-value pairs during deserialization.
      * @example {"status":"ok"}
      */
     JsonQueryString: string;
@@ -413,7 +679,7 @@ export interface components {
       /** @description Source file, if available. */
       file?: string | null;
       /** @description Event id. */
-      id: components["schemas"]["DbId"];
+      id: components["schemas"]["EventId"];
       /** @description Severity level. */
       level: components["schemas"]["LevelResponse"];
       /**
@@ -423,7 +689,7 @@ export interface components {
       line?: number | null;
       /** @description Human-readable message, if any. */
       message?: string | null;
-      span_id?: null | components["schemas"]["DbId"];
+      span_id?: null | components["schemas"]["SpanId"];
       /** @description Module path that emitted the event. */
       target: string;
       /**
@@ -451,7 +717,7 @@ export interface components {
       /** @description Source file, if available. */
       file?: string | null;
       /** @description Span id. */
-      id: components["schemas"]["DbId"];
+      id: components["schemas"]["SpanId"];
       /** @description Severity level. */
       level: components["schemas"]["LevelResponse"];
       /**
@@ -461,7 +727,7 @@ export interface components {
       line?: number | null;
       /** @description Span name. */
       name: string;
-      parent_id?: null | components["schemas"]["DbId"];
+      parent_id?: null | components["schemas"]["SpanId"];
       /**
        * Format: date-time
        * @description When the span started.
@@ -470,6 +736,15 @@ export interface components {
       /** @description Module path that created the span. */
       target: string;
     };
+    LoginRequest: {
+      password: components["schemas"]["Password"];
+      username: components["schemas"]["Username"];
+    };
+    LoginResponse: {
+      must_change_password: boolean;
+    };
+    /** @description A bare 'type/subtype' media type with no parameters. */
+    MediaType: string;
     /**
      * @description Sort direction shared by list endpoints.
      * @enum {string}
@@ -480,7 +755,7 @@ export interface components {
       /** @description The rows in this page. */
       items: {
         /** @description Content digest of the newest version. */
-        digest: string;
+        digest: components["schemas"]["Digest"];
         /**
          * Format: date-time
          * @description When the newest version was downloaded.
@@ -513,7 +788,7 @@ export interface components {
       /** @description The rows in this page. */
       items: {
         /** @description Content digest of the stored blob. */
-        digest: string;
+        digest: components["schemas"]["Digest"];
         /**
          * Format: date-time
          * @description When this version was downloaded.
@@ -521,8 +796,7 @@ export interface components {
         downloaded_at: string;
         /** @description Logical artifact key. */
         key: string;
-        /** @description OCI media type, if applicable. */
-        media_type?: string | null;
+        media_type?: null | components["schemas"]["MediaType"];
         /**
          * Format: int64
          * @description Stored blob size in bytes.
@@ -559,7 +833,7 @@ export interface components {
         /** @description Source file, if available. */
         file?: string | null;
         /** @description Event id. */
-        id: components["schemas"]["DbId"];
+        id: components["schemas"]["EventId"];
         /** @description Severity level. */
         level: components["schemas"]["LevelResponse"];
         /**
@@ -569,7 +843,7 @@ export interface components {
         line?: number | null;
         /** @description Human-readable message, if any. */
         message?: string | null;
-        span_id?: null | components["schemas"]["DbId"];
+        span_id?: null | components["schemas"]["SpanId"];
         /** @description Module path that emitted the event. */
         target: string;
         /**
@@ -599,7 +873,7 @@ export interface components {
         /** @description Source file, if available. */
         file?: string | null;
         /** @description Span id. */
-        id: components["schemas"]["DbId"];
+        id: components["schemas"]["SpanId"];
         /** @description Severity level. */
         level: components["schemas"]["LevelResponse"];
         /**
@@ -609,7 +883,7 @@ export interface components {
         line?: number | null;
         /** @description Span name. */
         name: string;
-        parent_id?: null | components["schemas"]["DbId"];
+        parent_id?: null | components["schemas"]["SpanId"];
         /**
          * Format: date-time
          * @description When the span started.
@@ -640,14 +914,14 @@ export interface components {
          */
         finished_at?: string | null;
         /** @description Invocation id. */
-        id: components["schemas"]["DbId"];
+        id: components["schemas"]["TaskId"];
         /** @description The input the task was created with. */
         input: unknown;
         /** @description The kind of task. */
         kind: string;
         /** @description The output, once the task succeeds. */
         output?: unknown;
-        parent_id?: null | components["schemas"]["DbId"];
+        parent_id?: null | components["schemas"]["TaskId"];
         progress?: null | components["schemas"]["ProgressResponse"];
         /**
          * Format: date-time
@@ -662,6 +936,42 @@ export interface components {
       /** @description Cursor to pass as `?cursor=` for the previous page. Null at the start. */
       prev_cursor?: string | null;
     };
+    /** @description A page of results plus the cursors for the neighbouring pages. */
+    Page_TaskScheduleResponse: {
+      /** @description The rows in this page. */
+      items: {
+        /** Format: date-time */
+        created_at: string;
+        enabled: boolean;
+        id: components["schemas"]["TaskScheduleId"];
+        input: unknown;
+        interval: components["schemas"]["Interval"];
+        kind: string;
+        /** Format: date-time */
+        last_run_at?: string | null;
+        last_task_id?: null | components["schemas"]["TaskId"];
+        /** Format: date-time */
+        next_run_at: string;
+      }[];
+      /** @description Cursor to pass as `?cursor=` for the next page. Null at the end. */
+      next_cursor?: string | null;
+      /** @description Cursor to pass as `?cursor=` for the previous page. Null at the start. */
+      prev_cursor?: string | null;
+    };
+    /**
+     * @description A plaintext password. Redacts in Debug output to avoid accidental leakage.
+     *
+     *     Unlike [`Username`](crate::Username), `Password` does NOT validate on
+     *     construction or deserialization. This is deliberate: the login handler must
+     *     accept any password string (even one below the minimum length) so the
+     *     request reaches the handler body where the rate limiter is consulted.
+     *     Validating at deserialization would let an attacker bypass rate limiting
+     *     by sending short passwords (they would be rejected with a 400 before the
+     *     handler runs). Password validation happens in
+     *     [`AuthHandle`](crate::AuthHandle) methods (`create_user`,
+     *     `change_password`, `setup_admin`) instead.
+     */
+    Password: string;
     /** @description A localizable progress message: a translation key and its arguments. */
     ProgressMessageResponse: {
       /** @description Arguments to interpolate into the resolved message. */
@@ -685,6 +995,28 @@ export interface components {
        */
       total?: number | null;
     };
+    /** @description A raw API key. Redacts in Debug output. */
+    RawApiKey: string;
+    /**
+     * @description A built-in role. Stored as its lowercase name in casbin grouping rules.
+     * @enum {string}
+     */
+    Role: "admin" | "operator" | "viewer";
+    /** @description Rotation takes no parameters (identity-preserving). */
+    RotateCertificateInput: Record<string, never>;
+    RotateCertificateOutput: {
+      /** @description Whether the leaf was actually re-issued. */
+      rotated: boolean;
+    };
+    SetupRequest: {
+      password: components["schemas"]["Password"];
+      username: components["schemas"]["Username"];
+    };
+    SetupStatusResponse: {
+      setup_required: boolean;
+    };
+    /** @description Primary key of a row in the `log_spans` table. */
+    SpanId: string;
     /** @description A registered task kind, with its capabilities and JSON Schemas. */
     TaskDefinitionResponse: {
       /** @description Whether the kind can be cancelled. */
@@ -698,6 +1030,8 @@ export interface components {
       /** @description Whether the kind is safe to interrupt across a restart. */
       resumable: boolean;
     };
+    /** @description Primary key of a row in the `tasks` table. */
+    TaskId: string;
     /** @description One task invocation, returned by the task endpoints. */
     TaskResponse: {
       /**
@@ -713,14 +1047,14 @@ export interface components {
        */
       finished_at?: string | null;
       /** @description Invocation id. */
-      id: components["schemas"]["DbId"];
+      id: components["schemas"]["TaskId"];
       /** @description The input the task was created with. */
       input: unknown;
       /** @description The kind of task. */
       kind: string;
       /** @description The output, once the task succeeds. */
       output?: unknown;
-      parent_id?: null | components["schemas"]["DbId"];
+      parent_id?: null | components["schemas"]["TaskId"];
       progress?: null | components["schemas"]["ProgressResponse"];
       /**
        * Format: date-time
@@ -729,6 +1063,22 @@ export interface components {
       started_at?: string | null;
       /** @description Lifecycle state. */
       status: components["schemas"]["TaskStatusResponse"];
+    };
+    /** @description Primary key of a row in the `task_schedules` table. */
+    TaskScheduleId: string;
+    TaskScheduleResponse: {
+      /** Format: date-time */
+      created_at: string;
+      enabled: boolean;
+      id: components["schemas"]["TaskScheduleId"];
+      input: unknown;
+      interval: components["schemas"]["Interval"];
+      kind: string;
+      /** Format: date-time */
+      last_run_at?: string | null;
+      last_task_id?: null | components["schemas"]["TaskId"];
+      /** Format: date-time */
+      next_run_at: string;
     };
     /**
      * @description Filter for task status, including the `active` and `finished` groups.
@@ -749,6 +1099,28 @@ export interface components {
      */
     TaskStatusResponse:
       "pending" | "running" | "succeeded" | "failed" | "cancelled" | "interrupted";
+    /** @description Body for `PATCH /api/v1/task-schedules/{id}`. */
+    UpdateTaskScheduleRequest: {
+      enabled?: boolean | null;
+      interval?: null | components["schemas"]["Interval"];
+    };
+    /** @description Primary key of a row in the `users` table. */
+    UserId: string;
+    UserResponse: {
+      actor_id: string;
+      id: string;
+      must_change_password: boolean;
+      username: string;
+    };
+    /**
+     * @description A login name that is guaranteed valid by construction.
+     *
+     *     Allowed characters are ASCII letters, digits, and `_`, `-`, `.`. The length
+     *     is bounded to 1..=64 characters. Because validation runs in [`TryFrom`] (and
+     *     therefore during deserialization), a request body with an invalid username
+     *     is rejected at the extractor boundary with a `400` before any handler runs.
+     */
+    Username: string;
     /** @description Version information returned by `GET /api/v1/version`. */
     VersionResponse: {
       /** @description Version of the Aperture gateway. */
@@ -773,6 +1145,78 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  listApiKeys: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description API keys */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApiKeyResponse"][];
+        };
+      };
+    };
+  };
+  createApiKey: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateApiKeyRequest"];
+      };
+    };
+    responses: {
+      /** @description API key created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CreateApiKeyResponse"];
+        };
+      };
+    };
+  };
+  deleteApiKey: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description API key id */
+        id: components["schemas"]["ApiKeyId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description API key deleted */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unknown API key */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   listArtifacts: {
     parameters: {
       query?: {
@@ -808,7 +1252,7 @@ export interface operations {
       header?: never;
       path: {
         /** @description Artifact key */
-        key: string;
+        key: components["schemas"]["ArtifactKey"];
       };
       cookie?: never;
     };
@@ -832,6 +1276,43 @@ export interface operations {
       };
     };
   };
+  uploadArtifact: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Artifact key */
+        key: components["schemas"]["ArtifactKey"];
+      };
+      cookie?: never;
+    };
+    /** @description Raw artifact bytes to store */
+    requestBody?: {
+      content: {
+        "application/octet-stream": unknown;
+      };
+    };
+    responses: {
+      /** @description Version stored */
+      201: {
+        headers: {
+          /** @description Path to the newly stored version */
+          Location?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ArtifactVersionResponse"];
+        };
+      };
+      /** @description Body exceeded the maximum upload size */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   listArtifactVersions: {
     parameters: {
       query?: {
@@ -844,14 +1325,14 @@ export interface operations {
         /** @description Field to sort by. Defaults to downloaded time. */
         sort?: components["schemas"]["VersionSortParam"];
         /** @description Only versions with this exact media type. */
-        media_type?: string;
+        media_type?: components["schemas"]["MediaType"];
         /** @description Only versions with this exact version string. */
         version?: string;
       };
       header?: never;
       path: {
         /** @description Artifact key */
-        key: string;
+        key: components["schemas"]["ArtifactKey"];
       };
       cookie?: never;
     };
@@ -874,9 +1355,9 @@ export interface operations {
       header?: never;
       path: {
         /** @description Artifact key */
-        key: string;
+        key: components["schemas"]["ArtifactKey"];
         /** @description Content digest */
-        digest: string;
+        digest: components["schemas"]["Digest"];
       };
       cookie?: never;
     };
@@ -906,9 +1387,9 @@ export interface operations {
       header?: never;
       path: {
         /** @description Artifact key */
-        key: string;
+        key: components["schemas"]["ArtifactKey"];
         /** @description Content digest */
-        digest: string;
+        digest: components["schemas"]["Digest"];
       };
       cookie?: never;
     };
@@ -927,6 +1408,187 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+    };
+  };
+  downloadArtifactBlob: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Artifact key */
+        key: components["schemas"]["ArtifactKey"];
+        /** @description Content digest */
+        digest: components["schemas"]["Digest"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Blob content */
+      200: {
+        headers: {
+          /** @description Immutable caching directive */
+          "Cache-Control"?: string;
+          /** @description Quoted content digest */
+          ETag?: string;
+          /** @description HTTP timestamp of the upload */
+          "Last-Modified"?: string;
+          /** @description Always `nosniff` */
+          "X-Content-Type-Options"?: string;
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Not Modified */
+      304: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unknown version */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  changePassword: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChangePasswordRequest"];
+      };
+    };
+    responses: {
+      /** @description Password changed */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Current password is incorrect */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description API-key authenticated callers cannot change a password */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  login: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LoginRequest"];
+      };
+    };
+    responses: {
+      /** @description Login successful */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LoginResponse"];
+        };
+      };
+      /** @description Invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  logout: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Logged out */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  setup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SetupRequest"];
+      };
+    };
+    responses: {
+      /** @description Setup complete, session created */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LoginResponse"];
+        };
+      };
+      /** @description Setup already complete */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getSetupStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Setup status */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SetupStatusResponse"];
+        };
       };
     };
   };
@@ -949,7 +1611,7 @@ export interface operations {
         /** @description Substring search across message and target. */
         q?: string;
         /** @description Only events belonging to this span. */
-        span_id?: components["schemas"]["DbId"];
+        span_id?: components["schemas"]["SpanId"];
         /** @description Only events from this boot session. */
         boot_id?: string;
         /** @description Only events at or after this time (RFC 3339). */
@@ -1019,7 +1681,7 @@ export interface operations {
         /** @description Only spans started at or before this time (RFC 3339). */
         until?: string;
         /** @description Only direct children of this span id. */
-        parent_id?: components["schemas"]["DbId"];
+        parent_id?: components["schemas"]["SpanId"];
         /** @description When true, only root spans (no parent) are returned. */
         parent_null?: boolean;
         /** @description Structured field filter as a JSON object, e.g. `{"key":"value"}`. */
@@ -1048,7 +1710,7 @@ export interface operations {
       header?: never;
       path: {
         /** @description Span id */
-        id: components["schemas"]["DbId"];
+        id: components["schemas"]["SpanId"];
       };
       cookie?: never;
     };
@@ -1115,6 +1777,153 @@ export interface operations {
       };
     };
   };
+  listTaskSchedules: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+        order?: components["schemas"]["OrderParam"];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Task schedules */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Page_TaskScheduleResponse"];
+        };
+      };
+    };
+  };
+  createTaskSchedule: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateTaskScheduleRequest"];
+      };
+    };
+    responses: {
+      /** @description Task schedule created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TaskScheduleResponse"];
+        };
+      };
+      /** @description Invalid input */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getTaskSchedule: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Task schedule id */
+        id: components["schemas"]["TaskScheduleId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Task schedule */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TaskScheduleResponse"];
+        };
+      };
+      /** @description Unknown task schedule */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  deleteTaskSchedule: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Task schedule id */
+        id: components["schemas"]["TaskScheduleId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Task schedule deleted */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unknown task schedule */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  updateTaskSchedule: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Task schedule id */
+        id: components["schemas"]["TaskScheduleId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateTaskScheduleRequest"];
+      };
+    };
+    responses: {
+      /** @description Task schedule updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TaskScheduleResponse"];
+        };
+      };
+      /** @description Unknown task schedule */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   listTasks: {
     parameters: {
       query?: {
@@ -1129,7 +1938,7 @@ export interface operations {
         /** @description Only tasks of this kind. */
         kind?: string;
         /** @description Only children of this task. */
-        parent?: components["schemas"]["DbId"];
+        parent?: components["schemas"]["TaskId"];
         /** @description Only top-level tasks (no parent). Ignored when `parent` is set. */
         root?: boolean;
         /**
@@ -1201,7 +2010,7 @@ export interface operations {
       header?: never;
       path: {
         /** @description Task id */
-        id: components["schemas"]["DbId"];
+        id: components["schemas"]["TaskId"];
       };
       cookie?: never;
     };
@@ -1231,7 +2040,7 @@ export interface operations {
       header?: never;
       path: {
         /** @description Task id */
-        id: components["schemas"]["DbId"];
+        id: components["schemas"]["TaskId"];
       };
       cookie?: never;
     };
@@ -1260,6 +2069,115 @@ export interface operations {
       };
       /** @description Task has already finished */
       410: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  listUsers: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Users */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserResponse"][];
+        };
+      };
+    };
+  };
+  createUser: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateUserRequest"];
+      };
+    };
+    responses: {
+      /** @description User created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserResponse"];
+        };
+      };
+      /** @description Insufficient permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getUser: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description User id */
+        id: components["schemas"]["UserId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description User */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserResponse"];
+        };
+      };
+      /** @description Unknown user */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  deleteUser: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description User id */
+        id: components["schemas"]["UserId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description User deleted */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unknown user */
+      404: {
         headers: {
           [name: string]: unknown;
         };
