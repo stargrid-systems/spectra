@@ -37,7 +37,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "1.2.120",
+    "@iconify-json/lucide": "1.2.121",
     "@intlify/eslint-plugin-vue-i18n": "4.5.1",
     "@microsoft/eslint-formatter-sarif": "3.1.0",
     "@nuxt/eslint": "1.16.0",
@@ -52,6 +52,6 @@
     "prettier": "3.9.6",
     "typescript": "6.0.3",
     "vitest": "4.1.10",
-    "vue-tsc": "3.3.8"
+    "vue-tsc": "3.3.9"
   }
 }
