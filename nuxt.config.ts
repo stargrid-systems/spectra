@@ -1,5 +1,7 @@
 import { version } from "./package.json";
 
+const isDenoServer = process.env.NITRO_PRESET === "deno_server";
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
@@ -45,7 +47,7 @@ export default defineNuxtConfig({
   nitro: {
     compressPublicAssets: true,
     prerender: {
-      crawlLinks: true,
+      crawlLinks: !isDenoServer,
       failOnError: false,
     },
     devProxy: {
