@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "nuxt build",
+    "build:deno": "NITRO_PRESET=deno_server nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
