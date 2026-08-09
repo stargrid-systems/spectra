@@ -490,10 +490,18 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * @description Primary key of a row in the `actors` table.
+         *
+         *     Used wherever an actor is referenced: `users.actor_id`,
+         *     `sessions.actor_id`, `api_keys.actor_id`, `tasks.initiator_id`.
+         */
+        ActorId: string;
         /** @description Primary key of a row in the `api_keys` table. */
         ApiKeyId: string;
         ApiKeyResponse: {
-            id: string;
+            id: components["schemas"]["ApiKeyId"];
+            /** Format: date-time */
             last_used_at?: string | null;
             name: string;
             prefix: string;
@@ -593,7 +601,7 @@ export interface components {
             role?: null | components["schemas"]["Role"];
         };
         CreateApiKeyResponse: {
-            id: string;
+            id: components["schemas"]["ApiKeyId"];
             /** @description The full key. Only visible at creation time. */
             key: components["schemas"]["RawApiKey"];
             name: string;
@@ -627,10 +635,10 @@ export interface components {
             username: components["schemas"]["Username"];
         };
         CurrentUserResponse: {
-            actor_id: string;
+            actor_id: components["schemas"]["ActorId"];
             display_name: string;
             must_change_password: boolean;
-            role?: null | components["schemas"]["Role"];
+            roles: components["schemas"]["Role"][];
             username?: string | null;
         };
         /** @description Content digest, e.g. `sha256:hex`. */
@@ -1120,8 +1128,8 @@ export interface components {
         /** @description Primary key of a row in the `users` table. */
         UserId: string;
         UserResponse: {
-            actor_id: string;
-            id: string;
+            actor_id: components["schemas"]["ActorId"];
+            id: components["schemas"]["UserId"];
             must_change_password: boolean;
             username: string;
         };

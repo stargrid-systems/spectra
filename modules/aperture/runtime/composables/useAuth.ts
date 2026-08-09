@@ -10,7 +10,7 @@ export function useAuth() {
 
   const isAuthenticated = computed(() => user.value !== null);
   const mustChangePassword = computed(() => user.value?.must_change_password ?? false);
-  const isAdmin = computed(() => user.value?.role === "admin");
+  const isAdmin = computed(() => user.value?.roles.includes("admin") ?? false);
 
   async function fetchMe(): Promise<void> {
     try {

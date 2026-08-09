@@ -1469,6 +1469,10 @@
   },
   "components": {
     "schemas": {
+      "ActorId": {
+        "type": "string",
+        "description": "Primary key of a row in the `actors` table.\n\nUsed wherever an actor is referenced: `users.actor_id`,\n`sessions.actor_id`, `api_keys.actor_id`, `tasks.initiator_id`."
+      },
       "ApiKeyId": {
         "type": "string",
         "description": "Primary key of a row in the `api_keys` table."
@@ -1482,13 +1486,14 @@
         ],
         "properties": {
           "id": {
-            "type": "string"
+            "$ref": "#/components/schemas/ApiKeyId"
           },
           "last_used_at": {
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "format": "date-time"
           },
           "name": {
             "type": "string"
@@ -1700,7 +1705,7 @@
         ],
         "properties": {
           "id": {
-            "type": "string"
+            "$ref": "#/components/schemas/ApiKeyId"
           },
           "key": {
             "$ref": "#/components/schemas/RawApiKey",
@@ -1822,11 +1827,12 @@
         "required": [
           "actor_id",
           "display_name",
+          "roles",
           "must_change_password"
         ],
         "properties": {
           "actor_id": {
-            "type": "string"
+            "$ref": "#/components/schemas/ActorId"
           },
           "display_name": {
             "type": "string"
@@ -1834,15 +1840,11 @@
           "must_change_password": {
             "type": "boolean"
           },
-          "role": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Role"
-              }
-            ]
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Role"
+            }
           },
           "username": {
             "type": [
@@ -3093,10 +3095,10 @@
         ],
         "properties": {
           "actor_id": {
-            "type": "string"
+            "$ref": "#/components/schemas/ActorId"
           },
           "id": {
-            "type": "string"
+            "$ref": "#/components/schemas/UserId"
           },
           "must_change_password": {
             "type": "boolean"
