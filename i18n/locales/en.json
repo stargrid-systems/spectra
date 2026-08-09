@@ -7,6 +7,42 @@
   "home": "Home",
   "go-to": "Go to",
   "notifications": "Notifications",
+  "auth": {
+    "menu": {
+      "signOut": "Sign out"
+    },
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Enter your credentials to continue.",
+      "username": "Username",
+      "password": "Password",
+      "submit": "Sign in",
+      "invalidCredentials": "Invalid username or password.",
+      "tooManyAttempts": "Too many attempts. Try again later."
+    },
+    "setup": {
+      "title": "Create admin account",
+      "subtitle": "Set up the first administrator account.",
+      "username": "Username",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "submit": "Create account",
+      "failed": "Setup failed.",
+      "passwordsMismatch": "Passwords do not match."
+    },
+    "changePassword": {
+      "title": "Change password",
+      "subtitle": "Choose a new password before continuing.",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "submit": "Change password",
+      "wrongCurrent": "Current password is incorrect.",
+      "failed": "Failed to change password.",
+      "passwordsMismatch": "Passwords do not match.",
+      "passwordReuse": "New password must differ from the current password."
+    }
+  },
   "settings": {
     "title": "Settings",
     "description": "Adjust eCube preferences, thresholds, and regional options.",
