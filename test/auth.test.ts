@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as z from "zod/v4/mini";
-import {
-  changePasswordSchema,
-  loginSchema,
-  PASSWORD_MIN,
-  setupSchema,
-} from "~/utils/auth";
+import { changePasswordSchema, loginSchema, PASSWORD_MIN, setupSchema } from "~/utils/auth";
 
 function ok(schema: z.core.$ZodType, data: unknown): boolean {
   return z.safeParse(schema, data).success;
