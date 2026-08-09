@@ -56,7 +56,14 @@ async function onSubmit(event: FormSubmitEvent<ChangePasswordValues>) {
         <USeparator />
         <div class="flex max-sm:flex-col justify-between items-start gap-2">
           <span class="text-muted">{{ $t("auth.account.role") }}</span>
-          <UBadge v-if="user.role" :label="$t(`auth.roles.${user.role}`)" variant="subtle" />
+          <div class="flex flex-wrap gap-1">
+            <UBadge
+              v-for="r in user.roles"
+              :key="r"
+              :label="$t(`auth.roles.${r}`)"
+              variant="subtle"
+            />
+          </div>
         </div>
       </div>
     </UPageCard>
