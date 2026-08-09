@@ -64,32 +64,27 @@ async function onDelete(target: User) {
       </div>
 
       <div class="flex flex-col gap-2">
-        <UPageCard
-          v-for="u in data"
-          :key="u.id"
-          variant="subtle"
-          class="flex sm:items-center justify-between gap-3"
-        >
-          <template #default>
+        <UPageCard v-for="u in data" :key="u.id" variant="subtle">
+          <div class="flex sm:items-center justify-between gap-3">
             <div class="flex flex-col">
               <span class="font-medium">{{ u.username }}</span>
               <span class="text-muted text-xs">{{ u.id }}</span>
             </div>
-          </template>
-          <div class="flex items-center gap-3">
-            <UBadge
-              v-if="u.must_change_password"
-              :label="$t('auth.users.mustChange')"
-              color="warning"
-              variant="subtle"
-            />
-            <UButton
-              icon="i-lucide-trash"
-              color="error"
-              variant="ghost"
-              :disabled="u.actor_id === currentUser?.actor_id"
-              @click="onDelete(u)"
-            />
+            <div class="flex items-center gap-3">
+              <UBadge
+                v-if="u.must_change_password"
+                :label="$t('auth.users.mustChange')"
+                color="warning"
+                variant="subtle"
+              />
+              <UButton
+                icon="i-lucide-trash"
+                color="error"
+                variant="ghost"
+                :disabled="u.actor_id === currentUser?.actor_id"
+                @click="onDelete(u)"
+              />
+            </div>
           </div>
         </UPageCard>
       </div>

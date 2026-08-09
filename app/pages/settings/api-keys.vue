@@ -81,21 +81,16 @@ function formatLastUsed(value: ApiKey["last_used_at"]): string {
       <p v-if="!isAdmin" class="text-muted text-sm mb-4">{{ $t("auth.apiKeys.adminOnly") }}</p>
 
       <div class="flex flex-col gap-2">
-        <UPageCard
-          v-for="k in data"
-          :key="k.id"
-          variant="subtle"
-          class="flex sm:items-center justify-between gap-3"
-        >
-          <template #default>
+        <UPageCard v-for="k in data" :key="k.id" variant="subtle">
+          <div class="flex sm:items-center justify-between gap-3">
             <div class="flex flex-col">
               <span class="font-medium">{{ k.name }}</span>
               <span class="text-muted text-xs font-mono">{{ k.prefix }}...</span>
             </div>
-          </template>
-          <div class="flex items-center gap-3">
-            <span class="text-muted text-xs">{{ formatLastUsed(k.last_used_at) }}</span>
-            <UButton icon="i-lucide-trash" color="error" variant="ghost" @click="onDelete(k)" />
+            <div class="flex items-center gap-3">
+              <span class="text-muted text-xs">{{ formatLastUsed(k.last_used_at) }}</span>
+              <UButton icon="i-lucide-trash" color="error" variant="ghost" @click="onDelete(k)" />
+            </div>
           </div>
         </UPageCard>
       </div>
