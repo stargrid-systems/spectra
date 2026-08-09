@@ -502,7 +502,9 @@
             "description": "Invalid credentials"
           }
         },
-        "security": [{}]
+        "security": [
+          {}
+        ]
       }
     },
     "/api/v1/auth/logout": {
@@ -512,6 +514,24 @@
         "responses": {
           "204": {
             "description": "Logged out"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "summary": "Returns the authenticated caller's identity and role.",
+        "operationId": "getCurrentUser",
+        "responses": {
+          "200": {
+            "description": "Current caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -545,7 +565,9 @@
             "description": "Setup already complete"
           }
         },
-        "security": [{}]
+        "security": [
+          {}
+        ]
       }
     },
     "/api/v1/auth/setup-status": {
@@ -564,7 +586,9 @@
             }
           }
         },
-        "security": [{}]
+        "security": [
+          {}
+        ]
       }
     },
     "/api/v1/logs": {
@@ -1451,13 +1475,20 @@
       },
       "ApiKeyResponse": {
         "type": "object",
-        "required": ["id", "name", "prefix"],
+        "required": [
+          "id",
+          "name",
+          "prefix"
+        ],
         "properties": {
           "id": {
             "type": "string"
           },
           "last_used_at": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "name": {
             "type": "string"
@@ -1475,7 +1506,14 @@
       "ArtifactSummaryResponse": {
         "type": "object",
         "description": "A distinct artifact key with its newest version, for `GET\n/api/v1/artifacts`.",
-        "required": ["key", "version_count", "source", "digest", "size_bytes", "downloaded_at"],
+        "required": [
+          "key",
+          "version_count",
+          "source",
+          "digest",
+          "size_bytes",
+          "downloaded_at"
+        ],
         "properties": {
           "digest": {
             "$ref": "#/components/schemas/Digest",
@@ -1501,7 +1539,10 @@
             "description": "Where the newest version came from."
           },
           "version": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Human-readable version of the newest version, if known."
           },
           "version_count": {
@@ -1515,7 +1556,13 @@
       "ArtifactVersionResponse": {
         "type": "object",
         "description": "One stored version of an artifact.",
-        "required": ["key", "digest", "source", "size_bytes", "downloaded_at"],
+        "required": [
+          "key",
+          "digest",
+          "source",
+          "size_bytes",
+          "downloaded_at"
+        ],
         "properties": {
           "digest": {
             "$ref": "#/components/schemas/Digest",
@@ -1552,12 +1599,18 @@
             "description": "Where this version came from."
           },
           "verified_at": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "date-time",
             "description": "When this version was last verified, if ever."
           },
           "version": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Human-readable version, if known."
           }
         }
@@ -1565,7 +1618,13 @@
       "BootResponse": {
         "type": "object",
         "description": "One boot session observed in the log store, returned by\n`GET /api/v1/logs/boots`.",
-        "required": ["boot_id", "first_seen", "last_seen", "event_count", "is_current"],
+        "required": [
+          "boot_id",
+          "first_seen",
+          "last_seen",
+          "event_count",
+          "is_current"
+        ],
         "properties": {
           "boot_id": {
             "type": "string",
@@ -1596,7 +1655,10 @@
       },
       "ChangePasswordRequest": {
         "type": "object",
-        "required": ["current_password", "new_password"],
+        "required": [
+          "current_password",
+          "new_password"
+        ],
         "properties": {
           "current_password": {
             "$ref": "#/components/schemas/Password"
@@ -1608,7 +1670,9 @@
       },
       "CreateApiKeyRequest": {
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "properties": {
           "name": {
             "type": "string"
@@ -1628,7 +1692,12 @@
       },
       "CreateApiKeyResponse": {
         "type": "object",
-        "required": ["id", "name", "prefix", "key"],
+        "required": [
+          "id",
+          "name",
+          "prefix",
+          "key"
+        ],
         "properties": {
           "id": {
             "type": "string"
@@ -1649,27 +1718,37 @@
         "oneOf": [
           {
             "type": "object",
-            "required": ["kind", "input"],
-            "properties": {
-              "input": {
-                "$ref": "#/components/schemas/DownloadInput"
-              },
-              "kind": {
-                "type": "string",
-                "enum": ["download"]
-              }
-            }
-          },
-          {
-            "type": "object",
-            "required": ["kind", "input"],
+            "required": [
+              "kind",
+              "input"
+            ],
             "properties": {
               "input": {
                 "$ref": "#/components/schemas/RotateCertificateInput"
               },
               "kind": {
                 "type": "string",
-                "enum": ["rotate-certificate"]
+                "enum": [
+                  "rotate-certificate"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "input"
+            ],
+            "properties": {
+              "input": {
+                "$ref": "#/components/schemas/DownloadInput"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "download"
+                ]
               }
             }
           }
@@ -1681,7 +1760,10 @@
       "CreateTaskRequest": {
         "type": "object",
         "description": "Body for `POST /api/v1/tasks`.",
-        "required": ["kind", "input"],
+        "required": [
+          "kind",
+          "input"
+        ],
         "properties": {
           "input": {
             "description": "The task input, matching the kind's input schema."
@@ -1695,7 +1777,11 @@
       "CreateTaskScheduleRequest": {
         "type": "object",
         "description": "Body for `POST /api/v1/task-schedules`.",
-        "required": ["kind", "input", "interval"],
+        "required": [
+          "kind",
+          "input",
+          "interval"
+        ],
         "properties": {
           "input": {},
           "interval": {
@@ -1708,7 +1794,10 @@
       },
       "CreateUserRequest": {
         "type": "object",
-        "required": ["username", "password"],
+        "required": [
+          "username",
+          "password"
+        ],
         "properties": {
           "password": {
             "$ref": "#/components/schemas/Password"
@@ -1728,6 +1817,41 @@
           }
         }
       },
+      "CurrentUserResponse": {
+        "type": "object",
+        "required": [
+          "actor_id",
+          "display_name",
+          "must_change_password"
+        ],
+        "properties": {
+          "actor_id": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "must_change_password": {
+            "type": "boolean"
+          },
+          "role": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Role"
+              }
+            ]
+          },
+          "username": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
       "Digest": {
         "type": "string",
         "description": "Content digest, e.g. `sha256:hex`."
@@ -1735,7 +1859,10 @@
       "DownloadInput": {
         "type": "object",
         "description": "Input for a download task: what to fetch and where from.",
-        "required": ["key", "source"],
+        "required": [
+          "key",
+          "source"
+        ],
         "properties": {
           "key": {
             "$ref": "#/components/schemas/ArtifactKey",
@@ -1750,7 +1877,10 @@
       "DownloadOutput": {
         "type": "object",
         "description": "Output of a download task: the stored version that resulted.",
-        "required": ["digest", "size_bytes"],
+        "required": [
+          "digest",
+          "size_bytes"
+        ],
         "properties": {
           "digest": {
             "$ref": "#/components/schemas/Digest",
@@ -1763,7 +1893,10 @@
             "minimum": 0
           },
           "version": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Human-readable version, if known."
           }
         }
@@ -1773,7 +1906,11 @@
           {
             "type": "object",
             "description": "A layer of an OCI image.",
-            "required": ["reference", "media_type", "type"],
+            "required": [
+              "reference",
+              "media_type",
+              "type"
+            ],
             "properties": {
               "media_type": {
                 "$ref": "#/components/schemas/MediaType",
@@ -1785,7 +1922,9 @@
               },
               "type": {
                 "type": "string",
-                "enum": ["oci"]
+                "enum": [
+                  "oci"
+                ]
               }
             }
           }
@@ -1810,12 +1949,25 @@
       "LevelResponse": {
         "type": "string",
         "description": "Severity level of a log event or span.",
-        "enum": ["trace", "debug", "info", "warn", "error"]
+        "enum": [
+          "trace",
+          "debug",
+          "info",
+          "warn",
+          "error"
+        ]
       },
       "LogEventResponse": {
         "type": "object",
         "description": "A single log event, returned by `GET /api/v1/logs`.",
-        "required": ["id", "level", "target", "timestamp", "boot_id", "fields"],
+        "required": [
+          "id",
+          "level",
+          "target",
+          "timestamp",
+          "boot_id",
+          "fields"
+        ],
         "properties": {
           "boot_id": {
             "type": "string",
@@ -1831,7 +1983,10 @@
             }
           },
           "file": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Source file, if available."
           },
           "id": {
@@ -1843,13 +1998,19 @@
             "description": "Severity level."
           },
           "line": {
-            "type": ["integer", "null"],
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "int32",
             "description": "Source line, if available.",
             "minimum": 0
           },
           "message": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Human-readable message, if any."
           },
           "span_id": {
@@ -1881,7 +2042,9 @@
           },
           {
             "type": "object",
-            "required": ["events"],
+            "required": [
+              "events"
+            ],
             "properties": {
               "events": {
                 "type": "array",
@@ -1898,10 +2061,20 @@
       "LogSpanResponse": {
         "type": "object",
         "description": "A tracing span, returned by `GET /api/v1/logs/spans`.",
-        "required": ["id", "name", "level", "target", "started_at", "fields"],
+        "required": [
+          "id",
+          "name",
+          "level",
+          "target",
+          "started_at",
+          "fields"
+        ],
         "properties": {
           "ended_at": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "date-time",
             "description": "When the span ended, if it did."
           },
@@ -1914,7 +2087,10 @@
             }
           },
           "file": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Source file, if available."
           },
           "id": {
@@ -1926,7 +2102,10 @@
             "description": "Severity level."
           },
           "line": {
-            "type": ["integer", "null"],
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "int32",
             "description": "Source line, if available.",
             "minimum": 0
@@ -1959,7 +2138,10 @@
       },
       "LoginRequest": {
         "type": "object",
-        "required": ["username", "password"],
+        "required": [
+          "username",
+          "password"
+        ],
         "properties": {
           "password": {
             "$ref": "#/components/schemas/Password"
@@ -1971,7 +2153,9 @@
       },
       "LoginResponse": {
         "type": "object",
-        "required": ["must_change_password"],
+        "required": [
+          "must_change_password"
+        ],
         "properties": {
           "must_change_password": {
             "type": "boolean"
@@ -1985,12 +2169,17 @@
       "OrderParam": {
         "type": "string",
         "description": "Sort direction shared by list endpoints.",
-        "enum": ["asc", "desc"]
+        "enum": [
+          "asc",
+          "desc"
+        ]
       },
       "Page_ArtifactSummaryResponse": {
         "type": "object",
         "description": "A page of results plus the cursors for the neighbouring pages.",
-        "required": ["items"],
+        "required": [
+          "items"
+        ],
         "properties": {
           "items": {
             "type": "array",
@@ -2030,7 +2219,10 @@
                   "description": "Where the newest version came from."
                 },
                 "version": {
-                  "type": ["string", "null"],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "description": "Human-readable version of the newest version, if known."
                 },
                 "version_count": {
@@ -2044,11 +2236,17 @@
             "description": "The rows in this page."
           },
           "next_cursor": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
           },
           "prev_cursor": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
           }
         }
@@ -2056,14 +2254,22 @@
       "Page_ArtifactVersionResponse": {
         "type": "object",
         "description": "A page of results plus the cursors for the neighbouring pages.",
-        "required": ["items"],
+        "required": [
+          "items"
+        ],
         "properties": {
           "items": {
             "type": "array",
             "items": {
               "type": "object",
               "description": "One stored version of an artifact.",
-              "required": ["key", "digest", "source", "size_bytes", "downloaded_at"],
+              "required": [
+                "key",
+                "digest",
+                "source",
+                "size_bytes",
+                "downloaded_at"
+              ],
               "properties": {
                 "digest": {
                   "$ref": "#/components/schemas/Digest",
@@ -2100,12 +2306,18 @@
                   "description": "Where this version came from."
                 },
                 "verified_at": {
-                  "type": ["string", "null"],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "format": "date-time",
                   "description": "When this version was last verified, if ever."
                 },
                 "version": {
-                  "type": ["string", "null"],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "description": "Human-readable version, if known."
                 }
               }
@@ -2113,11 +2325,17 @@
             "description": "The rows in this page."
           },
           "next_cursor": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
           },
           "prev_cursor": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
           }
         }
@@ -2125,14 +2343,23 @@
       "Page_LogEventResponse": {
         "type": "object",
         "description": "A page of results plus the cursors for the neighbouring pages.",
-        "required": ["items"],
+        "required": [
+          "items"
+        ],
         "properties": {
           "items": {
             "type": "array",
             "items": {
               "type": "object",
               "description": "A single log event, returned by `GET /api/v1/logs`.",
-              "required": ["id", "level", "target", "timestamp", "boot_id", "fields"],
+              "required": [
+                "id",
+                "level",
+                "target",
+                "timestamp",
+                "boot_id",
+                "fields"
+              ],
               "properties": {
                 "boot_id": {
                   "type": "string",
@@ -2148,7 +2375,10 @@
                   }
                 },
                 "file": {
-                  "type": ["string", "null"],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "description": "Source file, if available."
                 },
                 "id": {
@@ -2160,13 +2390,19 @@
                   "description": "Severity level."
                 },
                 "line": {
-                  "type": ["integer", "null"],
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
                   "format": "int32",
                   "description": "Source line, if available.",
                   "minimum": 0
                 },
                 "message": {
-                  "type": ["string", "null"],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "description": "Human-readable message, if any."
                 },
                 "span_id": {
@@ -2194,11 +2430,17 @@
             "description": "The rows in this page."
           },
           "next_cursor": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
           },
           "prev_cursor": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
           }
         }
@@ -2206,17 +2448,29 @@
       "Page_LogSpanResponse": {
         "type": "object",
         "description": "A page of results plus the cursors for the neighbouring pages.",
-        "required": ["items"],
+        "required": [
+          "items"
+        ],
         "properties": {
           "items": {
             "type": "array",
             "items": {
               "type": "object",
               "description": "A tracing span, returned by `GET /api/v1/logs/spans`.",
-              "required": ["id", "name", "level", "target", "started_at", "fields"],
+              "required": [
+                "id",
+                "name",
+                "level",
+                "target",
+                "started_at",
+                "fields"
+              ],
               "properties": {
                 "ended_at": {
-                  "type": ["string", "null"],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "format": "date-time",
                   "description": "When the span ended, if it did."
                 },
@@ -2229,7 +2483,10 @@
                   }
                 },
                 "file": {
-                  "type": ["string", "null"],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "description": "Source file, if available."
                 },
                 "id": {
@@ -2241,7 +2498,10 @@
                   "description": "Severity level."
                 },
                 "line": {
-                  "type": ["integer", "null"],
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
                   "format": "int32",
                   "description": "Source line, if available.",
                   "minimum": 0
@@ -2275,11 +2535,17 @@
             "description": "The rows in this page."
           },
           "next_cursor": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
           },
           "prev_cursor": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
           }
         }
@@ -2287,14 +2553,22 @@
       "Page_TaskResponse": {
         "type": "object",
         "description": "A page of results plus the cursors for the neighbouring pages.",
-        "required": ["items"],
+        "required": [
+          "items"
+        ],
         "properties": {
           "items": {
             "type": "array",
             "items": {
               "type": "object",
               "description": "One task invocation, returned by the task endpoints.",
-              "required": ["id", "kind", "status", "input", "created_at"],
+              "required": [
+                "id",
+                "kind",
+                "status",
+                "input",
+                "created_at"
+              ],
               "properties": {
                 "created_at": {
                   "type": "string",
@@ -2302,11 +2576,17 @@
                   "description": "When the invocation was recorded."
                 },
                 "error": {
-                  "type": ["string", "null"],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "description": "Failure detail, if any."
                 },
                 "finished_at": {
-                  "type": ["string", "null"],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "format": "date-time",
                   "description": "When it finished, if it did."
                 },
@@ -2347,7 +2627,10 @@
                   ]
                 },
                 "started_at": {
-                  "type": ["string", "null"],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "format": "date-time",
                   "description": "When it started running, if it did."
                 },
@@ -2360,11 +2643,17 @@
             "description": "The rows in this page."
           },
           "next_cursor": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
           },
           "prev_cursor": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
           }
         }
@@ -2372,7 +2661,9 @@
       "Page_TaskScheduleResponse": {
         "type": "object",
         "description": "A page of results plus the cursors for the neighbouring pages.",
-        "required": ["items"],
+        "required": [
+          "items"
+        ],
         "properties": {
           "items": {
             "type": "array",
@@ -2406,7 +2697,10 @@
                   "type": "string"
                 },
                 "last_run_at": {
-                  "type": ["string", "null"],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "format": "date-time"
                 },
                 "last_task_id": {
@@ -2428,11 +2722,17 @@
             "description": "The rows in this page."
           },
           "next_cursor": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
           },
           "prev_cursor": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
           }
         }
@@ -2444,7 +2744,10 @@
       "ProgressMessageResponse": {
         "type": "object",
         "description": "A localizable progress message: a translation key and its arguments.",
-        "required": ["key", "args"],
+        "required": [
+          "key",
+          "args"
+        ],
         "properties": {
           "args": {
             "type": "object",
@@ -2467,7 +2770,10 @@
         "description": "Live progress of a running task.",
         "properties": {
           "done": {
-            "type": ["integer", "null"],
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "int64",
             "description": "Units of work completed so far.",
             "minimum": 0
@@ -2484,7 +2790,10 @@
             ]
           },
           "total": {
-            "type": ["integer", "null"],
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "int64",
             "description": "Total units of work expected, if known.",
             "minimum": 0
@@ -2498,7 +2807,11 @@
       "Role": {
         "type": "string",
         "description": "A built-in role. Stored as its lowercase name in casbin grouping rules.",
-        "enum": ["admin", "operator", "viewer"]
+        "enum": [
+          "admin",
+          "operator",
+          "viewer"
+        ]
       },
       "RotateCertificateInput": {
         "type": "object",
@@ -2506,7 +2819,9 @@
       },
       "RotateCertificateOutput": {
         "type": "object",
-        "required": ["rotated"],
+        "required": [
+          "rotated"
+        ],
         "properties": {
           "rotated": {
             "type": "boolean",
@@ -2516,7 +2831,10 @@
       },
       "SetupRequest": {
         "type": "object",
-        "required": ["username", "password"],
+        "required": [
+          "username",
+          "password"
+        ],
         "properties": {
           "password": {
             "$ref": "#/components/schemas/Password"
@@ -2528,7 +2846,9 @@
       },
       "SetupStatusResponse": {
         "type": "object",
-        "required": ["setup_required"],
+        "required": [
+          "setup_required"
+        ],
         "properties": {
           "setup_required": {
             "type": "boolean"
@@ -2542,7 +2862,13 @@
       "TaskDefinitionResponse": {
         "type": "object",
         "description": "A registered task kind, with its capabilities and JSON Schemas.",
-        "required": ["kind", "cancellable", "resumable", "input_schema", "output_schema"],
+        "required": [
+          "kind",
+          "cancellable",
+          "resumable",
+          "input_schema",
+          "output_schema"
+        ],
         "properties": {
           "cancellable": {
             "type": "boolean",
@@ -2571,7 +2897,13 @@
       "TaskResponse": {
         "type": "object",
         "description": "One task invocation, returned by the task endpoints.",
-        "required": ["id", "kind", "status", "input", "created_at"],
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "input",
+          "created_at"
+        ],
         "properties": {
           "created_at": {
             "type": "string",
@@ -2579,11 +2911,17 @@
             "description": "When the invocation was recorded."
           },
           "error": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Failure detail, if any."
           },
           "finished_at": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "date-time",
             "description": "When it finished, if it did."
           },
@@ -2624,7 +2962,10 @@
             ]
           },
           "started_at": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "date-time",
             "description": "When it started running, if it did."
           },
@@ -2640,7 +2981,15 @@
       },
       "TaskScheduleResponse": {
         "type": "object",
-        "required": ["id", "kind", "input", "interval", "next_run_at", "enabled", "created_at"],
+        "required": [
+          "id",
+          "kind",
+          "input",
+          "interval",
+          "next_run_at",
+          "enabled",
+          "created_at"
+        ],
         "properties": {
           "created_at": {
             "type": "string",
@@ -2660,7 +3009,10 @@
             "type": "string"
           },
           "last_run_at": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "date-time"
           },
           "last_task_id": {
@@ -2696,14 +3048,24 @@
       "TaskStatusResponse": {
         "type": "string",
         "description": "Lifecycle state of a task invocation.",
-        "enum": ["pending", "running", "succeeded", "failed", "cancelled", "interrupted"]
+        "enum": [
+          "pending",
+          "running",
+          "succeeded",
+          "failed",
+          "cancelled",
+          "interrupted"
+        ]
       },
       "UpdateTaskScheduleRequest": {
         "type": "object",
         "description": "Body for `PATCH /api/v1/task-schedules/{id}`.",
         "properties": {
           "enabled": {
-            "type": ["boolean", "null"]
+            "type": [
+              "boolean",
+              "null"
+            ]
           },
           "interval": {
             "oneOf": [
@@ -2723,7 +3085,12 @@
       },
       "UserResponse": {
         "type": "object",
-        "required": ["id", "actor_id", "username", "must_change_password"],
+        "required": [
+          "id",
+          "actor_id",
+          "username",
+          "must_change_password"
+        ],
         "properties": {
           "actor_id": {
             "type": "string"
@@ -2746,7 +3113,10 @@
       "VersionResponse": {
         "type": "object",
         "description": "Version information returned by `GET /api/v1/version`.",
-        "required": ["aperture", "boot_id"],
+        "required": [
+          "aperture",
+          "boot_id"
+        ],
         "properties": {
           "aperture": {
             "type": "string",
@@ -2762,7 +3132,10 @@
       "VersionSortParam": {
         "type": "string",
         "description": "Field a version listing is sorted by.",
-        "enum": ["downloaded_at", "size_bytes"]
+        "enum": [
+          "downloaded_at",
+          "size_bytes"
+        ]
       }
     },
     "securitySchemes": {
