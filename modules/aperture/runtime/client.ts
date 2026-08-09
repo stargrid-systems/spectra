@@ -3,9 +3,13 @@ import type { paths } from "./generated";
 import type {
   BootList,
   BootResponse,
+  ChangePasswordBody,
+  CurrentUser,
   ListLogSpansParams,
   ListLogTargetsParams,
   ListLogsParams,
+  LoginBody,
+  LoginResponse,
   LogEvent,
   LogEventPage,
   LogSpan,
@@ -15,6 +19,8 @@ import type {
   RawLogEvent,
   RawLogSpan,
   RawLogSpanDetail,
+  SetupBody,
+  SetupStatus,
   VersionResponse,
 } from "./types";
 
@@ -22,11 +28,56 @@ const client = createClient<paths>({
   querySerializer: { array: { style: "form", explode: false } },
 });
 
-function unwrap<T>(res: { data?: T; error?: unknown }): T {
+export class ApiError extends Error {
+  readonly status: number;
+  constructor(status: number, message?: string) {
+    super(message ?? `request failed with status ${status}`);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+const AUTH_ENDPOINTS = new Set([
+  "/api/v1/auth/me",
+  "/api/v1/auth/login",
+  "/api/v1/auth/change-password",
+]);
+
+let unauthorizedHandler: (() => void) | null = null;
+
+client.use({
+  onResponse({ request, response }) {
+    if (response.status !== 401 || !unauthorizedHandler) {
+      return;
+    }
+    let pathname: string;
+    try {
+      pathname = new URL(request.url).pathname;
+    } catch {
+      return;
+    }
+    if (AUTH_ENDPOINTS.has(pathname)) {
+      return;
+    }
+    unauthorizedHandler();
+  },
+});
+
+export function setUnauthorizedHandler(fn: (() => void) | null): void {
+  unauthorizedHandler = fn;
+}
+
+function unwrap<T>(res: { data?: T; error?: unknown; response: Response }): T {
   if (res.data === undefined) {
-    throw res.error ?? new Error("aperture returned an empty response");
+    throw new ApiError(res.response.status);
   }
   return res.data;
+}
+
+function unwrapVoid(res: { data?: unknown; error?: unknown; response: Response }): void {
+  if (res.data === undefined && !res.response.ok) {
+    throw new ApiError(res.response.status);
+  }
 }
 
 function toLogEvent(e: RawLogEvent): LogEvent {
@@ -82,4 +133,23 @@ export const apertureApi = {
     toLogSpanDetail(
       unwrap(await client.GET("/api/v1/logs/spans/{id}", { params: { path: { id } } })),
     ),
+
+  getMe: async (): Promise<CurrentUser> => unwrap(await client.GET("/api/v1/auth/me")),
+
+  getSetupStatus: async (): Promise<SetupStatus> =>
+    unwrap(await client.GET("/api/v1/auth/setup-status")),
+
+  login: async (body: LoginBody): Promise<LoginResponse> =>
+    unwrap(await client.POST("/api/v1/auth/login", { body })),
+
+  logout: async (): Promise<void> => {
+    unwrapVoid(await client.POST("/api/v1/auth/logout"));
+  },
+
+  setup: async (body: SetupBody): Promise<LoginResponse> =>
+    unwrap(await client.POST("/api/v1/auth/setup", { body })),
+
+  changePassword: async (body: ChangePasswordBody): Promise<void> => {
+    unwrapVoid(await client.POST("/api/v1/auth/change-password", { body }));
+  },
 };

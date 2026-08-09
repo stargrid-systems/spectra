@@ -40,3 +40,12 @@ export type BootList = BootResponse[];
 export type ListLogsParams = NonNullable<operations["listLogs"]["parameters"]["query"]>;
 export type ListLogSpansParams = NonNullable<operations["listSpans"]["parameters"]["query"]>;
 export type ListLogTargetsParams = NonNullable<operations["listLogTargets"]["parameters"]["query"]>;
+
+export type Role = Schemas["Role"];
+export type CurrentUser = Schemas["CurrentUserResponse"];
+export type SetupStatus = Schemas["SetupStatusResponse"];
+export type LoginResponse = Schemas["LoginResponse"];
+
+export type LoginBody = Schemas["LoginRequest"];
+export type SetupBody = Schemas["SetupRequest"];
+export type ChangePasswordBody = Schemas["ChangePasswordRequest"];
