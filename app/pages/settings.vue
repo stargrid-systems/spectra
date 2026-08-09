@@ -3,6 +3,7 @@ import type { NavigationMenuItem } from "@nuxt/ui";
 
 const { t } = useI18n();
 const localePath = useLocalePath();
+const { isAdmin } = useAuth();
 
 const links = computed(
   () =>
@@ -19,6 +20,27 @@ const links = computed(
           icon: "i-lucide-info",
           to: localePath("/settings/about"),
         },
+      ],
+      [
+        {
+          label: t("settings.nav.account"),
+          icon: "i-lucide-user-cog",
+          to: localePath("/settings/account"),
+        },
+        {
+          label: t("settings.nav.apiKeys"),
+          icon: "i-lucide-key",
+          to: localePath("/settings/api-keys"),
+        },
+        ...(isAdmin.value
+          ? [
+              {
+                label: t("settings.nav.users"),
+                icon: "i-lucide-users",
+                to: localePath("/settings/users"),
+              },
+            ]
+          : []),
       ],
     ] satisfies NavigationMenuItem[][],
 );

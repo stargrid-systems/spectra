@@ -1,5 +1,5 @@
 CHANGELOG.md
 
 # Generated files
-openapi/openapi.json
-app/utils/api/generated.ts
+modules/aperture/openapi.json
+modules/aperture/runtime/generated.ts

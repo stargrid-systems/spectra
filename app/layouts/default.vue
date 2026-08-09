@@ -1,11 +1,19 @@
 <script setup lang="ts">
+import type { DropdownMenuItem } from "@nuxt/ui";
+
 const open = ref(false);
 const { t } = useI18n();
 const localePath = useLocalePath();
+const { user, logout } = useAuth();
 
 const closeSidebar = () => {
   open.value = false;
 };
+
+async function signOut() {
+  await logout();
+  await navigateTo(localePath("/login"));
+}
 
 const links = computed(() => [
   [
@@ -47,6 +55,29 @@ const groups = computed(() => [
     items: links.value.flat(),
   },
 ]);
+
+const userItems = computed<DropdownMenuItem[][]>(() => [
+  [
+    {
+      label: user.value?.username ?? user.value?.display_name ?? "",
+      avatar: { icon: "i-lucide-user" },
+      type: "label",
+    },
+    {
+      label: t("auth.menu.account"),
+      icon: "i-lucide-user-cog",
+      to: localePath("/settings/account"),
+      onSelect: closeSidebar,
+    },
+  ],
+  [
+    {
+      label: t("auth.menu.signOut"),
+      icon: "i-lucide-log-out",
+      onSelect: signOut,
+    },
+  ],
+]);
 </script>
 
 <template>
@@ -77,6 +108,29 @@ const groups = computed(() => [
           tooltip
           class="mt-auto"
         />
+      </template>
+
+      <template #footer="{ collapsed }">
+        <UDropdownMenu
+          v-if="user"
+          :items="userItems"
+          :content="{ align: 'start' }"
+          :ui="{ content: 'w-56' }"
+          class="w-full"
+        >
+          <UButton
+            color="neutral"
+            variant="ghost"
+            class="w-full"
+            :class="collapsed ? 'justify-center' : 'justify-start'"
+            :block="!collapsed"
+          >
+            <UAvatar :icon="collapsed ? 'i-lucide-user' : undefined" size="2xs" />
+            <span v-if="!collapsed" class="truncate">
+              {{ user.username ?? user.display_name }}
+            </span>
+          </UButton>
+        </UDropdownMenu>
       </template>
     </UDashboardSidebar>
 
