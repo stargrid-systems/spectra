@@ -7,7 +7,11 @@ export default defineNuxtModule({
   setup() {
     const { resolve } = createResolver(import.meta.url);
 
-    addImports([{ name: "apertureApi", from: resolve("./runtime/client") }]);
+    addImports([
+      { name: "apertureApi", from: resolve("./runtime/client") },
+      { name: "ApiError", from: resolve("./runtime/client") },
+      { name: "setUnauthorizedHandler", from: resolve("./runtime/client") },
+    ]);
     addImportsDir(resolve("./runtime/composables"));
   },
 });
