@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import * as z from "zod/v4/mini";
 import {
   changePasswordSchema,
+  createApiKeySchema,
+  createUserSchema,
+  isRole,
   loginSchema,
   PASSWORD_MIN,
   setupSchema,
@@ -52,5 +55,40 @@ describe("changePasswordSchema", () => {
 
   it("requires all fields", () => {
     expect(ok(changePasswordSchema, { ...valid, currentPassword: "" })).toBe(false);
+  });
+});
+
+describe("createUserSchema", () => {
+  it("accepts a user with an optional role", () => {
+    expect(
+      ok(createUserSchema, { username: "bob", password: "secure-pass-1", role: "operator" }),
+    ).toBe(true);
+    expect(ok(createUserSchema, { username: "bob", password: "secure-pass-1" })).toBe(true);
+  });
+
+  it("rejects an unknown role", () => {
+    expect(
+      ok(createUserSchema, { username: "bob", password: "secure-pass-1", role: "superuser" }),
+    ).toBe(false);
+  });
+});
+
+describe("createApiKeySchema", () => {
+  it("accepts a name with an optional role", () => {
+    expect(ok(createApiKeySchema, { name: "ci" })).toBe(true);
+    expect(ok(createApiKeySchema, { name: "ci", role: "viewer" })).toBe(true);
+  });
+
+  it("rejects an empty name", () => {
+    expect(ok(createApiKeySchema, { name: "" })).toBe(false);
+  });
+});
+
+describe("isRole", () => {
+  it("narrows to known roles", () => {
+    expect(isRole("admin")).toBe(true);
+    expect(isRole("operator")).toBe(true);
+    expect(isRole("viewer")).toBe(true);
+    expect(isRole("superuser")).toBe(false);
   });
 });
