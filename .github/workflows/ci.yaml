@@ -33,6 +33,7 @@ jobs:
             perf
             build
             revert
+            release
           scopes: |
             deps
             ci

@@ -1,0 +1,248 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+
+concurrency:
+  group: release-${{ github.event_name }}
+  cancel-in-progress: false
+
+jobs:
+  open-pr:
+    name: Open release PR
+    if: |
+      github.event_name == 'push' &&
+      !startsWith(github.event.head_commit.message, 'release:')
+    runs-on: ubuntu-slim
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+
+      - name: Compute next CalVer version
+        id: calver
+        run: |
+          set -euo pipefail
+          today=$(date -u +'%Y.%-m')
+
+          from_tags=$(
+            git tag --list "${today}.*" \
+              | sed "s/^${today}\.//" \
+              | sort -n \
+              | tail -1
+          )
+
+          from_file=""
+          current=$(node -p "require('./package.json').version")
+          from_file=$(printf '%s\n' "$current" | sed -n "s/^${today}\.\([0-9]\+\)$/\1/p")
+
+          highest=$(
+            printf '%s\n%s\n' "${from_tags:-}" "${from_file:-}" \
+              | grep -E '^[0-9]+$' \
+              | sort -n \
+              | tail -1
+          ) || true
+
+          if [ -z "$highest" ]; then
+            next=1
+          else
+            next=$(( highest + 1 ))
+          fi
+          echo "version=${today}.${next}" >> "$GITHUB_OUTPUT"
+
+      - name: Bump version
+        run: npm version --no-git-tag-version '${{ steps.calver.outputs.version }}'
+
+      - name: Build changelog
+        id: changelog
+        env:
+          VERSION: ${{ steps.calver.outputs.version }}
+        run: |
+          set -euo pipefail
+          last_tag=$(git describe --tags --abbrev=0 --match "[0-9]*.[0-9]*.[0-9]*" 2>/dev/null || echo "")
+          if [ -n "$last_tag" ]; then
+            range="${last_tag}..HEAD"
+            since="since ${last_tag}"
+          else
+            range="HEAD"
+            since="since the start of history"
+          fi
+          {
+            echo "body<<EOF"
+            echo "## What's changed ${since}"
+            echo
+            git log "${range}" --pretty=format:'- %s' --no-merges | head -100 || true
+            echo
+            echo "<!-- release-notes-end -->"
+            echo
+            echo "Merging this PR cuts release **${VERSION}**."
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open or update release PR
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          branch: release-next
+          title: "release: ${{ steps.calver.outputs.version }}"
+          body: ${{ steps.changelog.outputs.body }}
+          labels: release
+          commit-message: "release: bump version to ${{ steps.calver.outputs.version }}"
+
+  tag:
+    name: Tag release
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'main' &&
+      contains(github.event.pull_request.labels.*.name, 'release')
+    runs-on: ubuntu-slim
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout merge commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+
+      - name: Read version
+        id: version
+        run: |
+          v=$(node -p "require('./package.json').version")
+          echo "version=${v}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          printf '%s' "$PR_BODY" | sed '/<!-- release-notes-end -->/,$d' > /tmp/release-notes.md
+          gh release create "${VERSION}" \
+            --target "${MERGE_SHA}" \
+            --title "${VERSION}" \
+            --notes-file /tmp/release-notes.md
+
+  build:
+    name: Build
+    needs: tag
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (static)
+        run: npm run generate
+
+      - name: Stash static output
+        run: mv .output/public static-output
+
+      - name: Build (deno SSR)
+        run: npm run build:deno
+
+      - name: Install squashfs-tools
+        run: sudo apt-get install -y squashfs-tools
+
+      - name: Archive build outputs
+        run: |
+          repro_time=$(git log -1 --format=%ct)
+          squashfs_args=(-comp zstd -noappend \
+            -mkfs-time "${repro_time}" -all-time "${repro_time}" -root-time "${repro_time}" \
+            -force-uid 0 -force-gid 0 -info)
+
+          mksquashfs "$(realpath static-output)" spectra-static.squashfs "${squashfs_args[@]}"
+          mksquashfs "$(realpath .output)" spectra-deno.squashfs "${squashfs_args[@]}"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: spectra-squashfs
+          path: |
+            spectra-static.squashfs
+            spectra-deno.squashfs
+          retention-days: 1
+
+  publish:
+    name: Publish
+    needs: [tag, build]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    env:
+      REGISTRY: ghcr.io
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: spectra-squashfs
+
+      - name: Install ORAS
+        uses: oras-project/setup-oras@1d808f7d7f6995cc68b7bf507bfe5c5446e1dc9d # v2.0.1
+
+      - name: Login to registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}
+          tags: |
+            type=sha,format=long
+            type=raw,value=${{ needs.tag.outputs.version }}
+
+      - name: Push to registry
+        run: |
+          LABEL_ARGS=()
+          while IFS= read -r label; do
+            [ -z "$label" ] && continue
+            LABEL_ARGS+=("--annotation" "$label")
+          done <<<'${{ steps.meta.outputs.labels }}'
+
+          while IFS= read -r TAG; do
+            [ -z "$TAG" ] && continue
+            echo "Pushing ${TAG}"
+
+            oras push "$TAG" \
+              "${LABEL_ARGS[@]}" \
+              --artifact-type application/vnd.spectra \
+              ./spectra-static.squashfs:application/vnd.spectra.squashfs \
+              ./spectra-deno.squashfs:application/vnd.spectra.deno.squashfs
+          done <<<'${{ steps.meta.outputs.tags }}'
