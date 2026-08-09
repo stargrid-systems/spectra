@@ -45,7 +45,12 @@ export type Role = Schemas["Role"];
 export type CurrentUser = Schemas["CurrentUserResponse"];
 export type SetupStatus = Schemas["SetupStatusResponse"];
 export type LoginResponse = Schemas["LoginResponse"];
+export type User = Schemas["UserResponse"];
+export type ApiKey = Schemas["ApiKeyResponse"];
+export type CreatedApiKey = Schemas["CreateApiKeyResponse"];
 
 export type LoginBody = Schemas["LoginRequest"];
 export type SetupBody = Schemas["SetupRequest"];
 export type ChangePasswordBody = Schemas["ChangePasswordRequest"];
+export type CreateUserBody = Schemas["CreateUserRequest"];
+export type CreateApiKeyBody = Schemas["CreateApiKeyRequest"];

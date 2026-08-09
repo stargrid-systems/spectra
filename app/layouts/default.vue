@@ -63,6 +63,12 @@ const userItems = computed<DropdownMenuItem[][]>(() => [
       avatar: { icon: "i-lucide-user" },
       type: "label",
     },
+    {
+      label: t("auth.menu.account"),
+      icon: "i-lucide-user-cog",
+      to: localePath("/settings/account"),
+      onSelect: closeSidebar,
+    },
   ],
   [
     {

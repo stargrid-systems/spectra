@@ -1,9 +1,13 @@
 import createClient from "openapi-fetch";
 import type { paths } from "./generated";
 import type {
+  ApiKey,
   BootList,
   BootResponse,
   ChangePasswordBody,
+  CreateApiKeyBody,
+  CreatedApiKey,
+  CreateUserBody,
   CurrentUser,
   ListLogSpansParams,
   ListLogTargetsParams,
@@ -21,6 +25,7 @@ import type {
   RawLogSpanDetail,
   SetupBody,
   SetupStatus,
+  User,
   VersionResponse,
 } from "./types";
 
@@ -151,5 +156,23 @@ export const apertureApi = {
 
   changePassword: async (body: ChangePasswordBody): Promise<void> => {
     unwrapVoid(await client.POST("/api/v1/auth/change-password", { body }));
+  },
+
+  listUsers: async (): Promise<User[]> => unwrap(await client.GET("/api/v1/users")),
+
+  createUser: async (body: CreateUserBody): Promise<User> =>
+    unwrap(await client.POST("/api/v1/users", { body })),
+
+  deleteUser: async (id: string): Promise<void> => {
+    unwrapVoid(await client.DELETE("/api/v1/users/{id}", { params: { path: { id } } }));
+  },
+
+  listApiKeys: async (): Promise<ApiKey[]> => unwrap(await client.GET("/api/v1/api-keys")),
+
+  createApiKey: async (body: CreateApiKeyBody): Promise<CreatedApiKey> =>
+    unwrap(await client.POST("/api/v1/api-keys", { body })),
+
+  deleteApiKey: async (id: string): Promise<void> => {
+    unwrapVoid(await client.DELETE("/api/v1/api-keys/{id}", { params: { path: { id } } }));
   },
 };

@@ -7,8 +7,19 @@
   "home": "Home",
   "go-to": "Go to",
   "notifications": "Notifications",
+  "common": {
+    "cancel": "Cancel",
+    "create": "Create",
+    "done": "Done"
+  },
   "auth": {
+    "roles": {
+      "admin": "Administrator",
+      "operator": "Operator",
+      "viewer": "Viewer"
+    },
     "menu": {
+      "account": "Account",
       "signOut": "Sign out"
     },
     "login": {
@@ -39,8 +50,41 @@
       "submit": "Change password",
       "wrongCurrent": "Current password is incorrect.",
       "failed": "Failed to change password.",
+      "success": "Password changed.",
       "passwordsMismatch": "Passwords do not match.",
       "passwordReuse": "New password must differ from the current password."
+    },
+    "account": {
+      "title": "Account",
+      "description": "Your account details and password.",
+      "username": "Username",
+      "role": "Role"
+    },
+    "users": {
+      "title": "Users",
+      "create": "Create user",
+      "created": "User created.",
+      "createFailed": "Failed to create user.",
+      "username": "Username",
+      "password": "Password",
+      "role": "Role",
+      "deleted": "User deleted.",
+      "deleteFailed": "Failed to delete user.",
+      "mustChange": "Must change password"
+    },
+    "apiKeys": {
+      "title": "API keys",
+      "create": "Create API key",
+      "created": "API key created",
+      "createFailed": "Failed to create API key.",
+      "name": "Name",
+      "role": "Role",
+      "deleted": "API key deleted.",
+      "deleteFailed": "Failed to delete API key.",
+      "noRole": "No role",
+      "neverUsed": "Never used",
+      "keyWarning": "Copy this key now. It will not be shown again.",
+      "adminOnly": "Only administrators can create API keys."
     }
   },
   "settings": {
@@ -49,7 +93,10 @@
     "saved": "Your settings have been saved.",
     "nav": {
       "general": "General",
-      "about": "About"
+      "about": "About",
+      "account": "Account",
+      "apiKeys": "API keys",
+      "users": "Users"
     },
     "sections": {
       "dashboard": {

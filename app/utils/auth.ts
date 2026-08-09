@@ -1,4 +1,5 @@
 import * as z from "zod/v4/mini";
+import type { Role } from "~~/modules/aperture/runtime/types";
 
 export const USERNAME_PATTERN = /^[A-Za-z0-9._-]+$/;
 export const PASSWORD_MIN = 12;
@@ -7,6 +8,7 @@ export const PASSWORD_MAX = 1024;
 const requiredString = z.string().check(z.minLength(1));
 const usernameField = z.string().check(z.minLength(1), z.maxLength(64), z.regex(USERNAME_PATTERN));
 const newPasswordField = z.string().check(z.minLength(PASSWORD_MIN), z.maxLength(PASSWORD_MAX));
+const roleField = z.optional(z.enum(["admin", "operator", "viewer"]));
 
 export type LoginValues = z.infer<typeof loginSchema>;
 export const loginSchema = z.object({
@@ -27,3 +29,20 @@ export const changePasswordSchema = z.object({
   newPassword: newPasswordField,
   confirmPassword: requiredString,
 });
+
+export type CreateUserValues = z.infer<typeof createUserSchema>;
+export const createUserSchema = z.object({
+  username: usernameField,
+  password: newPasswordField,
+  role: roleField,
+});
+
+export type CreateApiKeyValues = z.infer<typeof createApiKeySchema>;
+export const createApiKeySchema = z.object({
+  name: requiredString,
+  role: roleField,
+});
+
+export function isRole(value: string): value is Role {
+  return value === "admin" || value === "operator" || value === "viewer";
+}

@@ -7,8 +7,19 @@
   "home": "Startseite",
   "go-to": "Gehe zu",
   "notifications": "Benachrichtigungen",
+  "common": {
+    "cancel": "Abbrechen",
+    "create": "Erstellen",
+    "done": "Fertig"
+  },
   "auth": {
+    "roles": {
+      "admin": "Administrator",
+      "operator": "Operator",
+      "viewer": "Betrachter"
+    },
     "menu": {
+      "account": "Konto",
       "signOut": "Abmelden"
     },
     "login": {
@@ -39,8 +50,41 @@
       "submit": "Passwort ändern",
       "wrongCurrent": "Aktuelles Passwort ist falsch.",
       "failed": "Passwort konnte nicht geändert werden.",
+      "success": "Passwort geändert.",
       "passwordsMismatch": "Passwörter stimmen nicht überein.",
       "passwordReuse": "Das neue Passwort muss sich vom aktuellen unterscheiden."
+    },
+    "account": {
+      "title": "Konto",
+      "description": "Deine Kontodetails und dein Passwort.",
+      "username": "Benutzername",
+      "role": "Rolle"
+    },
+    "users": {
+      "title": "Benutzer",
+      "create": "Benutzer erstellen",
+      "created": "Benutzer erstellt.",
+      "createFailed": "Benutzer konnte nicht erstellt werden.",
+      "username": "Benutzername",
+      "password": "Passwort",
+      "role": "Rolle",
+      "deleted": "Benutzer gelöscht.",
+      "deleteFailed": "Benutzer konnte nicht gelöscht werden.",
+      "mustChange": "Muss Passwort ändern"
+    },
+    "apiKeys": {
+      "title": "API-Schlüssel",
+      "create": "API-Schlüssel erstellen",
+      "created": "API-Schlüssel erstellt",
+      "createFailed": "API-Schlüssel konnte nicht erstellt werden.",
+      "name": "Name",
+      "role": "Rolle",
+      "deleted": "API-Schlüssel gelöscht.",
+      "deleteFailed": "API-Schlüssel konnte nicht gelöscht werden.",
+      "noRole": "Keine Rolle",
+      "neverUsed": "Nie verwendet",
+      "keyWarning": "Kopiere diesen Schlüssel jetzt. Er wird nicht wieder angezeigt.",
+      "adminOnly": "Nur Administratoren können API-Schlüssel erstellen."
     }
   },
   "settings": {
@@ -49,7 +93,10 @@
     "saved": "Deine Einstellungen wurden gespeichert.",
     "nav": {
       "general": "Allgemein",
-      "about": "Info"
+      "about": "Info",
+      "account": "Konto",
+      "apiKeys": "API-Schlüssel",
+      "users": "Benutzer"
     },
     "sections": {
       "dashboard": {
