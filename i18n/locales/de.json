@@ -7,6 +7,42 @@
   "home": "Startseite",
   "go-to": "Gehe zu",
   "notifications": "Benachrichtigungen",
+  "auth": {
+    "menu": {
+      "signOut": "Abmelden"
+    },
+    "login": {
+      "title": "Anmelden",
+      "subtitle": "Gib deine Anmeldedaten ein, um fortzufahren.",
+      "username": "Benutzername",
+      "password": "Passwort",
+      "submit": "Anmelden",
+      "invalidCredentials": "Benutzername oder Passwort ungültig.",
+      "tooManyAttempts": "Zu viele Versuche. Versuche es später erneut."
+    },
+    "setup": {
+      "title": "Administratorkonto erstellen",
+      "subtitle": "Richte das erste Administratorkonto ein.",
+      "username": "Benutzername",
+      "password": "Passwort",
+      "confirmPassword": "Passwort bestätigen",
+      "submit": "Konto erstellen",
+      "failed": "Einrichtung fehlgeschlagen.",
+      "passwordsMismatch": "Passwörter stimmen nicht überein."
+    },
+    "changePassword": {
+      "title": "Passwort ändern",
+      "subtitle": "Wähle ein neues Passwort, bevor du fortfährst.",
+      "current": "Aktuelles Passwort",
+      "new": "Neues Passwort",
+      "confirm": "Neues Passwort bestätigen",
+      "submit": "Passwort ändern",
+      "wrongCurrent": "Aktuelles Passwort ist falsch.",
+      "failed": "Passwort konnte nicht geändert werden.",
+      "passwordsMismatch": "Passwörter stimmen nicht überein.",
+      "passwordReuse": "Das neue Passwort muss sich vom aktuellen unterscheiden."
+    }
+  },
   "settings": {
     "title": "Einstellungen",
     "description": "eCube-Präferenzen, Schwellenwerte und regionale Optionen anpassen.",
