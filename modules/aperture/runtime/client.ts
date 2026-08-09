@@ -42,13 +42,29 @@ export class ApiError extends Error {
   }
 }
 
+const AUTH_ENDPOINTS = new Set([
+  "/api/v1/auth/me",
+  "/api/v1/auth/login",
+  "/api/v1/auth/change-password",
+]);
+
 let unauthorizedHandler: (() => void) | null = null;
 
 client.use({
-  onResponse({ response }) {
-    if (response.status === 401 && unauthorizedHandler) {
-      unauthorizedHandler();
+  onResponse({ request, response }) {
+    if (response.status !== 401 || !unauthorizedHandler) {
+      return;
     }
+    let pathname: string;
+    try {
+      pathname = new URL(request.url).pathname;
+    } catch {
+      return;
+    }
+    if (AUTH_ENDPOINTS.has(pathname)) {
+      return;
+    }
+    unauthorizedHandler();
   },
 });
 
