@@ -25,7 +25,7 @@ function stubApi(mode: AuthMode) {
             actor_id: "2",
             display_name: "admin",
             username: "admin",
-            role: "admin",
+            roles: ["admin"],
             must_change_password: true,
           }),
         });
