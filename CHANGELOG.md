@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/stargrid-systems/spectra/compare/v0.4.0...v0.5.0) (2026-08-09)
+
+
+### Features
+
+* add user and api-key management UI ([#222](https://github.com/stargrid-systems/spectra/issues/222)) ([63fa8f3](https://github.com/stargrid-systems/spectra/commit/63fa8f384f53bcf12309fe11b73fdc6720c85a6e))
+* implement authentication ([#221](https://github.com/stargrid-systems/spectra/issues/221)) ([8975994](https://github.com/stargrid-systems/spectra/commit/897599414b69d09d14cc7286a1a34ff7a9488125))
+
 ## [0.4.0](https://github.com/stargrid-systems/spectra/compare/v0.3.1...v0.4.0) (2026-08-03)
 
 
