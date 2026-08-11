@@ -109,6 +109,7 @@ async function onDelete(target: User) {
               autocomplete="new-password"
               class="w-full"
             />
+            <PasswordRequirements :value="createState.password" />
           </UFormField>
 
           <UFormField :label="$t('auth.users.role')" name="role">

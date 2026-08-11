@@ -7,6 +7,7 @@ import {
   isRole,
   loginSchema,
   PASSWORD_MIN,
+  passwordRequirements,
   setupSchema,
 } from "~/utils/auth";
 
@@ -90,5 +91,23 @@ describe("isRole", () => {
     expect(isRole("operator")).toBe(true);
     expect(isRole("viewer")).toBe(true);
     expect(isRole("superuser")).toBe(false);
+  });
+});
+
+describe("passwordRequirements", () => {
+  it("marks the minimum length unmet below the threshold", () => {
+    const result = passwordRequirements("x".repeat(PASSWORD_MIN - 1));
+    expect(result).toHaveLength(1);
+    expect(result[0].key).toBe("minLength");
+    expect(result[0].satisfied).toBe(false);
+  });
+
+  it("marks the minimum length met at and above the threshold", () => {
+    expect(passwordRequirements("x".repeat(PASSWORD_MIN))[0].satisfied).toBe(true);
+    expect(passwordRequirements("x".repeat(PASSWORD_MIN + 10))[0].satisfied).toBe(true);
+  });
+
+  it("treats the empty password as unmet", () => {
+    expect(passwordRequirements("")[0].satisfied).toBe(false);
   });
 });

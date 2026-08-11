@@ -41,6 +41,9 @@
       "failed": "Setup failed.",
       "passwordsMismatch": "Passwords do not match."
     },
+    "passwordRequirements": {
+      "minLength": "At least {n} characters"
+    },
     "changePassword": {
       "title": "Change password",
       "subtitle": "Choose a new password before continuing.",
