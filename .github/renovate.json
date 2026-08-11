@@ -5,6 +5,23 @@
     {
       "matchManagers": ["github-actions"],
       "groupName": "CI"
+    },
+    {
+      "matchDatasources": ["git-refs"],
+      "matchDepNames": ["https://github.com/stargrid-systems/aperture"],
+      "automerge": false,
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps",
+      "commitMessageTopic": "aperture"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "datasourceTemplate": "git-refs",
+      "depNameTemplate": "https://github.com/stargrid-systems/aperture",
+      "fileMatch": ["^modules/aperture/APERTURE_REF$"],
+      "matchStrings": ["ref=(?<currentValue>\\S+) sha=(?<currentDigest>[0-9a-f]+)"]
     }
   ]
 }

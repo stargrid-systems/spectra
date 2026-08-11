@@ -1,0 +1,98 @@
+name: aperture-sync
+
+on:
+  pull_request:
+    paths:
+      - modules/aperture/APERTURE_REF
+
+permissions:
+  contents: write
+  checks: write
+
+concurrency:
+  group: aperture-sync-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    if: startsWith(github.head_ref, 'renovate/')
+    runs-on: ubuntu-26.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Read aperture ref
+        id: ref
+        run: |
+          sha=$(grep -o 'sha=[0-9a-f]*' modules/aperture/APERTURE_REF | cut -d= -f2)
+          if [ -z "$sha" ]; then
+            echo "::error::could not parse sha from modules/aperture/APERTURE_REF"
+            exit 1
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch openapi.json
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/stargrid-systems/aperture/${{ steps.ref.outputs.sha }}/openapi.json" \
+            -o modules/aperture/openapi.json
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Regenerate types
+        run: npm run openapi:generate
+
+      - name: Commit regenerated files
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add modules/aperture/openapi.json modules/aperture/runtime/generated.ts
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "chore: regenerate aperture API code"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Quality
+        id: quality
+        if: steps.commit.outputs.changed == 'true'
+        continue-on-error: true
+        run: |
+          npm run format:check
+          npm run lint
+          npm run typecheck
+          npm run test
+
+      - name: Report Gate check
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          HEAD_SHA: ${{ steps.commit.outputs.head_sha }}
+          CONCLUSION: ${{ steps.quality.outcome == 'success' && 'success' || 'failure' }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          gh api --method POST "repos/${{ github.repository }}/check-runs" \
+            -f name="Gate" \
+            -f head_sha="$HEAD_SHA" \
+            -f status="completed" \
+            -f conclusion="$CONCLUSION" \
+            -f started_at="$now" \
+            -f completed_at="$now" \
+            -f details_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+      - name: Fail on unmet quality
+        if: steps.commit.outputs.changed == 'true' && steps.quality.outcome != 'success'
+        run: exit 1
