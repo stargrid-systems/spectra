@@ -43,6 +43,17 @@ npm run test       # Run vitest
 npm run test:watch # Run vitest in watch mode
 ```
 
+### API code generation
+
+Spectra consumes aperture's OpenAPI spec to generate TypeScript types for the
+API layer. The spec lives at `modules/aperture/openapi.json` and the generated
+types at `modules/aperture/runtime/generated.ts`.
+
+To regenerate after aperture changes:
+
+1. From the aperture directory: `cargo run -- openapi > ../spectra/modules/aperture/openapi.json`
+2. From the spectra directory: `npm run openapi:generate`
+
 ### Production build
 
 ```bash
