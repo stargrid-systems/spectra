@@ -18,16 +18,43 @@
       "get": {
         "summary": "Lists API keys for the authenticated actor.",
         "operationId": "listApiKeys",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrderParam"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "API keys",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ApiKeyResponse"
-                  }
+                  "$ref": "#/components/schemas/Page_ApiKeyResponse"
                 }
               }
             }
@@ -724,16 +751,43 @@
       "get": {
         "summary": "Lists distinct boot sessions, newest first.",
         "operationId": "listLogBoots",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrderParam"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Boot sessions",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/BootResponse"
-                  }
+                  "$ref": "#/components/schemas/Page_BootResponse"
                 }
               }
             }
@@ -915,6 +969,34 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrderParam"
+            }
           }
         ],
         "responses": {
@@ -923,13 +1005,106 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "$ref": "#/components/schemas/Page_String"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/settings": {
+      "get": {
+        "summary": "Lists every setting key with its current value.",
+        "operationId": "listSettings",
+        "responses": {
+          "200": {
+            "description": "Settings",
+            "content": {
+              "application/json": {
+                "schema": {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "$ref": "#/components/schemas/SettingResponse"
                   }
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/settings/{key}": {
+      "get": {
+        "summary": "Returns the value of one setting key.",
+        "operationId": "getSetting",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "description": "Setting key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Setting value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown setting key"
+          }
+        }
+      },
+      "put": {
+        "summary": "Replaces the value of one setting key.",
+        "operationId": "updateSetting",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "description": "Setting key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSettingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Setting updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid value"
+          },
+          "404": {
+            "description": "Unknown setting key"
           }
         }
       }
@@ -1347,16 +1522,43 @@
       "get": {
         "summary": "Lists all users.",
         "operationId": "listUsers",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrderParam"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Users",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserResponse"
-                  }
+                  "$ref": "#/components/schemas/Page_UserResponse"
                 }
               }
             }
@@ -2176,6 +2378,59 @@
           "desc"
         ]
       },
+      "Page_ApiKeyResponse": {
+        "type": "object",
+        "description": "A page of results plus the cursors for the neighbouring pages.",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "prefix"
+              ],
+              "properties": {
+                "id": {
+                  "$ref": "#/components/schemas/ApiKeyId"
+                },
+                "last_used_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "prefix": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The rows in this page."
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
+          },
+          "prev_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
+          }
+        }
+      },
       "Page_ArtifactSummaryResponse": {
         "type": "object",
         "description": "A page of results plus the cursors for the neighbouring pages.",
@@ -2321,6 +2576,71 @@
                     "null"
                   ],
                   "description": "Human-readable version, if known."
+                }
+              }
+            },
+            "description": "The rows in this page."
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
+          },
+          "prev_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
+          }
+        }
+      },
+      "Page_BootResponse": {
+        "type": "object",
+        "description": "A page of results plus the cursors for the neighbouring pages.",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "One boot session observed in the log store, returned by\n`GET /api/v1/logs/boots`.",
+              "required": [
+                "boot_id",
+                "first_seen",
+                "last_seen",
+                "event_count",
+                "is_current"
+              ],
+              "properties": {
+                "boot_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "Unique boot id (UUID)."
+                },
+                "event_count": {
+                  "type": "integer",
+                  "format": "int64",
+                  "description": "Number of events recorded so far in this boot.",
+                  "minimum": 0
+                },
+                "first_seen": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Timestamp of the earliest event in this boot."
+                },
+                "is_current": {
+                  "type": "boolean",
+                  "description": "True if this is the currently running gateway boot."
+                },
+                "last_seen": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Timestamp of the latest event in this boot."
                 }
               }
             },
@@ -2552,6 +2872,36 @@
           }
         }
       },
+      "Page_String": {
+        "type": "object",
+        "description": "A page of results plus the cursors for the neighbouring pages.",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The rows in this page."
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
+          },
+          "prev_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
+          }
+        }
+      },
       "Page_TaskResponse": {
         "type": "object",
         "description": "A page of results plus the cursors for the neighbouring pages.",
@@ -2739,6 +3089,56 @@
           }
         }
       },
+      "Page_UserResponse": {
+        "type": "object",
+        "description": "A page of results plus the cursors for the neighbouring pages.",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "actor_id",
+                "username",
+                "must_change_password"
+              ],
+              "properties": {
+                "actor_id": {
+                  "$ref": "#/components/schemas/ActorId"
+                },
+                "id": {
+                  "$ref": "#/components/schemas/UserId"
+                },
+                "must_change_password": {
+                  "type": "boolean"
+                },
+                "username": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The rows in this page."
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
+          },
+          "prev_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
+          }
+        }
+      },
       "Password": {
         "type": "string",
         "description": "A plaintext password. Redacts in Debug output to avoid accidental leakage.\n\nUnlike [`Username`](crate::Username), `Password` does NOT validate on\nconstruction or deserialization. This is deliberate: the login handler must\naccept any password string (even one below the minimum length) so the\nrequest reaches the handler body where the rate limiter is consulted.\nValidating at deserialization would let an attacker bypass rate limiting\nby sending short passwords (they would be rejected with a 400 before the\nhandler runs). Password validation happens in\n[`AuthHandle`](crate::AuthHandle) methods (`create_user`,\n`change_password`, `setup_admin`) instead."
@@ -2829,6 +3229,20 @@
             "type": "boolean",
             "description": "Whether the leaf was actually re-issued."
           }
+        }
+      },
+      "SettingResponse": {
+        "type": "object",
+        "description": "One setting key and its current value.",
+        "required": [
+          "key",
+          "value"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {}
         }
       },
       "SetupRequest": {
@@ -3058,6 +3472,16 @@
           "cancelled",
           "interrupted"
         ]
+      },
+      "UpdateSettingRequest": {
+        "type": "object",
+        "description": "Body for `PUT /api/v1/settings/{key}`.",
+        "required": [
+          "value"
+        ],
+        "properties": {
+          "value": {}
+        }
       },
       "UpdateTaskScheduleRequest": {
         "type": "object",

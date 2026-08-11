@@ -321,6 +321,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists every setting key with its current value. */
+        get: operations["listSettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settings/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Returns the value of one setting key. */
+        get: operations["getSetting"];
+        /** Replaces the value of one setting key. */
+        put: operations["updateSetting"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/task-definitions": {
         parameters: {
             query?: never;
@@ -781,6 +816,21 @@ export interface components {
          */
         OrderParam: "asc" | "desc";
         /** @description A page of results plus the cursors for the neighbouring pages. */
+        Page_ApiKeyResponse: {
+            /** @description The rows in this page. */
+            items: {
+                id: components["schemas"]["ApiKeyId"];
+                /** Format: date-time */
+                last_used_at?: string | null;
+                name: string;
+                prefix: string;
+            }[];
+            /** @description Cursor to pass as `?cursor=` for the next page. Null at the end. */
+            next_cursor?: string | null;
+            /** @description Cursor to pass as `?cursor=` for the previous page. Null at the start. */
+            prev_cursor?: string | null;
+        };
+        /** @description A page of results plus the cursors for the neighbouring pages. */
         Page_ArtifactSummaryResponse: {
             /** @description The rows in this page. */
             items: {
@@ -841,6 +891,38 @@ export interface components {
                 verified_at?: string | null;
                 /** @description Human-readable version, if known. */
                 version?: string | null;
+            }[];
+            /** @description Cursor to pass as `?cursor=` for the next page. Null at the end. */
+            next_cursor?: string | null;
+            /** @description Cursor to pass as `?cursor=` for the previous page. Null at the start. */
+            prev_cursor?: string | null;
+        };
+        /** @description A page of results plus the cursors for the neighbouring pages. */
+        Page_BootResponse: {
+            /** @description The rows in this page. */
+            items: {
+                /**
+                 * Format: uuid
+                 * @description Unique boot id (UUID).
+                 */
+                boot_id: string;
+                /**
+                 * Format: int64
+                 * @description Number of events recorded so far in this boot.
+                 */
+                event_count: number;
+                /**
+                 * Format: date-time
+                 * @description Timestamp of the earliest event in this boot.
+                 */
+                first_seen: string;
+                /** @description True if this is the currently running gateway boot. */
+                is_current: boolean;
+                /**
+                 * Format: date-time
+                 * @description Timestamp of the latest event in this boot.
+                 */
+                last_seen: string;
             }[];
             /** @description Cursor to pass as `?cursor=` for the next page. Null at the end. */
             next_cursor?: string | null;
@@ -928,6 +1010,15 @@ export interface components {
             prev_cursor?: string | null;
         };
         /** @description A page of results plus the cursors for the neighbouring pages. */
+        Page_String: {
+            /** @description The rows in this page. */
+            items: string[];
+            /** @description Cursor to pass as `?cursor=` for the next page. Null at the end. */
+            next_cursor?: string | null;
+            /** @description Cursor to pass as `?cursor=` for the previous page. Null at the start. */
+            prev_cursor?: string | null;
+        };
+        /** @description A page of results plus the cursors for the neighbouring pages. */
         Page_TaskResponse: {
             /** @description The rows in this page. */
             items: {
@@ -988,6 +1079,20 @@ export interface components {
             /** @description Cursor to pass as `?cursor=` for the previous page. Null at the start. */
             prev_cursor?: string | null;
         };
+        /** @description A page of results plus the cursors for the neighbouring pages. */
+        Page_UserResponse: {
+            /** @description The rows in this page. */
+            items: {
+                actor_id: components["schemas"]["ActorId"];
+                id: components["schemas"]["UserId"];
+                must_change_password: boolean;
+                username: string;
+            }[];
+            /** @description Cursor to pass as `?cursor=` for the next page. Null at the end. */
+            next_cursor?: string | null;
+            /** @description Cursor to pass as `?cursor=` for the previous page. Null at the start. */
+            prev_cursor?: string | null;
+        };
         /**
          * @description A plaintext password. Redacts in Debug output to avoid accidental leakage.
          *
@@ -1037,6 +1142,11 @@ export interface components {
         RotateCertificateOutput: {
             /** @description Whether the leaf was actually re-issued. */
             rotated: boolean;
+        };
+        /** @description One setting key and its current value. */
+        SettingResponse: {
+            key: string;
+            value: unknown;
         };
         SetupRequest: {
             password: components["schemas"]["Password"];
@@ -1120,6 +1230,10 @@ export interface components {
          * @enum {string}
          */
         TaskStatusResponse: "pending" | "running" | "succeeded" | "failed" | "cancelled" | "interrupted";
+        /** @description Body for `PUT /api/v1/settings/{key}`. */
+        UpdateSettingRequest: {
+            value: unknown;
+        };
         /** @description Body for `PATCH /api/v1/task-schedules/{id}`. */
         UpdateTaskScheduleRequest: {
             enabled?: boolean | null;
@@ -1168,7 +1282,11 @@ export type $defs = Record<string, never>;
 export interface operations {
     listApiKeys: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                cursor?: string;
+                order?: components["schemas"]["OrderParam"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1181,7 +1299,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiKeyResponse"][];
+                    "application/json": components["schemas"]["Page_ApiKeyResponse"];
                 };
             };
         };
@@ -1681,7 +1799,11 @@ export interface operations {
     };
     listLogBoots: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                cursor?: string;
+                order?: components["schemas"]["OrderParam"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1694,7 +1816,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BootResponse"][];
+                    "application/json": components["schemas"]["Page_BootResponse"];
                 };
             };
         };
@@ -1780,6 +1902,9 @@ export interface operations {
             query?: {
                 /** @description Only targets starting with this prefix. */
                 q?: string;
+                limit?: number;
+                cursor?: string;
+                order?: components["schemas"]["OrderParam"];
             };
             header?: never;
             path?: never;
@@ -1793,8 +1918,99 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string[];
+                    "application/json": components["schemas"]["Page_String"];
                 };
+            };
+        };
+    };
+    listSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingResponse"][];
+                };
+            };
+        };
+    };
+    getSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Setting key */
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Setting value */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingResponse"];
+                };
+            };
+            /** @description Unknown setting key */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Setting key */
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSettingRequest"];
+            };
+        };
+        responses: {
+            /** @description Setting updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingResponse"];
+                };
+            };
+            /** @description Invalid value */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown setting key */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -2119,7 +2335,11 @@ export interface operations {
     };
     listUsers: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                cursor?: string;
+                order?: components["schemas"]["OrderParam"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2132,7 +2352,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserResponse"][];
+                    "application/json": components["schemas"]["Page_UserResponse"];
                 };
             };
         };

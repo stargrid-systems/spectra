@@ -42,6 +42,10 @@ export class ApiError extends Error {
   }
 }
 
+// Several list endpoints are now paginated on the server but are consumed as
+// plain arrays here. Request the largest page until the UI supports cursors.
+const LIST_LIMIT = 200;
+
 const AUTH_ENDPOINTS = new Set([
   "/api/v1/auth/me",
   "/api/v1/auth/login",
@@ -124,10 +128,16 @@ export const apertureApi = {
   },
 
   listLogTargets: async (params?: ListLogTargetsParams): Promise<string[]> =>
-    unwrap(await client.GET("/api/v1/logs/targets", { params: { query: params } })),
+    unwrap(
+      await client.GET("/api/v1/logs/targets", {
+        params: { query: { limit: LIST_LIMIT, ...params } },
+      }),
+    ).items,
 
   listLogBoots: async (): Promise<BootList> =>
-    unwrap(await client.GET("/api/v1/logs/boots")).map(toBootResponse),
+    unwrap(
+      await client.GET("/api/v1/logs/boots", { params: { query: { limit: LIST_LIMIT } } }),
+    ).items.map(toBootResponse),
 
   listSpans: async (params?: ListLogSpansParams): Promise<LogSpanPage> => {
     const data = unwrap(await client.GET("/api/v1/logs/spans", { params: { query: params } }));
@@ -158,7 +168,8 @@ export const apertureApi = {
     unwrapVoid(await client.POST("/api/v1/auth/change-password", { body }));
   },
 
-  listUsers: async (): Promise<User[]> => unwrap(await client.GET("/api/v1/users")),
+  listUsers: async (): Promise<User[]> =>
+    unwrap(await client.GET("/api/v1/users", { params: { query: { limit: LIST_LIMIT } } })).items,
 
   createUser: async (body: CreateUserBody): Promise<User> =>
     unwrap(await client.POST("/api/v1/users", { body })),
@@ -167,7 +178,9 @@ export const apertureApi = {
     unwrapVoid(await client.DELETE("/api/v1/users/{id}", { params: { path: { id } } }));
   },
 
-  listApiKeys: async (): Promise<ApiKey[]> => unwrap(await client.GET("/api/v1/api-keys")),
+  listApiKeys: async (): Promise<ApiKey[]> =>
+    unwrap(await client.GET("/api/v1/api-keys", { params: { query: { limit: LIST_LIMIT } } }))
+      .items,
 
   createApiKey: async (body: CreateApiKeyBody): Promise<CreatedApiKey> =>
     unwrap(await client.POST("/api/v1/api-keys", { body })),

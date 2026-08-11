@@ -46,16 +46,13 @@ npm run test:watch # Run vitest in watch mode
 ### API code generation
 
 Spectra consumes aperture's OpenAPI spec to generate TypeScript types for the
-API layer. The spec lives at `openapi/openapi.json` and the generated types at
-`app/utils/api/generated.ts`.
+API layer. The spec lives at `modules/aperture/openapi.json` and the generated
+types at `modules/aperture/runtime/generated.ts`.
 
 To regenerate after aperture changes:
 
-1. From the aperture directory: `cargo run -- openapi > ../spectra/openapi/openapi.json`
+1. From the aperture directory: `cargo run -- openapi > ../spectra/modules/aperture/openapi.json`
 2. From the spectra directory: `npm run openapi:generate`
-
-The generation script patches the spec with missing enum schemas and resolves
-a duplicate operation ID. See `scripts/patch-openapi.mjs`.
 
 ### Production build
 
