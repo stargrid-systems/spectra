@@ -5,6 +5,19 @@ export const USERNAME_PATTERN = /^[A-Za-z0-9._-]+$/;
 export const PASSWORD_MIN = 12;
 export const PASSWORD_MAX = 1024;
 
+export interface PasswordRequirement {
+  key: string;
+  satisfied: boolean;
+}
+
+export const PASSWORD_RULES = [
+  { key: "minLength", test: (v: string) => v.length >= PASSWORD_MIN },
+] as const;
+
+export function passwordRequirements(value: string): PasswordRequirement[] {
+  return PASSWORD_RULES.map((rule) => ({ key: rule.key, satisfied: rule.test(value) }));
+}
+
 const requiredString = z.string().check(z.minLength(1));
 const usernameField = z.string().check(z.minLength(1), z.maxLength(64), z.regex(USERNAME_PATTERN));
 const newPasswordField = z.string().check(z.minLength(PASSWORD_MIN), z.maxLength(PASSWORD_MAX));

@@ -70,6 +70,7 @@ async function onSubmit(event: FormSubmitEvent<ChangePasswordValues>) {
           autocomplete="new-password"
           class="w-full"
         />
+        <PasswordRequirements :value="state.newPassword" />
       </UFormField>
 
       <UFormField :label="$t('auth.changePassword.confirm')" name="confirmPassword">

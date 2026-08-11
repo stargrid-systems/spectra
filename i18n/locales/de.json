@@ -41,6 +41,9 @@
       "failed": "Einrichtung fehlgeschlagen.",
       "passwordsMismatch": "Passwörter stimmen nicht überein."
     },
+    "passwordRequirements": {
+      "minLength": "Mindestens {n} Zeichen"
+    },
     "changePassword": {
       "title": "Passwort ändern",
       "subtitle": "Wähle ein neues Passwort, bevor du fortfährst.",
