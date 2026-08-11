@@ -1,0 +1,79 @@
+name: aperture-sync
+
+on:
+  pull_request:
+    paths:
+      - modules/aperture/module.ts
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: aperture-sync-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    if: startsWith(github.head_ref, 'renovate/')
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout renovate branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Read aperture ref
+        id: ref
+        run: |
+          sha=$(grep -o 'sha=[0-9a-f]*' modules/aperture/module.ts | cut -d= -f2)
+          if [ -z "$sha" ]; then
+            echo "::error::could not parse sha from modules/aperture/module.ts"
+            exit 1
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch openapi.json
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/stargrid-systems/aperture/${{ steps.ref.outputs.sha }}/openapi.json" \
+            -o modules/aperture/openapi.json
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Regenerate types
+        run: npm run openapi:generate
+
+      - name: Open stacked regen PR
+        env:
+          BASE: ${{ github.head_ref }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          branch="aperture-regen/pr-${{ github.event.pull_request.number }}"
+          git add modules/aperture/openapi.json modules/aperture/runtime/generated.ts
+          if git diff --cached --quiet; then
+            echo "no regenerated changes"
+            exit 0
+          fi
+          git checkout -B "$branch"
+          git commit -m "chore: regenerate aperture API code"
+          git push origin "$branch" --force
+          existing=$(gh pr list --head "$branch" --state open --json number --jq 'length')
+          if [ "$existing" = "0" ]; then
+            gh pr create \
+              --base "$BASE" \
+              --head "$branch" \
+              --title "chore: regenerate aperture API code" \
+              --body "Stacked on #${{ github.event.pull_request.number }}. Regenerates the Aperture API code for the ref bump. Approve workflows to run CI."
+          else
+            echo "stacked PR already open"
+          fi
