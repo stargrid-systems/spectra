@@ -3,7 +3,7 @@ name: aperture-sync
 on:
   pull_request:
     paths:
-      - modules/aperture/APERTURE_REF
+      - modules/aperture/module.ts
 
 permissions:
   contents: write
@@ -27,9 +27,9 @@ jobs:
       - name: Read aperture ref
         id: ref
         run: |
-          sha=$(grep -o 'sha=[0-9a-f]*' modules/aperture/APERTURE_REF | cut -d= -f2)
+          sha=$(grep -o 'sha=[0-9a-f]*' modules/aperture/module.ts | cut -d= -f2)
           if [ -z "$sha" ]; then
-            echo "::error::could not parse sha from modules/aperture/APERTURE_REF"
+            echo "::error::could not parse sha from modules/aperture/module.ts"
             exit 1
           fi
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
