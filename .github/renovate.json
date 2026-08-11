@@ -1,11 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:best-practices",
-    ":automergePatch",
-    ":automergeLinters",
-    "group:allNonMajor"
-  ],
+  "extends": ["config:best-practices", ":automergePatch", ":automergeLinters", "group:allNonMajor"],
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
@@ -26,9 +21,7 @@
       "datasourceTemplate": "git-refs",
       "depNameTemplate": "https://github.com/stargrid-systems/aperture",
       "managerFilePatterns": ["/^modules/aperture/module\\.ts$/"],
-      "matchStrings": [
-        "ref=(?<currentValue>\\S+) sha=(?<currentDigest>[0-9a-f]+)"
-      ]
+      "matchStrings": ["ref=(?<currentValue>\\S+) sha=(?<currentDigest>[0-9a-f]+)"]
     }
   ]
 }
