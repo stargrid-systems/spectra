@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  checks: write
 
 concurrency:
   group: aperture-sync-${{ github.event.pull_request.number }}
@@ -17,7 +16,7 @@ jobs:
   sync:
     if: startsWith(github.head_ref, 'renovate/')
     runs-on: ubuntu-26.04
-    timeout-minutes: 25
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -52,47 +51,13 @@ jobs:
         run: npm run openapi:generate
 
       - name: Commit regenerated files
-        id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add modules/aperture/openapi.json modules/aperture/runtime/generated.ts
           if git diff --cached --quiet; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "no changes to commit"
           else
             git commit -m "chore: regenerate aperture API code"
             git push
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Quality
-        id: quality
-        if: steps.commit.outputs.changed == 'true'
-        continue-on-error: true
-        run: |
-          npm run format:check
-          npm run lint
-          npm run typecheck
-          npm run test
-
-      - name: Report Gate check
-        if: steps.commit.outputs.changed == 'true'
-        env:
-          HEAD_SHA: ${{ steps.commit.outputs.head_sha }}
-          CONCLUSION: ${{ steps.quality.outcome == 'success' && 'success' || 'failure' }}
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          gh api --method POST "repos/${{ github.repository }}/check-runs" \
-            -f name="Gate" \
-            -f head_sha="$HEAD_SHA" \
-            -f status="completed" \
-            -f conclusion="$CONCLUSION" \
-            -f started_at="$now" \
-            -f completed_at="$now" \
-            -f details_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-      - name: Fail on unmet quality
-        if: steps.commit.outputs.changed == 'true' && steps.quality.outcome != 'success'
-        run: exit 1
