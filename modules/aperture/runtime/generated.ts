@@ -643,13 +643,13 @@ export interface components {
             prefix: string;
         };
         CreateTaskInput: {
-            input: components["schemas"]["RotateCertificateInput"];
-            /** @enum {string} */
-            kind: "rotate-certificate";
-        } | {
             input: components["schemas"]["DownloadInput"];
             /** @enum {string} */
             kind: "download";
+        } | {
+            input: components["schemas"]["RotateCertificateInput"];
+            /** @enum {string} */
+            kind: "rotate-certificate";
         };
         /** @description Body for `POST /api/v1/tasks`. */
         CreateTaskRequest: {
