@@ -193,7 +193,7 @@ export interface paths {
             cookie?: never;
         };
         /** Returns the authenticated caller's identity and role. */
-        get: operations["getCurrentUser"];
+        get: operations["getCurrentActor"];
         put?: never;
         post?: never;
         delete?: never;
@@ -504,6 +504,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/{id}/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Returns a deterministic constellation avatar for a user as inline SVG. */
+        get: operations["getUserAvatar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/version": {
         parameters: {
             query?: never;
@@ -643,13 +660,13 @@ export interface components {
             prefix: string;
         };
         CreateTaskInput: {
-            input: components["schemas"]["RotateCertificateInput"];
-            /** @enum {string} */
-            kind: "rotate-certificate";
-        } | {
             input: components["schemas"]["DownloadInput"];
             /** @enum {string} */
             kind: "download";
+        } | {
+            input: components["schemas"]["RotateCertificateInput"];
+            /** @enum {string} */
+            kind: "rotate-certificate";
         };
         /** @description Body for `POST /api/v1/tasks`. */
         CreateTaskRequest: {
@@ -669,11 +686,12 @@ export interface components {
             role?: null | components["schemas"]["Role"];
             username: components["schemas"]["Username"];
         };
-        CurrentUserResponse: {
+        CurrentActorResponse: {
             actor_id: components["schemas"]["ActorId"];
             display_name: string;
             must_change_password: boolean;
             roles: components["schemas"]["Role"][];
+            user_id?: null | components["schemas"]["UserId"];
             username?: string | null;
         };
         /** @description Content digest, e.g. `sha256:hex`. */
@@ -1680,7 +1698,7 @@ export interface operations {
             };
         };
     };
-    getCurrentUser: {
+    getCurrentActor: {
         parameters: {
             query?: never;
             header?: never;
@@ -1695,7 +1713,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CurrentUserResponse"];
+                    "application/json": components["schemas"]["CurrentActorResponse"];
                 };
             };
         };
@@ -2443,6 +2461,31 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    getUserAvatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description User id */
+                id: components["schemas"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Avatar SVG */
+            200: {
+                headers: {
+                    /** @description Immutable caching directive */
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/svg+xml": unknown;
+                };
             };
         };
     };

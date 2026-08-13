@@ -8,7 +8,7 @@ import type {
   CreateApiKeyBody,
   CreatedApiKey,
   CreateUserBody,
-  CurrentUser,
+  CurrentActor,
   ListLogSpansParams,
   ListLogTargetsParams,
   ListLogsParams,
@@ -149,7 +149,7 @@ export const apertureApi = {
       unwrap(await client.GET("/api/v1/logs/spans/{id}", { params: { path: { id } } })),
     ),
 
-  getMe: async (): Promise<CurrentUser> => unwrap(await client.GET("/api/v1/auth/me")),
+  getMe: async (): Promise<CurrentActor> => unwrap(await client.GET("/api/v1/auth/me")),
 
   getSetupStatus: async (): Promise<SetupStatus> =>
     unwrap(await client.GET("/api/v1/auth/setup-status")),

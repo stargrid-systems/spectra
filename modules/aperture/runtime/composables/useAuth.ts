@@ -1,11 +1,11 @@
 import { computed } from "vue";
 import { apertureApi } from "../client";
-import type { CurrentUser } from "../types";
+import type { CurrentActor } from "../types";
 
 export type SetupStatus = "unknown" | "required" | "done";
 
 export function useAuth() {
-  const user = useState<CurrentUser | null>("auth:user", () => null);
+  const user = useState<CurrentActor | null>("auth:user", () => null);
   const setupStatus = useState<SetupStatus>("auth:setup-status", () => "unknown");
 
   const isAuthenticated = computed(() => user.value !== null);
