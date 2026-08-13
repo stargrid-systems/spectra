@@ -42,7 +42,7 @@ export type ListLogSpansParams = NonNullable<operations["listSpans"]["parameters
 export type ListLogTargetsParams = NonNullable<operations["listLogTargets"]["parameters"]["query"]>;
 
 export type Role = Schemas["Role"];
-export type CurrentUser = Schemas["CurrentUserResponse"];
+export type CurrentActor = Schemas["CurrentActorResponse"];
 export type SetupStatus = Schemas["SetupStatusResponse"];
 export type LoginResponse = Schemas["LoginResponse"];
 export type User = Schemas["UserResponse"];
