@@ -66,9 +66,12 @@ async function onDelete(target: User) {
       <div class="flex flex-col gap-2">
         <UPageCard v-for="u in data" :key="u.id" variant="subtle">
           <div class="flex sm:items-center justify-between gap-3">
-            <div class="flex flex-col">
-              <span class="font-medium">{{ u.username }}</span>
-              <span class="text-muted text-xs">{{ u.id }}</span>
+            <div class="flex items-center gap-3 min-w-0">
+              <UAvatar :src="userAvatarUrl(u.id)" :alt="u.username" size="sm" />
+              <div class="flex flex-col min-w-0">
+                <span class="font-medium truncate">{{ u.username }}</span>
+                <span class="text-muted text-xs">{{ u.id }}</span>
+              </div>
             </div>
             <div class="flex items-center gap-3">
               <UBadge

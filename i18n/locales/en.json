@@ -60,7 +60,6 @@
     "account": {
       "title": "Account",
       "description": "Your account details and password.",
-      "username": "Username",
       "role": "Role"
     },
     "users": {

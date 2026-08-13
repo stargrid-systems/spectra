@@ -189,3 +189,7 @@ export const apertureApi = {
     unwrapVoid(await client.DELETE("/api/v1/api-keys/{id}", { params: { path: { id } } }));
   },
 };
+
+export function userAvatarUrl(userId: string): string {
+  return `/api/v1/users/${userId}/avatar`;
+}

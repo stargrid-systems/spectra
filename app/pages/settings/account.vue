@@ -49,8 +49,13 @@ async function onSubmit(event: FormSubmitEvent<ChangePasswordValues>) {
 
     <UPageCard v-if="user" variant="subtle">
       <div class="flex flex-col gap-3">
-        <div class="flex max-sm:flex-col justify-between items-start gap-2">
-          <span class="text-muted">{{ $t("auth.account.username") }}</span>
+        <div class="flex items-center gap-3">
+          <UAvatar
+            :src="user.user_id ? userAvatarUrl(user.user_id) : undefined"
+            :alt="user.username ?? user.display_name"
+            :icon="user.user_id ? undefined : 'i-lucide-user'"
+            size="lg"
+          />
           <span class="font-medium">{{ user.username ?? user.display_name }}</span>
         </div>
         <USeparator />
