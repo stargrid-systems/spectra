@@ -6,6 +6,12 @@ const { t } = useI18n();
 const localePath = useLocalePath();
 const { user, logout } = useAuth();
 
+const avatarUrl = computed(() => {
+  const id = user.value?.user_id;
+  return id ? userAvatarUrl(id) : undefined;
+});
+const avatarAlt = computed(() => user.value?.username ?? user.value?.display_name ?? "");
+
 const closeSidebar = () => {
   open.value = false;
 };
@@ -60,7 +66,11 @@ const userItems = computed<DropdownMenuItem[][]>(() => [
   [
     {
       label: user.value?.username ?? user.value?.display_name ?? "",
-      avatar: { icon: "i-lucide-user" },
+      avatar: {
+        src: avatarUrl.value,
+        alt: avatarAlt.value,
+        icon: avatarUrl.value ? undefined : "i-lucide-user",
+      },
       type: "label",
     },
     {
@@ -125,7 +135,12 @@ const userItems = computed<DropdownMenuItem[][]>(() => [
             :class="collapsed ? 'justify-center' : 'justify-start'"
             :block="!collapsed"
           >
-            <UAvatar :icon="collapsed ? 'i-lucide-user' : undefined" size="2xs" />
+            <UAvatar
+              :src="avatarUrl"
+              :alt="avatarAlt"
+              :icon="avatarUrl ? undefined : 'i-lucide-user'"
+              size="2xs"
+            />
             <span v-if="!collapsed" class="truncate">
               {{ user.username ?? user.display_name }}
             </span>

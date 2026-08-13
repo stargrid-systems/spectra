@@ -12,6 +12,7 @@ export default defineNuxtModule({
       { name: "apertureApi", from: resolve("./runtime/client") },
       { name: "ApiError", from: resolve("./runtime/client") },
       { name: "setUnauthorizedHandler", from: resolve("./runtime/client") },
+      { name: "userAvatarUrl", from: resolve("./runtime/client") },
     ]);
     addImportsDir(resolve("./runtime/composables"));
     addPlugin(resolve("./runtime/plugins/auth.client.ts"));
