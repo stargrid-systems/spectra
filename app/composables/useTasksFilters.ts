@@ -1,7 +1,10 @@
 import * as z from "zod/v4/mini";
-import type { ListTasksParams } from "~~/modules/aperture/runtime/types";
+import type { ListTasksParams, TaskStatusParam } from "~~/modules/aperture/runtime/types";
 import { queryOptionalString, useRouteQueryState } from "~/composables/useRouteQueryState";
 
+// openapi-typescript emits types only, so there is no runtime array to import
+// from the generated code. `satisfies` pins the values to the TaskStatusParam
+// union and the assertion below fails if the spec grows a new status.
 export const TASK_STATUS_FILTERS = [
   "active",
   "finished",
@@ -10,16 +13,18 @@ export const TASK_STATUS_FILTERS = [
   "succeeded",
   "failed",
   "cancelled",
-  "interrupted",
-] as const;
+] as const satisfies readonly TaskStatusParam[];
 
-export type TaskStatusFilter = (typeof TASK_STATUS_FILTERS)[number];
+type AssertNever<T extends never> = T;
+export type TaskStatusFiltersComplete = AssertNever<
+  Exclude<TaskStatusParam, (typeof TASK_STATUS_FILTERS)[number]>
+>;
 
-export function isTaskStatusFilter(value: string): value is TaskStatusFilter {
+export function isTaskStatusFilter(value: string): value is TaskStatusParam {
   return (TASK_STATUS_FILTERS as readonly string[]).includes(value);
 }
 
-const queryStatusFilter = z.codec(z.array(z.string()), z.custom<TaskStatusFilter | undefined>(), {
+const queryStatusFilter = z.codec(z.array(z.string()), z.custom<TaskStatusParam | undefined>(), {
   decode: (arr) => {
     const v = arr[0];
     return v !== undefined && isTaskStatusFilter(v) ? v : undefined;
