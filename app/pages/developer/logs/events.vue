@@ -15,7 +15,18 @@ const logsParams = computed<ListLogsParams | undefined>(() => {
   return Object.keys(p).length > 0 ? p : undefined;
 });
 
-const { data, status, error, refresh } = useLogs(() => logsParams.value);
+const {
+  items: allItems,
+  pending,
+  loadingMore,
+  error,
+  hasMore,
+  loadMore,
+  reload,
+} = useInfiniteList<LogEvent, ListLogsParams>(
+  (query) => apertureApi.listLogs(query),
+  () => logsParams.value,
+);
 
 const expandedRows = computed(() => new Set(filters.expand.events));
 
@@ -33,28 +44,8 @@ function toggleRow(event: LogEvent) {
   }
 }
 
-// Events: infinite scroll accumulation.
-
-const allItems = ref<LogEvent[]>([]);
-const nextCursor = ref<string | null | undefined>(undefined);
-const isLoadingMore = ref(false);
-let loadMoreGen = 0;
-
-function resetItems() {
-  allItems.value = [];
-  nextCursor.value = null;
-}
-
-watch(logsParams, () => {
-  loadMoreGen++;
-  resetItems();
-});
-
-watch(data, (newData) => {
-  if (!newData) return;
-  allItems.value = newData.items;
-  nextCursor.value = newData.next_cursor;
-  for (const event of newData.items) {
+watch(allItems, (items) => {
+  for (const event of items) {
     if (
       expandedRows.value.has(event.id) &&
       event.span_id &&
@@ -67,23 +58,6 @@ watch(data, (newData) => {
   }
 });
 
-async function loadMore() {
-  if (!nextCursor.value || isLoadingMore.value || status.value === "pending") return;
-  const myGen = ++loadMoreGen;
-  isLoadingMore.value = true;
-  try {
-    const params = { ...logsParams.value, cursor: nextCursor.value };
-    const result = await apertureApi.listLogs(params);
-    if (myGen !== loadMoreGen) return;
-    allItems.value = [...allItems.value, ...result.items];
-    nextCursor.value = result.next_cursor;
-  } catch (err) {
-    console.error("Failed to load more logs", err);
-  } finally {
-    isLoadingMore.value = false;
-  }
-}
-
 const scrollArea = useTemplateRef("scrollArea");
 
 useInfiniteScroll(
@@ -91,17 +65,12 @@ useInfiniteScroll(
   () => loadMore(),
   {
     distance: 200,
-    canLoadMore: () =>
-      nextCursor.value !== null &&
-      nextCursor.value !== undefined &&
-      status.value !== "pending" &&
-      !isLoadingMore.value,
+    canLoadMore: () => hasMore.value && !pending.value && !loadingMore.value,
   },
 );
 
 function retry() {
-  resetItems();
-  void refresh();
+  void reload();
 }
 
 // Span chain (event -> span -> ancestors) loaded on expand, cached by event id.
@@ -132,7 +101,7 @@ async function loadEventSpanChain(event: LogEvent) {
 <template>
   <UScrollArea ref="scrollArea" class="h-full" :ui="{ viewport: 'gap-1 p-4' }">
     <DataState
-      :pending="status === 'pending' && allItems.length === 0"
+      :pending="pending && allItems.length === 0"
       :error="error"
       :empty="allItems.length === 0"
       :error-text="$t('developer.logs.error')"
@@ -235,11 +204,11 @@ async function loadEventSpanChain(event: LogEvent) {
       </div>
     </DataState>
 
-    <div v-if="isLoadingMore" class="flex justify-center py-4">
+    <div v-if="loadingMore" class="flex justify-center py-4">
       <LoadingSpinner class="size-5 text-muted-foreground" />
     </div>
     <div
-      v-if="!nextCursor && allItems.length > 0"
+      v-if="!hasMore && allItems.length > 0"
       class="text-center py-4 text-xs text-muted-foreground"
     >
       {{ $t("developer.logs.noMore") }}

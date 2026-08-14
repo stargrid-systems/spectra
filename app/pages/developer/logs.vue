@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import type { BootResponse, LogEvent, LogSpan } from "~~/modules/aperture/runtime/types";
+import type {
+  BootResponse,
+  ListLogBootsParams,
+  ListLogTargetsParams,
+  LogEvent,
+  LogSpan,
+} from "~~/modules/aperture/runtime/types";
 import { defaultLogsState, queryKeys, schema } from "~/composables/useLogsFilters";
 import { timeRangeDurations, useLogsContextKey } from "~/composables/useLogsContext";
 import { LEVEL_COLORS, LOG_LEVELS } from "~/utils/logLevels";
@@ -12,12 +18,23 @@ const localePath = useLocalePath();
 
 const filters = useRouteQueryState(schema, { keys: queryKeys });
 
-const { data: targetOptions } = useLogTargets();
-const { data: bootsData } = useBoots();
-const boots = computed<BootResponse[]>(() => bootsData.value ?? []);
+const {
+  items: targetItemsRaw,
+  loadingMore: targetsLoadingMore,
+  hasMore: targetsHasMore,
+  loadMore: loadMoreTargets,
+} = useInfiniteList<string, ListLogTargetsParams>((query) => apertureApi.listLogTargets(query));
+const targetOptions = computed(() => targetItemsRaw.value);
+
+const {
+  items: bootsItems,
+  hasMore: bootsHasMore,
+  loadMore: loadMoreBoots,
+} = useInfiniteList<BootResponse, ListLogBootsParams>((query) => apertureApi.listLogBoots(query));
+const boots = computed<BootResponse[]>(() => bootsItems.value);
 
 const targetItems = computed(() =>
-  (targetOptions.value ?? []).map((target) => ({ label: target, value: target })),
+  targetItemsRaw.value.map((target) => ({ label: target, value: target })),
 );
 
 const inlineFields = ref(true);
@@ -207,29 +224,36 @@ provide(useLogsContextKey, logsContext);
               >
                 {{ $t("developer.logs.bootSelect.allBoots") }}
               </button>
-              <div
-                v-for="item in boots"
-                :key="item.boot_id"
-                class="w-full text-start px-3 py-2 hover:bg-elevated/50 cursor-pointer flex items-center justify-between gap-2"
-                :class="item.boot_id === filters.bootId ? 'bg-elevated/40' : ''"
-                @click="selectBoot(item.boot_id)"
-              >
-                <div class="min-w-0 flex flex-col">
-                  <span class="text-sm truncate">{{ formatBootLabel(item) }}</span>
-                  <span class="text-xs text-muted-foreground">
-                    {{ item.event_count }} {{ $t("developer.logs.events") }}
-                  </span>
+              <div class="max-h-72 overflow-y-auto">
+                <div
+                  v-for="item in boots"
+                  :key="item.boot_id"
+                  class="w-full text-start px-3 py-2 hover:bg-elevated/50 cursor-pointer flex items-center justify-between gap-2"
+                  :class="item.boot_id === filters.bootId ? 'bg-elevated/40' : ''"
+                  @click="selectBoot(item.boot_id)"
+                >
+                  <div class="min-w-0 flex flex-col">
+                    <span class="text-sm truncate">{{ formatBootLabel(item) }}</span>
+                    <span class="text-xs text-muted-foreground">
+                      {{ item.event_count }} {{ $t("developer.logs.events") }}
+                    </span>
+                  </div>
+                  <UBadge
+                    v-if="item.is_current"
+                    color="primary"
+                    variant="subtle"
+                    size="sm"
+                    :label="$t('developer.logs.bootSelect.current')"
+                  />
                 </div>
-                <UBadge
-                  v-if="item.is_current"
-                  color="primary"
-                  variant="subtle"
-                  size="sm"
-                  :label="$t('developer.logs.bootSelect.current')"
+                <div v-if="!boots.length" class="px-3 py-2 text-xs text-muted-foreground">
+                  {{ $t("developer.logs.bootSelect.empty") }}
+                </div>
+                <InfiniteSentinel
+                  v-if="bootsHasMore"
+                  :key="boots.length"
+                  @visible="loadMoreBoots()"
                 />
-              </div>
-              <div v-if="!boots.length" class="px-3 py-2 text-xs text-muted-foreground">
-                {{ $t("developer.logs.bootSelect.empty") }}
               </div>
             </div>
           </template>
@@ -246,14 +270,17 @@ provide(useLogsContextKey, logsContext);
 
         <USelect v-model="filters.level" :items="levelOptions" size="sm" class="w-32" />
 
-        <USelectMenu
+        <InfiniteSelectMenu
           v-model="filters.target"
           multiple
           :items="targetItems"
+          :loading="targetsLoadingMore"
+          :has-more="targetsHasMore"
           searchable
           size="sm"
           class="w-60"
           value-key="value"
+          @load-more="loadMoreTargets()"
         >
           <template #default>
             <span v-if="!filters.target.length" class="text-muted-foreground text-xs truncate">
@@ -274,7 +301,7 @@ provide(useLogsContextKey, logsContext);
               <span class="font-mono text-xs truncate">{{ item.label }}</span>
             </div>
           </template>
-        </USelectMenu>
+        </InfiniteSelectMenu>
 
         <UInput
           v-model="filters.search"

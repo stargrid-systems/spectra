@@ -7,11 +7,16 @@ const { t } = useI18n();
 const toast = useToast();
 const { user: currentUser } = useAuth();
 
-const { data, pending, error, refresh } = await useAsyncData<User[]>(
-  "users",
-  () => apertureApi.listUsers(),
-  { server: false },
-);
+const {
+  items: users,
+  pending,
+  error,
+  hasNext,
+  hasPrev,
+  loadNext,
+  loadPrev,
+  reload: refresh,
+} = useCursorPager<User>((query) => apertureApi.listUsers(query));
 
 const createOpen = ref(false);
 const createState = reactive({
@@ -58,13 +63,17 @@ async function onDelete(target: User) {
 
 <template>
   <div>
-    <DataState :pending="pending" :error="error ? String(error) : null" @retry="refresh">
+    <DataState
+      :pending="pending && users.length === 0"
+      :error="error ? String(error) : null"
+      @retry="refresh"
+    >
       <div class="flex justify-end mb-4">
         <UButton icon="i-lucide-plus" :label="$t('auth.users.create')" @click="createOpen = true" />
       </div>
 
       <div class="flex flex-col gap-2">
-        <UPageCard v-for="u in data" :key="u.id" variant="subtle">
+        <UPageCard v-for="u in users" :key="u.id" variant="subtle">
           <div class="flex sm:items-center justify-between gap-3">
             <div class="flex items-center gap-3 min-w-0">
               <UAvatar :src="userAvatarUrl(u.id)" :alt="u.username" size="sm" />
@@ -91,6 +100,16 @@ async function onDelete(target: User) {
           </div>
         </UPageCard>
       </div>
+
+      <PagerBar
+        :has-prev="hasPrev"
+        :has-next="hasNext"
+        :pending="pending"
+        :prev-text="$t('common.prev')"
+        :next-text="$t('common.next')"
+        @prev="loadPrev"
+        @next="loadNext"
+      />
     </DataState>
 
     <UModal v-model:open="createOpen" :title="$t('auth.users.create')">

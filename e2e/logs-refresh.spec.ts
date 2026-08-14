@@ -14,10 +14,9 @@ function isListLogs(url: string): boolean {
 function stubBody(pathname: string): unknown {
   switch (pathname) {
     case "/api/v1/logs":
-      return { items: [], next_cursor: null };
     case "/api/v1/logs/targets":
     case "/api/v1/logs/boots":
-      return [];
+      return { items: [], next_cursor: null };
     default:
       return {};
   }

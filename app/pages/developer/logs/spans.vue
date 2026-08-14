@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ListLogSpansParams, LogSpan } from "~~/modules/aperture/runtime/types";
+import { useInfiniteScroll } from "@vueuse/core";
 import { useLogsContext } from "~/composables/useLogsContext";
 import { spansParamsFromFilters } from "~/composables/useLogsFilters";
 
@@ -27,13 +28,28 @@ const spansParams = computed<ListLogSpansParams | undefined>(() => {
 });
 
 const {
-  data: spansData,
-  status: spansStatus,
+  items: rootSpans,
+  pending: spansPending,
+  loadingMore: spansLoadingMore,
   error: spansError,
-  refresh: refreshSpans,
-} = useSpans(() => spansParams.value);
+  hasMore: spansHasMore,
+  loadMore: loadMoreSpans,
+  reload: reloadSpans,
+} = useInfiniteList<LogSpan, ListLogSpansParams>(
+  (query) => apertureApi.listSpans(query),
+  () => spansParams.value,
+);
 
-const rootSpans = computed<LogSpan[]>(() => spansData.value?.items ?? []);
+const scrollArea = useTemplateRef("scrollArea");
+
+useInfiniteScroll(
+  () => scrollArea.value?.$el,
+  () => loadMoreSpans(),
+  {
+    distance: 200,
+    canLoadMore: () => spansHasMore.value && !spansPending.value && !spansLoadingMore.value,
+  },
+);
 
 watch(rootSpans, (rows) => {
   for (const s of rows) {
@@ -111,7 +127,7 @@ function retry() {
   childrenGen++;
   childrenCache.value.clear();
   spanEventsCache.value.clear();
-  void refreshSpans();
+  void reloadSpans();
 }
 
 watch(
@@ -125,7 +141,7 @@ watch(
 </script>
 
 <template>
-  <UScrollArea class="h-full" :ui="{ viewport: 'gap-1 p-4' }">
+  <UScrollArea ref="scrollArea" class="h-full" :ui="{ viewport: 'gap-1 p-4' }">
     <div v-if="filters.spanId" class="mb-3 flex items-center gap-2 px-4">
       <UBadge color="primary" variant="subtle" size="sm">
         {{ $t("developer.logs.spanFocus") }}
@@ -142,7 +158,7 @@ watch(
     </div>
 
     <DataState
-      :pending="spansStatus === 'pending'"
+      :pending="spansPending && rootSpans.length === 0"
       :error="spansError"
       :empty="rootSpans.length === 0 && !filters.spanId"
       :error-text="$t('developer.logs.error')"
@@ -269,5 +285,15 @@ watch(
         </div>
       </div>
     </DataState>
+
+    <div v-if="spansLoadingMore" class="flex justify-center py-4">
+      <LoadingSpinner class="size-5 text-muted-foreground" />
+    </div>
+    <div
+      v-if="!spansHasMore && rootSpans.length > 0"
+      class="text-center py-4 text-xs text-muted-foreground"
+    >
+      {{ $t("developer.logs.noMore") }}
+    </div>
   </UScrollArea>
 </template>

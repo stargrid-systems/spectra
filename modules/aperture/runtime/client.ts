@@ -1,17 +1,20 @@
 import createClient from "openapi-fetch";
 import type { paths } from "./generated";
 import type {
-  ApiKey,
-  BootList,
+  ApiKeyPage,
+  BootPage,
   BootResponse,
   ChangePasswordBody,
   CreateApiKeyBody,
   CreatedApiKey,
   CreateUserBody,
   CurrentActor,
+  ListApiKeysParams,
+  ListLogBootsParams,
   ListLogSpansParams,
   ListLogTargetsParams,
   ListLogsParams,
+  ListUsersParams,
   LoginBody,
   LoginResponse,
   LogEvent,
@@ -25,7 +28,9 @@ import type {
   RawLogSpanDetail,
   SetupBody,
   SetupStatus,
+  StringPage,
   User,
+  UserPage,
   VersionResponse,
 } from "./types";
 
@@ -41,10 +46,6 @@ export class ApiError extends Error {
     this.status = status;
   }
 }
-
-// Several list endpoints are now paginated on the server but are consumed as
-// plain arrays here. Request the largest page until the UI supports cursors.
-const LIST_LIMIT = 200;
 
 const AUTH_ENDPOINTS = new Set([
   "/api/v1/auth/me",
@@ -127,17 +128,13 @@ export const apertureApi = {
     return { ...data, items: data.items.map(toLogEvent) };
   },
 
-  listLogTargets: async (params?: ListLogTargetsParams): Promise<string[]> =>
-    unwrap(
-      await client.GET("/api/v1/logs/targets", {
-        params: { query: { limit: LIST_LIMIT, ...params } },
-      }),
-    ).items,
+  listLogTargets: async (params?: ListLogTargetsParams): Promise<StringPage> =>
+    unwrap(await client.GET("/api/v1/logs/targets", { params: { query: params } })),
 
-  listLogBoots: async (): Promise<BootList> =>
-    unwrap(
-      await client.GET("/api/v1/logs/boots", { params: { query: { limit: LIST_LIMIT } } }),
-    ).items.map(toBootResponse),
+  listLogBoots: async (params?: ListLogBootsParams): Promise<BootPage> => {
+    const data = unwrap(await client.GET("/api/v1/logs/boots", { params: { query: params } }));
+    return { ...data, items: data.items.map(toBootResponse) };
+  },
 
   listSpans: async (params?: ListLogSpansParams): Promise<LogSpanPage> => {
     const data = unwrap(await client.GET("/api/v1/logs/spans", { params: { query: params } }));
@@ -168,8 +165,8 @@ export const apertureApi = {
     unwrapVoid(await client.POST("/api/v1/auth/change-password", { body }));
   },
 
-  listUsers: async (): Promise<User[]> =>
-    unwrap(await client.GET("/api/v1/users", { params: { query: { limit: LIST_LIMIT } } })).items,
+  listUsers: async (params?: ListUsersParams): Promise<UserPage> =>
+    unwrap(await client.GET("/api/v1/users", { params: { query: params } })),
 
   createUser: async (body: CreateUserBody): Promise<User> =>
     unwrap(await client.POST("/api/v1/users", { body })),
@@ -178,9 +175,8 @@ export const apertureApi = {
     unwrapVoid(await client.DELETE("/api/v1/users/{id}", { params: { path: { id } } }));
   },
 
-  listApiKeys: async (): Promise<ApiKey[]> =>
-    unwrap(await client.GET("/api/v1/api-keys", { params: { query: { limit: LIST_LIMIT } } }))
-      .items,
+  listApiKeys: async (params?: ListApiKeysParams): Promise<ApiKeyPage> =>
+    unwrap(await client.GET("/api/v1/api-keys", { params: { query: params } })),
 
   createApiKey: async (body: CreateApiKeyBody): Promise<CreatedApiKey> =>
     unwrap(await client.POST("/api/v1/api-keys", { body })),
