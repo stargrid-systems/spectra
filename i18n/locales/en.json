@@ -12,8 +12,10 @@
     "create": "Create",
     "done": "Done",
     "next": "Next",
+    "noParameters": "No parameters.",
     "notImplemented": "Not implemented yet.",
     "prev": "Previous",
+    "rawJson": "Raw JSON",
     "retry": "Retry"
   },
   "auth": {

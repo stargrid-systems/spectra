@@ -104,6 +104,41 @@ const stubDetail = {
   output: undefined,
 };
 
+const ociInput = {
+  key: "spectra",
+  source: {
+    type: "oci",
+    reference: "ghcr.io/stargrid-systems/spectra:1",
+    media_type: "application/vnd.oci.image.layer.v1.tar",
+  },
+};
+
+const downloadDefinition = {
+  kind: "rotate-certificate",
+  cancellable: true,
+  resumable: false,
+  input_schema: {
+    type: "object",
+    properties: {
+      key: { type: "string", description: "Logical key to record the artifact under." },
+      source: {
+        oneOf: [
+          {
+            type: "object",
+            required: ["reference", "media_type", "type"],
+            properties: {
+              reference: { type: "string", description: "The image reference." },
+              media_type: { type: "string" },
+              type: { type: "string", enum: ["oci"] },
+            },
+          },
+        ],
+      },
+    },
+  },
+  output_schema: {},
+};
+
 test("task detail renders and cancels", async ({ page }) => {
   let cancelCalled = false;
 
@@ -140,7 +175,11 @@ test("task detail renders and cancels", async ({ page }) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(cancelCalled ? { ...stubDetail, status: "cancelled" } : stubDetail),
+        body: JSON.stringify(
+          cancelCalled
+            ? { ...stubDetail, status: "cancelled", input: ociInput }
+            : { ...stubDetail, input: ociInput },
+        ),
       });
       return;
     }
@@ -164,15 +203,7 @@ test("task detail renders and cancels", async ({ page }) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify([
-          {
-            kind: "rotate-certificate",
-            cancellable: true,
-            resumable: false,
-            input_schema: {},
-            output_schema: {},
-          },
-        ]),
+        body: JSON.stringify([downloadDefinition]),
       });
       return;
     }
@@ -189,6 +220,20 @@ test("task detail renders and cancels", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "rotate-certificate" })).toBeVisible();
   await expect(page.getByText("40%")).toBeVisible();
   await expect(page.getByText("Child tasks", { exact: true })).toBeVisible();
+
+  // Schema-driven input view shows labeled fields from the definition schema.
+  await expect(page.getByTitle("Logical key to record the artifact under.")).toBeVisible();
+  await expect(page.getByTitle("The image reference.")).toBeVisible();
+  await expect(page.getByText("ghcr.io/stargrid-systems/spectra:1")).toBeVisible();
+
+  // The raw toggle switches to plain JSON.
+  await page
+    .locator("section, div")
+    .filter({ hasText: "Input" })
+    .getByRole("button", { name: "Raw JSON" })
+    .first()
+    .click();
+  await expect(page.getByText('"key": "spectra"')).toBeVisible();
 
   await page.getByRole("button", { name: "Cancel task" }).click();
   await expect(page.getByText("Cancelled")).toBeVisible({ timeout: 10_000 });
