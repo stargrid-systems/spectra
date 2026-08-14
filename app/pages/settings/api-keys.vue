@@ -8,11 +8,16 @@ const toast = useToast();
 const formatter = useFormatter();
 const { isAdmin } = useAuth();
 
-const { data, pending, error, refresh } = await useAsyncData<ApiKey[]>(
-  "api-keys",
-  () => apertureApi.listApiKeys(),
-  { server: false },
-);
+const {
+  items: keys,
+  pending,
+  error,
+  hasNext,
+  hasPrev,
+  loadNext,
+  loadPrev,
+  reload: refresh,
+} = useCursorPager<ApiKey>((query) => apertureApi.listApiKeys(query));
 
 const createOpen = ref(false);
 const createState = reactive({ name: "", role: undefined as CreateApiKeyValues["role"] });
@@ -68,7 +73,11 @@ function formatLastUsed(value: ApiKey["last_used_at"]): string {
 
 <template>
   <div>
-    <DataState :pending="pending" :error="error ? String(error) : null" @retry="refresh">
+    <DataState
+      :pending="pending && keys.length === 0"
+      :error="error ? String(error) : null"
+      @retry="refresh"
+    >
       <div class="flex justify-end mb-4">
         <UButton
           v-if="isAdmin"
@@ -81,7 +90,7 @@ function formatLastUsed(value: ApiKey["last_used_at"]): string {
       <p v-if="!isAdmin" class="text-muted text-sm mb-4">{{ $t("auth.apiKeys.adminOnly") }}</p>
 
       <div class="flex flex-col gap-2">
-        <UPageCard v-for="k in data" :key="k.id" variant="subtle">
+        <UPageCard v-for="k in keys" :key="k.id" variant="subtle">
           <div class="flex sm:items-center justify-between gap-3">
             <div class="flex flex-col">
               <span class="font-medium">{{ k.name }}</span>
@@ -94,6 +103,16 @@ function formatLastUsed(value: ApiKey["last_used_at"]): string {
           </div>
         </UPageCard>
       </div>
+
+      <PagerBar
+        :has-prev="hasPrev"
+        :has-next="hasNext"
+        :pending="pending"
+        :prev-text="$t('common.prev')"
+        :next-text="$t('common.next')"
+        @prev="loadPrev"
+        @next="loadNext"
+      />
     </DataState>
 
     <UModal v-model:open="createOpen" :title="$t('auth.apiKeys.create')">

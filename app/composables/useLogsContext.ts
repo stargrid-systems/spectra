@@ -4,13 +4,11 @@ import type { BootResponse, LogEvent, LogSpan } from "~~/modules/aperture/runtim
 import type { LogsState } from "~/composables/useLogsFilters";
 import type { BadgeColor } from "~/utils/logLevels";
 
-type TargetOptionsRef = ReturnType<typeof useLogTargets>["data"];
-
 export interface LogsContext {
   filters: LogsState;
   inlineFields: Ref<boolean>;
-  boots: Ref<BootResponse[]>;
-  targetOptions: TargetOptionsRef;
+  boots: ComputedRef<BootResponse[]>;
+  targetOptions: ComputedRef<string[]>;
   levelColors: Record<string, BadgeColor>;
   computedSince: ComputedRef<string | undefined>;
   formatTimestamp: (ts: Temporal.Instant) => string;

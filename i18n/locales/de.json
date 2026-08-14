@@ -10,7 +10,10 @@
   "common": {
     "cancel": "Abbrechen",
     "create": "Erstellen",
-    "done": "Fertig"
+    "done": "Fertig",
+    "loadMore": "Mehr laden",
+    "next": "Weiter",
+    "prev": "Zurück"
   },
   "auth": {
     "roles": {

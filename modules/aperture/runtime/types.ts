@@ -35,11 +35,17 @@ export interface Page<T> {
 
 export type LogEventPage = Page<LogEvent>;
 export type LogSpanPage = Page<LogSpan>;
-export type BootList = BootResponse[];
+export type BootPage = Page<BootResponse>;
+export type UserPage = Page<User>;
+export type ApiKeyPage = Page<ApiKey>;
+export type StringPage = Page<string>;
 
 export type ListLogsParams = NonNullable<operations["listLogs"]["parameters"]["query"]>;
 export type ListLogSpansParams = NonNullable<operations["listSpans"]["parameters"]["query"]>;
 export type ListLogTargetsParams = NonNullable<operations["listLogTargets"]["parameters"]["query"]>;
+export type ListLogBootsParams = NonNullable<operations["listLogBoots"]["parameters"]["query"]>;
+export type ListUsersParams = NonNullable<operations["listUsers"]["parameters"]["query"]>;
+export type ListApiKeysParams = NonNullable<operations["listApiKeys"]["parameters"]["query"]>;
 
 export type Role = Schemas["Role"];
 export type CurrentActor = Schemas["CurrentActorResponse"];
