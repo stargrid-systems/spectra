@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import type { SelectMenuItem } from "@nuxt/ui";
+import * as z from "zod/v4/mini";
 import { useIntervalFn } from "@vueuse/core";
-import type { ListTasksParams, Task, TaskDefinition } from "~~/modules/aperture/runtime/types";
+import type {
+  CreateTaskBody,
+  ListTasksParams,
+  Task,
+  TaskDefinition,
+} from "~~/modules/aperture/runtime/types";
+import type { JsonSchemaLike } from "~/utils/schemaDisplay";
+import { buildFormState, buildZodSchema, cleanFormState, type FormState } from "~/utils/schemaForm";
 import {
   TASK_STATUS_FILTERS,
   tasksParamsFromFilters,
@@ -10,6 +18,7 @@ import {
 import { TASK_STATUS_COLORS, useTaskDisplay } from "~/composables/useTaskDisplay";
 
 const { t } = useI18n();
+const toast = useToast();
 const localePath = useLocalePath();
 const { formatTimestamp, formatDuration, progressPercent, progressMessage } = useTaskDisplay();
 
@@ -59,6 +68,71 @@ const { pause, resume } = useIntervalFn(() => void reload(), 3000);
 watch(hasActiveTasks, (active) => (active ? resume() : pause()), { immediate: true });
 
 onUnmounted(pause);
+
+// Create task: the input form is generated from the kind's JSON Schema.
+
+const createOpen = ref(false);
+const createKind = ref<string | undefined>(undefined);
+const createState = ref<FormState>({});
+const creating = ref(false);
+
+const createKindItems = computed<SelectMenuItem[]>(() =>
+  (definitions.value ?? []).map((d) => ({ label: d.kind, value: d.kind })),
+);
+
+const selectedDefinition = computed<TaskDefinition | undefined>(() =>
+  (definitions.value ?? []).find((d) => d.kind === createKind.value),
+);
+
+const createInputSchema = computed<JsonSchemaLike | undefined>(() => {
+  const schema = selectedDefinition.value?.input_schema;
+  return typeof schema === "object" && schema !== null ? (schema as JsonSchemaLike) : undefined;
+});
+
+const createZodSchema = computed(() =>
+  createInputSchema.value ? buildZodSchema(createInputSchema.value) : z.object({}),
+);
+
+watch(createKind, (kind) => {
+  const def = (definitions.value ?? []).find((d) => d.kind === kind);
+  const schema =
+    typeof def?.input_schema === "object" && def?.input_schema !== null
+      ? (def.input_schema as JsonSchemaLike)
+      : undefined;
+  createState.value = schema ? buildFormState(schema) : {};
+});
+
+function openCreate() {
+  createKind.value = definitions.value?.[0]?.kind;
+  createOpen.value = true;
+}
+
+async function onCreate() {
+  if (!createKind.value) return;
+  creating.value = true;
+  try {
+    const payload = {
+      kind: createKind.value,
+      input: cleanFormState(createState.value, createInputSchema.value),
+    };
+    // The generated client narrows the body to the known kinds' unions; the
+    // schema-driven payload is valid at runtime for any kind.
+    await apertureApi.createTask(payload as CreateTaskBody);
+    createOpen.value = false;
+    toast.add({ title: t("operations.tasks.created"), color: "success" });
+    await reload();
+  } catch (err) {
+    toast.add({
+      title:
+        err instanceof ApiError && err.status === 400
+          ? t("operations.tasks.createInvalid")
+          : t("operations.tasks.createFailed"),
+      color: "error",
+    });
+  } finally {
+    creating.value = false;
+  }
+}
 </script>
 
 <template>
@@ -68,7 +142,7 @@ onUnmounted(pause);
         <USelectMenu
           v-model="filters.status"
           :items="statusItems"
-          value-attribute="value"
+          value-key="value"
           size="sm"
           class="w-44"
         />
@@ -76,7 +150,7 @@ onUnmounted(pause);
         <USelectMenu
           v-model="filters.kind"
           :items="kindItems"
-          value-attribute="value"
+          value-key="value"
           size="sm"
           class="w-44"
         />
@@ -86,6 +160,14 @@ onUnmounted(pause);
           :label="$t('operations.tasks.filters.rootOnly')"
           size="sm"
           @update:model-value="(v) => (filters.root = v === true)"
+        />
+
+        <UButton
+          icon="i-lucide-plus"
+          size="sm"
+          :label="$t('operations.tasks.create')"
+          :disabled="!definitions?.length"
+          @click="openCreate()"
         />
 
         <UButton
@@ -186,5 +268,42 @@ onUnmounted(pause);
         />
       </DataState>
     </div>
+
+    <UModal v-model:open="createOpen" :title="$t('operations.tasks.create')">
+      <template #body>
+        <UForm
+          :schema="createZodSchema"
+          :state="createState"
+          class="flex flex-col gap-4"
+          @submit="onCreate"
+        >
+          <UFormField :label="$t('operations.tasks.filters.kind')" name="kind">
+            <USelectMenu
+              v-model="createKind"
+              :items="createKindItems"
+              value-key="value"
+              class="w-full"
+            />
+          </UFormField>
+
+          <p
+            v-if="createInputSchema && !Object.keys(createInputSchema.properties ?? {}).length"
+            class="text-muted text-sm"
+          >
+            {{ $t("common.noParameters") }}
+          </p>
+          <SchemaForm
+            v-else-if="createInputSchema"
+            v-model:state="createState"
+            :schema="createInputSchema"
+          />
+
+          <div class="flex justify-end gap-2">
+            <UButton variant="ghost" :label="$t('common.cancel')" @click="createOpen = false" />
+            <UButton type="submit" :loading="creating" :label="$t('common.create')" />
+          </div>
+        </UForm>
+      </template>
+    </UModal>
   </AppPage>
 </template>

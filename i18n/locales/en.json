@@ -8,6 +8,7 @@
   "go-to": "Go to",
   "notifications": "Notifications",
   "common": {
+    "add": "Add",
     "cancel": "Cancel",
     "create": "Create",
     "done": "Done",
@@ -229,6 +230,7 @@
       "notStarted": "Not started",
       "filters": {
         "statusAll": "All statuses",
+        "kind": "Kind",
         "kindAll": "All kinds",
         "rootOnly": "Top-level only"
       },
@@ -247,6 +249,10 @@
       "cancelNotCancellable": "This task kind cannot be cancelled.",
       "cancelAlreadyFinished": "This task has already finished.",
       "cancelFailed": "Failed to cancel the task.",
+      "create": "New task",
+      "created": "Task created.",
+      "createInvalid": "The input is not valid for this task kind.",
+      "createFailed": "Failed to create the task.",
       "detail": {
         "createdAt": "Created",
         "startedAt": "Started",

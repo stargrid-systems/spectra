@@ -238,3 +238,122 @@ test("task detail renders and cancels", async ({ page }) => {
   await page.getByRole("button", { name: "Cancel task" }).click();
   await expect(page.getByText("Cancelled")).toBeVisible({ timeout: 10_000 });
 });
+
+const createDefinitions = [
+  {
+    kind: "rotate-certificate",
+    cancellable: false,
+    resumable: true,
+    input_schema: { type: "object" },
+    output_schema: { type: "object" },
+  },
+  {
+    kind: "download",
+    cancellable: true,
+    resumable: false,
+    input_schema: downloadDefinition.input_schema,
+    output_schema: { type: "object" },
+  },
+];
+
+test("create task form is driven by the kind schema", async ({ page }) => {
+  const created: unknown[] = [];
+  await page.route("**/api/v1/**", async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const pathname = url.pathname;
+
+    if (pathname === "/api/v1/auth/setup-status") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ setup_required: false }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/auth/me") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          actor_id: "2",
+          user_id: "1",
+          display_name: "admin",
+          username: "admin",
+          roles: ["admin"],
+          must_change_password: false,
+        }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/tasks" && request.method() === "POST") {
+      created.push(request.postDataJSON());
+      await route.fulfill({ status: 202, contentType: "application/json", body: "{}" });
+      return;
+    }
+
+    if (pathname === "/api/v1/tasks") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ items: [], next_cursor: null, prev_cursor: null }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/task-definitions") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(createDefinitions),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({}),
+    });
+  });
+
+  await page.goto("/en/operations/tasks", { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "New task" }).click();
+
+  // Default kind (first definition) takes no parameters.
+  await expect(page.getByText("No parameters.")).toBeVisible();
+
+  // Switch to the download kind: schema fields appear.
+  await page.getByRole("button", { name: "Show popup" }).click();
+  await page.getByRole("option", { name: "download" }).click();
+
+  // The schema-driven inputs replace their DOM nodes once, right after the
+  // kind switch; a fill landing on the stale node is lost. Verify and retry.
+  const typeStable = async (name: string, value: string) => {
+    const box = page.getByRole("textbox", { name });
+    await box.click();
+    await page.keyboard.type(value, { delay: 20 });
+    await expect(box).toHaveValue(value);
+  };
+
+  await typeStable("key", "firmware");
+  await typeStable("reference", "ghcr.io/stargrid-systems/firmware:1.2.3");
+  await typeStable("media_type", "application/vnd.oci.image.layer.v1.tar");
+
+  await page.getByRole("button", { name: "Create" }).click();
+
+  await expect.poll(() => created.length).toBe(1);
+  expect(created[0]).toEqual({
+    kind: "download",
+    input: {
+      key: "firmware",
+      source: {
+        type: "oci",
+        reference: "ghcr.io/stargrid-systems/firmware:1.2.3",
+        media_type: "application/vnd.oci.image.layer.v1.tar",
+      },
+    },
+  });
+});

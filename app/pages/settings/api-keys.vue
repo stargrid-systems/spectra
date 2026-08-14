@@ -131,7 +131,7 @@ function formatLastUsed(value: ApiKey["last_used_at"]): string {
             <USelectMenu
               v-model="createState.role"
               :items="roleItems"
-              value-attribute="value"
+              value-key="value"
               class="w-full"
             />
           </UFormField>
