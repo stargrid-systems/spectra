@@ -32,6 +32,32 @@ const links = computed(() => [
   ],
   [
     {
+      label: t("operations.title"),
+      icon: "i-lucide-list-checks",
+      to: localePath("/operations/tasks"),
+      onSelect: closeSidebar,
+      children: [
+        {
+          label: t("operations.tasks.title"),
+          icon: "i-lucide-list-checks",
+          to: localePath("/operations/tasks"),
+          onSelect: closeSidebar,
+        },
+        {
+          label: t("operations.schedules.title"),
+          icon: "i-lucide-calendar-clock",
+          to: localePath("/operations/schedules"),
+          onSelect: closeSidebar,
+        },
+        {
+          label: t("operations.artifacts.title"),
+          icon: "i-lucide-package",
+          to: localePath("/operations/artifacts"),
+          onSelect: closeSidebar,
+        },
+      ],
+    },
+    {
       label: t("developer.title"),
       icon: "i-lucide-terminal-square",
       to: localePath("/developer"),

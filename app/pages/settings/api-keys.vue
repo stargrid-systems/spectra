@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { FormSubmitEvent, SelectMenuItem } from "@nuxt/ui";
 import type { ApiKey, CreatedApiKey } from "~~/modules/aperture/runtime/types";
-import { createApiKeySchema, type CreateApiKeyValues } from "~/utils/auth";
+import { createApiKeySchema, type CreateApiKeyValues, ROLES } from "~/utils/auth";
 
 const { t } = useI18n();
 const toast = useToast();
@@ -28,7 +28,7 @@ const copied = ref(false);
 
 const roleItems = computed<SelectMenuItem[]>(() => [
   { label: t("auth.apiKeys.noRole"), value: undefined },
-  ...(["admin", "operator", "viewer"] as const).map((r) => ({
+  ...ROLES.map((r) => ({
     label: t(`auth.roles.${r}`),
     value: r,
   })),

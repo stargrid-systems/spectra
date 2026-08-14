@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { FormSubmitEvent, SelectMenuItem } from "@nuxt/ui";
 import type { User } from "~~/modules/aperture/runtime/types";
-import { createUserSchema, type CreateUserValues } from "~/utils/auth";
+import { createUserSchema, type CreateUserValues, ROLES } from "~/utils/auth";
 
 const { t } = useI18n();
 const toast = useToast();
@@ -27,7 +27,7 @@ const createState = reactive({
 const creating = ref(false);
 
 const roleItems = computed<SelectMenuItem[]>(() =>
-  (["admin", "operator", "viewer"] as const).map((r) => ({
+  ROLES.map((r) => ({
     label: t(`auth.roles.${r}`),
     value: r,
   })),

@@ -12,7 +12,9 @@
     "create": "Create",
     "done": "Done",
     "next": "Next",
-    "prev": "Previous"
+    "notImplemented": "Not implemented yet.",
+    "prev": "Previous",
+    "retry": "Retry"
   },
   "auth": {
     "roles": {
@@ -213,6 +215,37 @@
       "spanId": "Span",
       "childSpans": "Child spans",
       "noChildSpans": "No child spans"
+    }
+  },
+  "operations": {
+    "title": "Operations",
+    "tasks": {
+      "title": "Tasks",
+      "empty": "No tasks found.",
+      "error": "Failed to load tasks.",
+      "refresh": "Refresh",
+      "notStarted": "Not started",
+      "filters": {
+        "statusAll": "All statuses",
+        "kindAll": "All kinds",
+        "rootOnly": "Top-level only"
+      },
+      "status": {
+        "pending": "Pending",
+        "running": "Running",
+        "succeeded": "Succeeded",
+        "failed": "Failed",
+        "cancelled": "Cancelled",
+        "interrupted": "Interrupted",
+        "active": "Active",
+        "finished": "Finished"
+      }
+    },
+    "schedules": {
+      "title": "Schedules"
+    },
+    "artifacts": {
+      "title": "Artifacts"
     }
   },
   "units": {
