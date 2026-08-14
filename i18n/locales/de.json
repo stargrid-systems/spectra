@@ -239,6 +239,22 @@
         "interrupted": "Unterbrochen",
         "active": "Aktiv",
         "finished": "Beendet"
+      },
+      "cancel": "Aufgabe abbrechen",
+      "cancelRequested": "Abbruch angefordert.",
+      "cancelNotCancellable": "Diese Art von Aufgabe kann nicht abgebrochen werden.",
+      "cancelAlreadyFinished": "Diese Aufgabe ist bereits beendet.",
+      "cancelFailed": "Aufgabe konnte nicht abgebrochen werden.",
+      "detail": {
+        "createdAt": "Erstellt",
+        "startedAt": "Gestartet",
+        "finishedAt": "Beendet",
+        "duration": "Dauer",
+        "parent": "Übergeordnete Aufgabe",
+        "input": "Eingabe",
+        "output": "Ausgabe",
+        "children": "Untergeordnete Aufgaben",
+        "noChildren": "Keine untergeordneten Aufgaben."
       }
     },
     "schedules": {

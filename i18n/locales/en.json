@@ -239,6 +239,22 @@
         "interrupted": "Interrupted",
         "active": "Active",
         "finished": "Finished"
+      },
+      "cancel": "Cancel task",
+      "cancelRequested": "Cancellation requested.",
+      "cancelNotCancellable": "This task kind cannot be cancelled.",
+      "cancelAlreadyFinished": "This task has already finished.",
+      "cancelFailed": "Failed to cancel the task.",
+      "detail": {
+        "createdAt": "Created",
+        "startedAt": "Started",
+        "finishedAt": "Finished",
+        "duration": "Duration",
+        "parent": "Parent",
+        "input": "Input",
+        "output": "Output",
+        "children": "Child tasks",
+        "noChildren": "No child tasks."
       }
     },
     "schedules": {

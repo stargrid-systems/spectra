@@ -1,20 +1,17 @@
 <script setup lang="ts">
 import type { SelectMenuItem } from "@nuxt/ui";
 import { useIntervalFn } from "@vueuse/core";
-import type {
-  ListTasksParams,
-  Task,
-  TaskDefinition,
-  TaskStatus,
-} from "~~/modules/aperture/runtime/types";
+import type { ListTasksParams, Task, TaskDefinition } from "~~/modules/aperture/runtime/types";
 import {
   TASK_STATUS_FILTERS,
   tasksParamsFromFilters,
   useTasksFilters,
 } from "~/composables/useTasksFilters";
+import { TASK_STATUS_COLORS, useTaskDisplay } from "~/composables/useTaskDisplay";
 
-const { t, te } = useI18n();
-const fmt = useFormatter();
+const { t } = useI18n();
+const localePath = useLocalePath();
+const { formatTimestamp, formatDuration, progressPercent, progressMessage } = useTaskDisplay();
 
 const filters = useTasksFilters();
 
@@ -40,15 +37,6 @@ const {
   () => params.value,
 );
 
-const STATUS_COLORS: Record<TaskStatus, "neutral" | "primary" | "success" | "error" | "warning"> = {
-  pending: "neutral",
-  running: "primary",
-  succeeded: "success",
-  failed: "error",
-  cancelled: "warning",
-  interrupted: "warning",
-};
-
 const statusItems = computed<SelectMenuItem[]>(() => [
   { label: t("operations.tasks.filters.statusAll"), value: undefined },
   ...TASK_STATUS_FILTERS.map((s) => ({
@@ -61,34 +49,6 @@ const kindItems = computed<SelectMenuItem[]>(() => [
   { label: t("operations.tasks.filters.kindAll"), value: undefined },
   ...(definitions.value ?? []).map((d) => ({ label: d.kind, value: d.kind })),
 ]);
-
-function formatTimestamp(ts: Temporal.Instant): string {
-  return fmt.date(ts, {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-}
-
-function formatDuration(task: Task): string {
-  if (!task.started_at) return t("operations.tasks.notStarted");
-  if (!task.finished_at) return t("operations.tasks.status.running");
-  return fmt.duration(task.finished_at.since(task.started_at), { fractionDigits: 1 });
-}
-
-function progressPercent(task: Task): number | null {
-  const p = task.progress;
-  if (!p?.total || p.done == null || p.total <= 0) return null;
-  return Math.min(100, Math.round((p.done / p.total) * 100));
-}
-
-function progressMessage(task: Task): string | null {
-  const msg = task.progress?.message;
-  if (!msg) return null;
-  return te(msg.key) ? t(msg.key, msg.args) : msg.key;
-}
 
 const hasActiveTasks = computed(() =>
   tasks.value.some((task) => task.status === "pending" || task.status === "running"),
@@ -152,13 +112,18 @@ onUnmounted(pause);
         @retry="reload()"
       >
         <div class="flex flex-col gap-2">
-          <UPageCard v-for="task in tasks" :key="task.id" variant="subtle">
+          <UPageCard
+            v-for="task in tasks"
+            :key="task.id"
+            variant="subtle"
+            :to="localePath(`/operations/tasks/${task.id}`)"
+          >
             <div class="flex flex-col gap-2">
               <div class="flex flex-wrap sm:items-center justify-between gap-3">
                 <div class="flex items-center gap-3 min-w-0">
                   <UBadge
                     :label="$t(`operations.tasks.status.${task.status}`)"
-                    :color="STATUS_COLORS[task.status]"
+                    :color="TASK_STATUS_COLORS[task.status]"
                     variant="subtle"
                   />
                   <span class="font-mono text-sm truncate">{{ task.kind }}</span>
