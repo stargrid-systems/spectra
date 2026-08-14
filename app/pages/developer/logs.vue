@@ -28,19 +28,14 @@ const targetOptions = computed(() => targetItemsRaw.value);
 
 const {
   items: bootsItems,
-  loadingMore: bootsLoadingMore,
   hasMore: bootsHasMore,
   loadMore: loadMoreBoots,
 } = useInfiniteList<BootResponse, ListLogBootsParams>((query) => apertureApi.listLogBoots(query));
 const boots = computed<BootResponse[]>(() => bootsItems.value);
 
-const TARGET_MORE = "__more__";
-const targetItems = computed(() => [
-  ...targetItemsRaw.value.map((target) => ({ label: target, value: target })),
-  ...(targetsHasMore.value
-    ? [{ label: t("common.loadMore"), value: TARGET_MORE, disabled: true }]
-    : []),
-]);
+const targetItems = computed(() =>
+  targetItemsRaw.value.map((target) => ({ label: target, value: target })),
+);
 
 const inlineFields = ref(true);
 const showFieldFilter = ref(Object.keys(filters.fieldFilters).length > 0);
@@ -256,8 +251,7 @@ provide(useLogsContextKey, logsContext);
                 </div>
                 <InfiniteSentinel
                   v-if="bootsHasMore"
-                  :loading="bootsLoadingMore"
-                  :text="$t('common.loadMore')"
+                  :key="boots.length"
                   @visible="loadMoreBoots()"
                 />
               </div>
@@ -276,14 +270,17 @@ provide(useLogsContextKey, logsContext);
 
         <USelect v-model="filters.level" :items="levelOptions" size="sm" class="w-32" />
 
-        <USelectMenu
+        <InfiniteSelectMenu
           v-model="filters.target"
           multiple
           :items="targetItems"
+          :loading="targetsLoadingMore"
+          :has-more="targetsHasMore"
           searchable
           size="sm"
           class="w-60"
           value-key="value"
+          @load-more="loadMoreTargets()"
         >
           <template #default>
             <span v-if="!filters.target.length" class="text-muted-foreground text-xs truncate">
@@ -294,14 +291,7 @@ provide(useLogsContextKey, logsContext);
             </span>
           </template>
           <template #item="{ item }">
-            <div v-if="item.value === TARGET_MORE" class="w-full">
-              <InfiniteSentinel
-                :loading="targetsLoadingMore"
-                :text="$t('common.loadMore')"
-                @visible="loadMoreTargets()"
-              />
-            </div>
-            <div v-else class="flex items-center gap-2 w-full">
+            <div class="flex items-center gap-2 w-full">
               <UIcon
                 v-if="filters.target.includes(item.value)"
                 name="i-lucide-check"
@@ -311,7 +301,7 @@ provide(useLogsContextKey, logsContext);
               <span class="font-mono text-xs truncate">{{ item.label }}</span>
             </div>
           </template>
-        </USelectMenu>
+        </InfiniteSelectMenu>
 
         <UInput
           v-model="filters.search"

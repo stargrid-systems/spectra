@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import { useIntersectionObserver } from "@vueuse/core";
 
-defineProps<{
-  loading?: boolean;
-  text?: string;
-}>();
-
 const emit = defineEmits<{ visible: [] }>();
 
 const el = useTemplateRef("el");
@@ -22,8 +17,7 @@ onUnmounted(stop);
 </script>
 
 <template>
-  <div ref="el" class="flex items-center justify-center gap-2 py-2 text-xs text-muted-foreground">
-    <LoadingSpinner v-if="loading" class="size-3.5" />
-    <span v-else>{{ text }}</span>
+  <div ref="el" class="flex items-center justify-center py-2">
+    <LoadingSpinner class="size-4 text-muted-foreground" />
   </div>
 </template>
