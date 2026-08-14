@@ -1,11 +1,9 @@
 import * as z from "zod/v4/mini";
 import type { ListTasksParams, TaskStatusParam } from "~~/modules/aperture/runtime/types";
 import { queryOptionalString, useRouteQueryState } from "~/composables/useRouteQueryState";
+import { assertUnionCoverage } from "~/utils/union";
 
-// openapi-typescript emits types only, so there is no runtime array to import
-// from the generated code. `satisfies` pins the values to the TaskStatusParam
-// union and the assertion below fails if the spec grows a new status.
-export const TASK_STATUS_FILTERS = [
+export const TASK_STATUS_FILTERS = assertUnionCoverage<TaskStatusParam>()([
   "active",
   "finished",
   "pending",
@@ -13,12 +11,8 @@ export const TASK_STATUS_FILTERS = [
   "succeeded",
   "failed",
   "cancelled",
-] as const satisfies readonly TaskStatusParam[];
-
-type AssertNever<T extends never> = T;
-export type TaskStatusFiltersComplete = AssertNever<
-  Exclude<TaskStatusParam, (typeof TASK_STATUS_FILTERS)[number]>
->;
+  "interrupted",
+] as const);
 
 export function isTaskStatusFilter(value: string): value is TaskStatusParam {
   return (TASK_STATUS_FILTERS as readonly string[]).includes(value);
