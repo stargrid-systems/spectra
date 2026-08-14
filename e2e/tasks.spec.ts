@@ -98,3 +98,98 @@ test("tasks list renders statuses and progress", async ({ page }) => {
   // The list asks for top-level tasks only by default.
   expect(taskRequests[0]).toContain("root=true");
 });
+
+const stubDetail = {
+  ...stubTasks[1],
+  output: undefined,
+};
+
+test("task detail renders and cancels", async ({ page }) => {
+  let cancelCalled = false;
+
+  await page.route("**/api/v1/**", async (route) => {
+    const url = new URL(route.request().url());
+    const pathname = url.pathname;
+
+    if (pathname === "/api/v1/auth/setup-status") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ setup_required: false }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/auth/me") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          actor_id: "2",
+          user_id: "1",
+          display_name: "admin",
+          username: "admin",
+          roles: ["admin"],
+          must_change_password: false,
+        }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/tasks/task-2") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(cancelCalled ? { ...stubDetail, status: "cancelled" } : stubDetail),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/tasks/task-2/cancel") {
+      cancelCalled = true;
+      await route.fulfill({ status: 202 });
+      return;
+    }
+
+    if (pathname === "/api/v1/tasks") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ items: [], next_cursor: null, prev_cursor: null }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/task-definitions") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([
+          {
+            kind: "rotate-certificate",
+            cancellable: true,
+            resumable: false,
+            input_schema: {},
+            output_schema: {},
+          },
+        ]),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({}),
+    });
+  });
+
+  await page.goto("/en/operations/tasks/task-2", { waitUntil: "domcontentloaded" });
+
+  await expect(page.getByRole("heading", { name: "rotate-certificate" })).toBeVisible();
+  await expect(page.getByText("40%")).toBeVisible();
+  await expect(page.getByText("Child tasks", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Cancel task" }).click();
+  await expect(page.getByText("Cancelled")).toBeVisible({ timeout: 10_000 });
+});
