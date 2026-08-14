@@ -1,18 +1,18 @@
 <script setup lang="ts">
-/* eslint-disable vue/no-mutating-props -- the state object is owned by the
-   surrounding UForm and shared by reference, like any nested form state. */
 import { resolveRef, type JsonSchemaLike } from "~/utils/schemaDisplay";
 import { buildFormState, oneOfBranchTag, type FormState, type FormValue } from "~/utils/schemaForm";
 
 const props = withDefaults(
   defineProps<{
     schema: JsonSchemaLike;
-    state: FormState;
     namePrefix?: string;
     depth?: number;
   }>(),
   { namePrefix: "", depth: 0 },
 );
+
+// The form state is owned by the surrounding UForm and shared by reference.
+const state = defineModel<FormState>("state", { required: true });
 
 const MAX_DEPTH = 6;
 
@@ -111,7 +111,7 @@ function selectBranch(field: Field, label: string | undefined) {
   const nested = buildFormState(branch);
   const tag = oneOfBranchTag(branch);
   if (tag) nested[tag[0]] = tag[1];
-  props.state[field.key] = nested;
+  state.value[field.key] = nested;
 }
 
 function isRecord(value: FormValue | undefined): value is FormState {
@@ -119,7 +119,7 @@ function isRecord(value: FormValue | undefined): value is FormState {
 }
 
 function stateAt(key: string): FormState | undefined {
-  const v = props.state[key];
+  const v = state.value[key];
   return isRecord(v) ? v : undefined;
 }
 
@@ -129,30 +129,30 @@ function itemAt(key: string, index: number): FormState | undefined {
 }
 
 function asArray(key: string): FormValue[] {
-  const v = props.state[key];
+  const v = state.value[key];
   return Array.isArray(v) ? v : [];
 }
 
 function addItem(field: Field) {
   const arr = [...asArray(field.key)];
   arr.push(buildFormState(field.schema?.items ?? {}));
-  props.state[field.key] = arr;
+  state.value[field.key] = arr;
 }
 
 function removeItem(field: Field, index: number) {
   const arr = [...asArray(field.key)];
   arr.splice(index, 1);
-  props.state[field.key] = arr;
+  state.value[field.key] = arr;
 }
 
 function setLeaf(key: string, value: FormValue) {
-  props.state[key] = value;
+  state.value[key] = value;
 }
 
 function setArrayItem(key: string, index: number, value: string) {
   const arr = [...asArray(key)];
   arr[index] = value;
-  props.state[key] = arr;
+  state.value[key] = arr;
 }
 </script>
 

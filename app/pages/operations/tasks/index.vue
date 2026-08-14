@@ -294,8 +294,8 @@ async function onCreate() {
           </p>
           <SchemaForm
             v-else-if="createInputSchema"
+            v-model:state="createState"
             :schema="createInputSchema"
-            :state="createState"
           />
 
           <div class="flex justify-end gap-2">
