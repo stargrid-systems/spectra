@@ -12,7 +12,9 @@
     "create": "Erstellen",
     "done": "Fertig",
     "next": "Weiter",
-    "prev": "Zurück"
+    "notImplemented": "Noch nicht implementiert.",
+    "prev": "Zurück",
+    "retry": "Erneut versuchen"
   },
   "auth": {
     "roles": {
@@ -213,6 +215,37 @@
       "spanId": "Span",
       "childSpans": "Untergeordnete Spans",
       "noChildSpans": "Keine untergeordneten Spans"
+    }
+  },
+  "operations": {
+    "title": "Betrieb",
+    "tasks": {
+      "title": "Aufgaben",
+      "empty": "Keine Aufgaben gefunden.",
+      "error": "Aufgaben konnten nicht geladen werden.",
+      "refresh": "Aktualisieren",
+      "notStarted": "Nicht gestartet",
+      "filters": {
+        "statusAll": "Alle Status",
+        "kindAll": "Alle Arten",
+        "rootOnly": "Nur oberste Ebene"
+      },
+      "status": {
+        "pending": "Ausstehend",
+        "running": "Läuft",
+        "succeeded": "Erfolgreich",
+        "failed": "Fehlgeschlagen",
+        "cancelled": "Abgebrochen",
+        "interrupted": "Unterbrochen",
+        "active": "Aktiv",
+        "finished": "Beendet"
+      }
+    },
+    "schedules": {
+      "title": "Zeitpläne"
+    },
+    "artifacts": {
+      "title": "Artefakte"
     }
   },
   "units": {
