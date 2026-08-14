@@ -13,6 +13,7 @@ export default defineNuxtModule({
       { name: "ApiError", from: resolve("./runtime/client") },
       { name: "setUnauthorizedHandler", from: resolve("./runtime/client") },
       { name: "userAvatarUrl", from: resolve("./runtime/client") },
+      { name: "artifactBlobUrl", from: resolve("./runtime/client") },
     ]);
     addImportsDir(resolve("./runtime/composables"));
     addPlugin(resolve("./runtime/plugins/auth.client.ts"));
