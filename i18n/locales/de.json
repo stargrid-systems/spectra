@@ -8,6 +8,7 @@
   "go-to": "Gehe zu",
   "notifications": "Benachrichtigungen",
   "common": {
+    "add": "Hinzufügen",
     "cancel": "Abbrechen",
     "create": "Erstellen",
     "done": "Fertig",
@@ -229,6 +230,7 @@
       "notStarted": "Nicht gestartet",
       "filters": {
         "statusAll": "Alle Status",
+        "kind": "Art",
         "kindAll": "Alle Arten",
         "rootOnly": "Nur oberste Ebene"
       },
@@ -247,6 +249,10 @@
       "cancelNotCancellable": "Diese Art von Aufgabe kann nicht abgebrochen werden.",
       "cancelAlreadyFinished": "Diese Aufgabe ist bereits beendet.",
       "cancelFailed": "Aufgabe konnte nicht abgebrochen werden.",
+      "create": "Neue Aufgabe",
+      "created": "Aufgabe erstellt.",
+      "createInvalid": "Die Eingabe ist für diese Art von Aufgabe nicht gültig.",
+      "createFailed": "Aufgabe konnte nicht erstellt werden.",
       "detail": {
         "createdAt": "Erstellt",
         "startedAt": "Gestartet",

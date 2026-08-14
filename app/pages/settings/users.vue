@@ -138,7 +138,7 @@ async function onDelete(target: User) {
             <USelectMenu
               v-model="createState.role"
               :items="roleItems"
-              value-attribute="value"
+              value-key="value"
               class="w-full"
             />
           </UFormField>
