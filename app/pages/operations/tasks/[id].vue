@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useIntervalFn } from "@vueuse/core";
 import type { ListTasksParams, Task, TaskDefinition } from "~~/modules/aperture/runtime/types";
+import type { JsonSchemaLike } from "~/utils/schemaDisplay";
 import { TASK_STATUS_COLORS, useTaskDisplay } from "~/composables/useTaskDisplay";
 
 const { t } = useI18n();
@@ -24,6 +25,13 @@ const { data: definitionsData } = useAsyncData<TaskDefinition[]>(
 const definition = computed<TaskDefinition | undefined>(() =>
   (definitionsData.value ?? []).find((d) => d.kind === task.value?.kind),
 );
+
+function asSchema(value: unknown): JsonSchemaLike | undefined {
+  return typeof value === "object" && value !== null ? (value as JsonSchemaLike) : undefined;
+}
+
+const inputSchema = computed(() => asSchema(definition.value?.input_schema));
+const outputSchema = computed(() => asSchema(definition.value?.output_schema));
 
 async function load() {
   loading.value = true;
@@ -79,6 +87,9 @@ async function cancel() {
 function prettyJson(value: unknown): string {
   return JSON.stringify(value ?? null, null, 2);
 }
+
+const showRawInput = ref(false);
+const showRawOutput = ref(false);
 
 const {
   items: children,
@@ -208,21 +219,54 @@ const {
             </div>
           </UPageCard>
 
-          <UPageCard
-            :title="$t('operations.tasks.detail.input')"
-            variant="subtle"
-            :ui="{ body: 'overflow-x-auto' }"
-          >
-            <pre class="text-xs font-mono whitespace-pre">{{ prettyJson(task.input) }}</pre>
+          <UPageCard variant="subtle" :ui="{ body: 'overflow-x-auto' }">
+            <template #title>
+              <div class="flex items-center justify-between gap-2 w-full">
+                <span>{{ $t("operations.tasks.detail.input") }}</span>
+                <UButton
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  :icon="showRawInput ? 'i-lucide-braces' : 'i-lucide-file-code'"
+                  :label="$t('common.rawJson')"
+                  @click="showRawInput = !showRawInput"
+                />
+              </div>
+            </template>
+            <SchemaValue
+              v-if="!showRawInput"
+              :value="task.input"
+              :schema="inputSchema"
+              :empty-text="$t('common.noParameters')"
+            />
+            <pre v-else class="text-xs font-mono whitespace-pre">{{ prettyJson(task.input) }}</pre>
           </UPageCard>
 
           <UPageCard
             v-if="task.output !== undefined"
-            :title="$t('operations.tasks.detail.output')"
             variant="subtle"
             :ui="{ body: 'overflow-x-auto' }"
           >
-            <pre class="text-xs font-mono whitespace-pre">{{ prettyJson(task.output) }}</pre>
+            <template #title>
+              <div class="flex items-center justify-between gap-2 w-full">
+                <span>{{ $t("operations.tasks.detail.output") }}</span>
+                <UButton
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  :icon="showRawOutput ? 'i-lucide-braces' : 'i-lucide-file-code'"
+                  :label="$t('common.rawJson')"
+                  @click="showRawOutput = !showRawOutput"
+                />
+              </div>
+            </template>
+            <SchemaValue
+              v-if="!showRawOutput"
+              :value="task.output"
+              :schema="outputSchema"
+              :empty-text="$t('common.noParameters')"
+            />
+            <pre v-else class="text-xs font-mono whitespace-pre">{{ prettyJson(task.output) }}</pre>
           </UPageCard>
 
           <UPageCard :title="$t('operations.tasks.detail.children')" variant="subtle">

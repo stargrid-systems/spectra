@@ -3,3 +3,4 @@ CHANGELOG.md
 # Generated files
 modules/aperture/openapi.json
 modules/aperture/runtime/generated.ts
+modules/aperture/runtime/taskSchemaComponents.json
