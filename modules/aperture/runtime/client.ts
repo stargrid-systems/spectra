@@ -56,6 +56,21 @@ import type {
 
 const client = createClient<paths>({
   querySerializer: { array: { style: "form", explode: false } },
+  // The default serializer JSON-stringifies everything but FormData, which
+  // would turn binary upload bodies into "{}".
+  bodySerializer(body: unknown) {
+    if (typeof body === "string") {
+      return body;
+    }
+    if (
+      typeof body === "object" &&
+      body !== null &&
+      (body instanceof FormData || body instanceof Blob)
+    ) {
+      return body;
+    }
+    return JSON.stringify(body);
+  },
 });
 
 export class ApiError extends Error {

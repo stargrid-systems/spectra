@@ -293,7 +293,34 @@
       "input": "Eingabe"
     },
     "artifacts": {
-      "title": "Artefakte"
+      "title": "Artefakte",
+      "empty": "Keine Artefakte gefunden.",
+      "error": "Artefakte konnten nicht geladen werden.",
+      "refresh": "Aktualisieren",
+      "search": "Schlüssel suchen",
+      "upload": "Hochladen",
+      "uploaded": "Artefakt gespeichert.",
+      "uploadFailed": "Artefakt konnte nicht gespeichert werden.",
+      "tooLarge": "Die Datei überschreitet die maximale Größe.",
+      "key": "Schlüssel",
+      "file": "Datei",
+      "backToList": "Alle Artefakte",
+      "versionCount": "{n} Version | {n} Versionen",
+      "noVersions": "Für diesen Schlüssel sind keine Versionen gespeichert.",
+      "verified": "Verifiziert",
+      "download": "Herunterladen",
+      "evict": "Entfernen",
+      "evicted": "Version entfernt.",
+      "evictMissing": "Diese Version existiert nicht mehr.",
+      "evictFailed": "Version konnte nicht entfernt werden.",
+      "filters": {
+        "mediaType": "Medientyp",
+        "version": "Version"
+      },
+      "sort": {
+        "downloadedAt": "Zuletzt heruntergeladen",
+        "sizeBytes": "Größe"
+      }
     }
   },
   "units": {
