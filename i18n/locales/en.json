@@ -269,7 +269,34 @@
       "title": "Schedules"
     },
     "artifacts": {
-      "title": "Artifacts"
+      "title": "Artifacts",
+      "empty": "No artifacts found.",
+      "error": "Failed to load artifacts.",
+      "refresh": "Refresh",
+      "search": "Search keys",
+      "upload": "Upload",
+      "uploaded": "Artifact stored.",
+      "uploadFailed": "Failed to store the artifact.",
+      "tooLarge": "The file exceeds the maximum upload size.",
+      "key": "Key",
+      "file": "File",
+      "backToList": "All artifacts",
+      "versionCount": "{n} version | {n} versions",
+      "noVersions": "No versions stored for this key.",
+      "verified": "Verified",
+      "download": "Download",
+      "evict": "Evict",
+      "evicted": "Version evicted.",
+      "evictMissing": "This version no longer exists.",
+      "evictFailed": "Failed to evict the version.",
+      "filters": {
+        "mediaType": "Media type",
+        "version": "Version"
+      },
+      "sort": {
+        "downloadedAt": "Newest downloaded",
+        "sizeBytes": "Size"
+      }
     }
   },
   "units": {
