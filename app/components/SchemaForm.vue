@@ -265,7 +265,7 @@ function setArrayItem(key: string, index: number, value: string) {
           :model-value="String(state[field.key] ?? '')"
           type="number"
           class="w-full"
-          @update:model-value="(v) => setLeaf(field.key, v)"
+          @update:model-value="(v) => setLeaf(field.key, typeof v === 'number' ? String(v) : v)"
         />
         <UInput
           v-else

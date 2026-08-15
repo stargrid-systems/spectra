@@ -16,8 +16,15 @@
     "noParameters": "Keine Parameter.",
     "notImplemented": "Noch nicht implementiert.",
     "prev": "Zurück",
+    "save": "Speichern",
     "rawJson": "JSON-Rohdaten",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "durationUnits": {
+      "second": "Sekunden",
+      "minute": "Minuten",
+      "hour": "Stunden",
+      "day": "Tage"
+    }
   },
   "auth": {
     "roles": {
@@ -266,7 +273,24 @@
       }
     },
     "schedules": {
-      "title": "Zeitpläne"
+      "title": "Zeitpläne",
+      "empty": "Keine Zeitpläne gefunden.",
+      "error": "Zeitpläne konnten nicht geladen werden.",
+      "refresh": "Aktualisieren",
+      "create": "Neuer Zeitplan",
+      "created": "Zeitplan erstellt.",
+      "createFailed": "Zeitplan konnte nicht erstellt werden.",
+      "invalidInterval": "Gib ein gültiges Intervall ein.",
+      "edit": "Zeitplan bearbeiten",
+      "edited": "Zeitplan aktualisiert.",
+      "updateFailed": "Zeitplan konnte nicht aktualisiert werden.",
+      "deleted": "Zeitplan gelöscht.",
+      "deleteFailed": "Zeitplan konnte nicht gelöscht werden.",
+      "interval": "Intervall",
+      "nextRun": "Nächste Ausführung",
+      "lastRun": "Letzte Ausführung",
+      "never": "Nie",
+      "input": "Eingabe"
     },
     "artifacts": {
       "title": "Artefakte"

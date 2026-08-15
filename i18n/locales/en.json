@@ -16,8 +16,15 @@
     "noParameters": "No parameters.",
     "notImplemented": "Not implemented yet.",
     "prev": "Previous",
+    "save": "Save",
     "rawJson": "Raw JSON",
-    "retry": "Retry"
+    "retry": "Retry",
+    "durationUnits": {
+      "second": "seconds",
+      "minute": "minutes",
+      "hour": "hours",
+      "day": "days"
+    }
   },
   "auth": {
     "roles": {
@@ -266,7 +273,24 @@
       }
     },
     "schedules": {
-      "title": "Schedules"
+      "title": "Schedules",
+      "empty": "No schedules found.",
+      "error": "Failed to load schedules.",
+      "refresh": "Refresh",
+      "create": "New schedule",
+      "created": "Schedule created.",
+      "createFailed": "Failed to create the schedule.",
+      "invalidInterval": "Enter a valid interval.",
+      "edit": "Edit schedule",
+      "edited": "Schedule updated.",
+      "updateFailed": "Failed to update the schedule.",
+      "deleted": "Schedule deleted.",
+      "deleteFailed": "Failed to delete the schedule.",
+      "interval": "Interval",
+      "nextRun": "Next run",
+      "lastRun": "Last run",
+      "never": "Never",
+      "input": "Input"
     },
     "artifacts": {
       "title": "Artifacts"
