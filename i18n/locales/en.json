@@ -112,7 +112,8 @@
       "about": "About",
       "account": "Account",
       "apiKeys": "API keys",
-      "users": "Users"
+      "users": "Users",
+      "system": "System"
     },
     "sections": {
       "dashboard": {
@@ -137,6 +138,20 @@
         "spectraVersion": "Spectra version",
         "apertureVersion": "Aperture version"
       }
+    },
+    "system": {
+      "title": "System settings",
+      "description": "Gateway configuration keys and their current values.",
+      "adminOnly": "Only administrators can view and change system settings.",
+      "empty": "No settings available.",
+      "error": "Failed to load settings.",
+      "edit": "Edit setting",
+      "value": "Value (JSON)",
+      "invalidJson": "The text is not valid JSON.",
+      "rejectedValue": "The gateway rejected this value.",
+      "missingKey": "This setting key no longer exists.",
+      "saved": "Setting saved.",
+      "saveFailed": "Failed to save the setting."
     }
   },
   "developer": {

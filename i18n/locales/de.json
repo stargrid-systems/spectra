@@ -112,7 +112,8 @@
       "about": "Info",
       "account": "Konto",
       "apiKeys": "API-Schlüssel",
-      "users": "Benutzer"
+      "users": "Benutzer",
+      "system": "System"
     },
     "sections": {
       "dashboard": {
@@ -137,6 +138,20 @@
         "spectraVersion": "Spectra-Version",
         "apertureVersion": "Aperture-Version"
       }
+    },
+    "system": {
+      "title": "Systemeinstellungen",
+      "description": "Konfigurationsschlüssel des Gateways und ihre aktuellen Werte.",
+      "adminOnly": "Nur Administratoren können Systemeinstellungen sehen und ändern.",
+      "empty": "Keine Einstellungen verfügbar.",
+      "error": "Einstellungen konnten nicht geladen werden.",
+      "edit": "Einstellung bearbeiten",
+      "value": "Wert (JSON)",
+      "invalidJson": "Der Text ist kein gültiges JSON.",
+      "rejectedValue": "Der Gateway hat diesen Wert abgelehnt.",
+      "missingKey": "Dieser Konfigurationsschlüssel existiert nicht mehr.",
+      "saved": "Einstellung gespeichert.",
+      "saveFailed": "Einstellung konnte nicht gespeichert werden."
     }
   },
   "developer": {
