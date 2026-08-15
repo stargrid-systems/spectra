@@ -72,6 +72,7 @@ export type LoginResponse = Schemas["LoginResponse"];
 export type User = Schemas["UserResponse"];
 export type ApiKey = Schemas["ApiKeyResponse"];
 export type CreatedApiKey = Schemas["CreateApiKeyResponse"];
+export type Setting = Schemas["SettingResponse"];
 
 export type TaskStatus = Schemas["TaskStatusResponse"];
 export type TaskStatusParam = Schemas["TaskStatusParam"];
@@ -117,3 +118,4 @@ export type CreateApiKeyBody = Schemas["CreateApiKeyRequest"];
 export type CreateTaskBody = Schemas["CreateTaskRequest"];
 export type CreateTaskScheduleBody = Schemas["CreateTaskScheduleRequest"];
 export type UpdateTaskScheduleBody = Schemas["UpdateTaskScheduleRequest"];
+export type UpdateSettingBody = Schemas["UpdateSettingRequest"];

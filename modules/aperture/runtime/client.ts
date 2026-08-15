@@ -42,6 +42,7 @@ import type {
   RawLogSpanDetail,
   RawTask,
   RawTaskSchedule,
+  Setting,
   SettingDefinition,
   SettingDefinitionPage,
   SetupBody,
@@ -53,6 +54,7 @@ import type {
   TaskPage,
   TaskSchedule,
   TaskSchedulePage,
+  UpdateSettingBody,
   UpdateTaskScheduleBody,
   User,
   UserPage,
@@ -241,6 +243,9 @@ export const apertureApi = {
   listUsers: async (params?: ListUsersParams): Promise<UserPage> =>
     unwrap(await client.GET("/api/v1/users", { params: { query: params } })),
 
+  getUser: async (id: string): Promise<User> =>
+    unwrap(await client.GET("/api/v1/users/{id}", { params: { path: { id } } })),
+
   createUser: async (body: CreateUserBody): Promise<User> =>
     unwrap(await client.POST("/api/v1/users", { body })),
 
@@ -308,6 +313,14 @@ export const apertureApi = {
   deleteTaskSchedule: async (id: string): Promise<void> => {
     unwrapVoid(await client.DELETE("/api/v1/task-schedules/{id}", { params: { path: { id } } }));
   },
+
+  listSettings: async (): Promise<Setting[]> => unwrap(await client.GET("/api/v1/settings")),
+
+  getSetting: async (key: string): Promise<Setting> =>
+    unwrap(await client.GET("/api/v1/settings/{key}", { params: { path: { key } } })),
+
+  updateSetting: async (key: string, body: UpdateSettingBody): Promise<Setting> =>
+    unwrap(await client.PUT("/api/v1/settings/{key}", { params: { path: { key } }, body })),
 
   listArtifacts: async (params?: ListArtifactsParams): Promise<ArtifactSummaryPage> => {
     const data = unwrap(await client.GET("/api/v1/artifacts", { params: { query: params } }));
