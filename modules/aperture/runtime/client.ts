@@ -22,6 +22,8 @@ import type {
   ListLogSpansParams,
   ListLogTargetsParams,
   ListLogsParams,
+  ListSettingDefinitionsParams,
+  ListTaskDefinitionsParams,
   ListTaskSchedulesParams,
   ListTasksParams,
   ListUsersParams,
@@ -40,11 +42,14 @@ import type {
   RawLogSpanDetail,
   RawTask,
   RawTaskSchedule,
+  SettingDefinition,
+  SettingDefinitionPage,
   SetupBody,
   SetupStatus,
   StringPage,
   Task,
   TaskDefinition,
+  TaskDefinitionPage,
   TaskPage,
   TaskSchedule,
   TaskSchedulePage,
@@ -268,8 +273,19 @@ export const apertureApi = {
     unwrapVoid(await client.POST("/api/v1/tasks/{id}/cancel", { params: { path: { id } } }));
   },
 
-  listTaskDefinitions: async (): Promise<TaskDefinition[]> =>
-    unwrap(await client.GET("/api/v1/task-definitions")),
+  listTaskDefinitions: async (params?: ListTaskDefinitionsParams): Promise<TaskDefinitionPage> =>
+    unwrap(await client.GET("/api/v1/task-definitions", { params: { query: params } })),
+
+  getTaskDefinition: async (key: string): Promise<TaskDefinition> =>
+    unwrap(await client.GET("/api/v1/task-definitions/{key}", { params: { path: { key } } })),
+
+  listSettingDefinitions: async (
+    params?: ListSettingDefinitionsParams,
+  ): Promise<SettingDefinitionPage> =>
+    unwrap(await client.GET("/api/v1/setting-definitions", { params: { query: params } })),
+
+  getSettingDefinition: async (key: string): Promise<SettingDefinition> =>
+    unwrap(await client.GET("/api/v1/setting-definitions/{key}", { params: { path: { key } } })),
 
   listTaskSchedules: async (params?: ListTaskSchedulesParams): Promise<TaskSchedulePage> => {
     const data = unwrap(await client.GET("/api/v1/task-schedules", { params: { query: params } }));

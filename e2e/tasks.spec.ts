@@ -12,7 +12,7 @@ function iso(msAgo: number): string {
 const stubTasks = [
   {
     id: "task-1",
-    kind: "download",
+    key: "download",
     status: "succeeded",
     input: {},
     created_at: iso(60_000),
@@ -21,7 +21,7 @@ const stubTasks = [
   },
   {
     id: "task-2",
-    kind: "rotate-certificate",
+    key: "rotate-certificate",
     status: "running",
     input: {},
     created_at: iso(10_000),
@@ -76,7 +76,22 @@ test("tasks list renders statuses and progress", async ({ page }) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify([]),
+        body: JSON.stringify({ items: definitionSummaries, next_cursor: null, prev_cursor: null }),
+      });
+      return;
+    }
+
+    const defMatch = pathname.match(/^\/api\/v1\/task-definitions\/(.+)$/);
+    if (defMatch) {
+      const definition = definitionFor(decodeURIComponent(defMatch[1]!));
+      if (!definition) {
+        await route.fulfill({ status: 404 });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(definition),
       });
       return;
     }
@@ -101,6 +116,7 @@ test("tasks list renders statuses and progress", async ({ page }) => {
 
 const stubDetail = {
   ...stubTasks[1],
+  key: "download",
   output: undefined,
 };
 
@@ -113,15 +129,32 @@ const ociInput = {
   },
 };
 
+// Standalone draft 2020-12 documents: dependencies under $defs.
+const rotateDefinition = {
+  key: "rotate-certificate",
+  cancellable: true,
+  resumable: false,
+  input_schema: { type: "object" },
+  output_schema: { type: "object" },
+};
+
 const downloadDefinition = {
-  kind: "rotate-certificate",
+  key: "download",
   cancellable: true,
   resumable: false,
   input_schema: {
     type: "object",
+    required: ["key", "source"],
     properties: {
-      key: { type: "string", description: "Logical key to record the artifact under." },
-      source: {
+      key: {
+        $ref: "#/$defs/ArtifactKey",
+        description: "Logical key to record the artifact under.",
+      },
+      source: { $ref: "#/$defs/DownloadSource" },
+    },
+    $defs: {
+      ArtifactKey: { type: "string" },
+      DownloadSource: {
         oneOf: [
           {
             type: "object",
@@ -136,8 +169,19 @@ const downloadDefinition = {
       },
     },
   },
-  output_schema: {},
+  output_schema: { type: "object" },
 };
+
+const definitionSummaries = [
+  { key: rotateDefinition.key, cancellable: true, resumable: false },
+  { key: downloadDefinition.key, cancellable: true, resumable: false },
+];
+
+function definitionFor(key: string): typeof downloadDefinition | undefined {
+  if (key === "download") return downloadDefinition;
+  if (key === "rotate-certificate") return rotateDefinition;
+  return undefined;
+}
 
 test("task detail renders and cancels", async ({ page }) => {
   let cancelCalled = false;
@@ -203,7 +247,22 @@ test("task detail renders and cancels", async ({ page }) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify([downloadDefinition]),
+        body: JSON.stringify({ items: definitionSummaries, next_cursor: null, prev_cursor: null }),
+      });
+      return;
+    }
+
+    const defMatch = pathname.match(/^\/api\/v1\/task-definitions\/(.+)$/);
+    if (defMatch) {
+      const definition = definitionFor(decodeURIComponent(defMatch[1]!));
+      if (!definition) {
+        await route.fulfill({ status: 404 });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(definition),
       });
       return;
     }
@@ -217,7 +276,7 @@ test("task detail renders and cancels", async ({ page }) => {
 
   await page.goto("/en/operations/tasks/task-2", { waitUntil: "domcontentloaded" });
 
-  await expect(page.getByRole("heading", { name: "rotate-certificate" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "download" })).toBeVisible();
   await expect(page.getByText("40%")).toBeVisible();
   await expect(page.getByText("Child tasks", { exact: true })).toBeVisible();
 
@@ -239,24 +298,7 @@ test("task detail renders and cancels", async ({ page }) => {
   await expect(page.getByText("Cancelled")).toBeVisible({ timeout: 10_000 });
 });
 
-const createDefinitions = [
-  {
-    kind: "rotate-certificate",
-    cancellable: false,
-    resumable: true,
-    input_schema: { type: "object" },
-    output_schema: { type: "object" },
-  },
-  {
-    kind: "download",
-    cancellable: true,
-    resumable: false,
-    input_schema: downloadDefinition.input_schema,
-    output_schema: { type: "object" },
-  },
-];
-
-test("create task form is driven by the kind schema", async ({ page }) => {
+test("create task form is driven by the key schema", async ({ page }) => {
   const created: unknown[] = [];
   await page.route("**/api/v1/**", async (route) => {
     const request = route.request();
@@ -307,7 +349,22 @@ test("create task form is driven by the kind schema", async ({ page }) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(createDefinitions),
+        body: JSON.stringify({ items: definitionSummaries, next_cursor: null, prev_cursor: null }),
+      });
+      return;
+    }
+
+    const defMatch = pathname.match(/^\/api\/v1\/task-definitions\/(.+)$/);
+    if (defMatch) {
+      const definition = definitionFor(decodeURIComponent(defMatch[1]!));
+      if (!definition) {
+        await route.fulfill({ status: 404 });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(definition),
       });
       return;
     }
@@ -322,15 +379,15 @@ test("create task form is driven by the kind schema", async ({ page }) => {
   await page.goto("/en/operations/tasks", { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "New task" }).click();
 
-  // Default kind (first definition) takes no parameters.
+  // Default key (first definition) takes no parameters.
   await expect(page.getByText("No parameters.")).toBeVisible();
 
-  // Switch to the download kind: schema fields appear.
+  // Switch to the download key: schema fields appear.
   await page.getByRole("button", { name: "Show popup" }).click();
   await page.getByRole("option", { name: "download" }).click();
 
   // The schema-driven inputs replace their DOM nodes once, right after the
-  // kind switch; a fill landing on the stale node is lost. Verify and retry.
+  // key switch; a fill landing on the stale node is lost. Verify and retry.
   const typeStable = async (name: string, value: string) => {
     const box = page.getByRole("textbox", { name });
     await box.click();
@@ -346,7 +403,7 @@ test("create task form is driven by the kind schema", async ({ page }) => {
 
   await expect.poll(() => created.length).toBe(1);
   expect(created[0]).toEqual({
-    kind: "download",
+    key: "download",
     input: {
       key: "firmware",
       source: {

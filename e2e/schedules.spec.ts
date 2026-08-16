@@ -9,7 +9,7 @@ function iso(msFromNow: number): string {
 
 const stubSchedule = {
   id: "sched-1",
-  kind: "download",
+  key: "download",
   input: {
     key: "firmware",
     source: {
@@ -27,7 +27,7 @@ const stubSchedule = {
 };
 
 const downloadDefinition = {
-  kind: "download",
+  key: "download",
   cancellable: true,
   resumable: false,
   input_schema: {
@@ -52,6 +52,8 @@ const downloadDefinition = {
   },
   output_schema: { type: "object" },
 };
+
+const definitionSummaries = [{ key: downloadDefinition.key, cancellable: true, resumable: false }];
 
 function stubSchedulesApi(
   page: import("@playwright/test").Page,
@@ -91,7 +93,16 @@ function stubSchedulesApi(
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify([downloadDefinition]),
+        body: JSON.stringify({ items: definitionSummaries, next_cursor: null, prev_cursor: null }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/task-definitions/download") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(downloadDefinition),
       });
       return;
     }
@@ -150,7 +161,7 @@ test("schedules list renders and toggling fires a patch", async ({ page }) => {
   expect(captured.patches[0]).toEqual({ enabled: false });
 });
 
-test("create schedule posts kind, schema-driven input, and interval", async ({ page }) => {
+test("create schedule posts key, schema-driven input, and interval", async ({ page }) => {
   const captured = { patches: [] as unknown[], creates: [] as unknown[] };
   await stubSchedulesApi(page, captured);
 
@@ -178,7 +189,7 @@ test("create schedule posts kind, schema-driven input, and interval", async ({ p
 
   await expect.poll(() => captured.creates.length).toBe(1);
   expect(captured.creates[0]).toEqual({
-    kind: "download",
+    key: "download",
     input: {
       key: "firmware",
       source: {

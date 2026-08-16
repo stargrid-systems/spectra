@@ -12,17 +12,21 @@ const props = withDefaults(
   defineProps<{
     value: unknown;
     schema?: JsonSchemaLike;
+    /** The standalone document the schema and its $defs belong to. */
+    doc?: JsonSchemaLike;
     depth?: number;
     emptyText?: string;
   }>(),
-  { schema: undefined, depth: 0, emptyText: undefined },
+  { schema: undefined, doc: undefined, depth: 0, emptyText: undefined },
 );
 
 const MAX_DEPTH = 8;
 
+const rootDoc = computed(() => props.doc ?? props.schema);
+
 const resolved = computed<JsonSchemaLike | undefined>(() => {
   if (!props.schema) return undefined;
-  const base = resolveRef(props.schema);
+  const base = resolveRef(props.schema, rootDoc.value);
   if (!base) return undefined;
   if (base.oneOf && typeof props.value === "object" && props.value !== null) {
     const branch = pickOneOfBranch(base.oneOf, props.value);
@@ -35,7 +39,7 @@ const rows = computed(() => {
   if (props.depth >= MAX_DEPTH || props.value === null) return undefined;
   if (Array.isArray(props.value)) return undefined;
   if (!resolved.value) return undefined;
-  return schemaEntries(resolved.value, props.value);
+  return schemaEntries(resolved.value, props.value, rootDoc.value);
 });
 
 const isObject = (v: unknown): boolean => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -70,6 +74,7 @@ const rawJson = computed(() => {
         <SchemaValue
           :value="item"
           :schema="resolved?.items"
+          :doc="rootDoc"
           :depth="depth + 1"
           :empty-text="emptyText"
         />
@@ -92,6 +97,7 @@ const rawJson = computed(() => {
           v-if="isObject(row.value) || isArray(row.value)"
           :value="row.value"
           :schema="rowSchema(row)"
+          :doc="rootDoc"
           :depth="depth + 1"
           :empty-text="emptyText"
         />

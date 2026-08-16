@@ -1,7 +1,6 @@
-import componentsJson from "~~/modules/aperture/runtime/taskSchemaComponents.json";
-
 export interface JsonSchemaLike {
   $ref?: string;
+  $defs?: Record<string, JsonSchemaLike>;
   type?: string | string[];
   title?: string;
   description?: string;
@@ -11,36 +10,35 @@ export interface JsonSchemaLike {
   items?: JsonSchemaLike;
   required?: string[];
   format?: string;
+  default?: unknown;
   [key: string]: unknown;
 }
 
-export type SchemaComponents = Record<string, JsonSchemaLike>;
-
-const taskSchemaComponents = componentsJson as SchemaComponents;
-
-const REF_PREFIX = "#/components/schemas/";
-
 /**
- * Resolves `$ref` pointers against the bundled spec components. Sibling
- * keywords next to `$ref` (e.g. a `description`) win over the target.
- * Returns undefined for refs the bundle does not know.
+ * Resolves `$ref` pointers against the standalone schema document they came
+ * from. Definitions endpoints serve draft 2020-12 documents with dependencies
+ * under `$defs`, so `#/$defs/Name` is the shape in play. Sibling keywords next
+ * to `$ref` (e.g. a `description`) win over the target. Returns undefined for
+ * pointers the document does not contain.
  */
 export function resolveRef(
   schema: JsonSchemaLike,
-  components: SchemaComponents = taskSchemaComponents,
+  doc?: JsonSchemaLike,
 ): JsonSchemaLike | undefined {
   if (!schema.$ref) return schema;
-  const name = schema.$ref.startsWith(REF_PREFIX) ? schema.$ref.slice(REF_PREFIX.length) : null;
-  const target = name ? components[name] : undefined;
+  const prefix = "#/$defs/";
+  if (!schema.$ref.startsWith(prefix) || !doc?.$defs) return undefined;
+  const name = schema.$ref.slice(prefix.length);
+  const target = doc.$defs[name];
   if (!target) return undefined;
   const { $ref: _, ...siblings } = schema;
-  return { ...resolveRef(target, components), ...siblings };
+  return { ...resolveRef(target, doc), ...siblings };
 }
 
 /**
  * Picks the `oneOf` branch the given value matches. Prefers a literal
- * discriminator (`type`/`kind` enum constant), then falls back to scoring
- * branches by how many required properties the value carries.
+ * discriminator (`type`/`kind`/`key` enum constant), then falls back to
+ * scoring branches by how many required properties the value carries.
  */
 export function pickOneOfBranch(
   branches: JsonSchemaLike[],
@@ -66,7 +64,7 @@ export function pickOneOfBranch(
 }
 
 function tagValue(branch: JsonSchemaLike): [string, unknown] | undefined {
-  for (const key of ["type", "kind"]) {
+  for (const key of ["type", "kind", "key"]) {
     const prop = branch.properties?.[key];
     if (prop?.enum?.length === 1) return [key, prop.enum[0]];
   }
@@ -93,7 +91,7 @@ export interface SchemaRow {
 export function schemaEntries(
   schema: JsonSchemaLike,
   value: unknown,
-  components?: SchemaComponents,
+  doc?: JsonSchemaLike,
 ): SchemaRow[] | undefined {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return undefined;
   const record = value as Record<string, unknown>;
@@ -103,7 +101,7 @@ export function schemaEntries(
   for (const [key, prop] of Object.entries(schema.properties ?? {})) {
     if (!(key in record)) continue;
     seen.add(key);
-    const resolved = resolveRef(prop, components);
+    const resolved = resolveRef(prop, doc);
     rows.push({
       key,
       label: resolved?.title ?? key,

@@ -59,7 +59,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           branch="aperture-regen/pr-${{ github.event.pull_request.number }}"
-          git add modules/aperture/openapi.json modules/aperture/runtime/generated.ts modules/aperture/runtime/taskSchemaComponents.json
+          git add modules/aperture/openapi.json modules/aperture/runtime/generated.ts
           if git diff --cached --quiet; then
             echo "no regenerated changes"
             exit 0

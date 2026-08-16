@@ -2,12 +2,7 @@
 import type { SelectMenuItem } from "@nuxt/ui";
 import * as z from "zod/v4/mini";
 import { useIntervalFn } from "@vueuse/core";
-import type {
-  CreateTaskBody,
-  ListTasksParams,
-  Task,
-  TaskDefinition,
-} from "~~/modules/aperture/runtime/types";
+import type { CreateTaskBody, ListTasksParams, Task } from "~~/modules/aperture/runtime/types";
 import type { JsonSchemaLike } from "~/utils/schemaDisplay";
 import { buildFormState, buildZodSchema, cleanFormState, type FormState } from "~/utils/schemaForm";
 import {
@@ -15,6 +10,10 @@ import {
   tasksParamsFromFilters,
   useTasksFilters,
 } from "~/composables/useTasksFilters";
+import {
+  useTaskDefinitionCache,
+  useTaskDefinitionSummaries,
+} from "~/composables/useTaskDefinitions";
 import { TASK_STATUS_COLORS, useTaskDisplay } from "~/composables/useTaskDisplay";
 
 const { t } = useI18n();
@@ -24,11 +23,14 @@ const { formatTimestamp, formatDuration, progressPercent, progressMessage } = us
 
 const filters = useTasksFilters();
 
-const { data: definitions } = useAsyncData<TaskDefinition[]>(
-  "task-definitions",
-  () => apertureApi.listTaskDefinitions(),
-  { server: false },
-);
+const {
+  items: definitionSummaries,
+  loadingMore: definitionsLoadingMore,
+  hasMore: definitionsHasMore,
+  loadMore: loadMoreDefinitions,
+} = useTaskDefinitionSummaries();
+
+const { getDefinition } = useTaskDefinitionCache();
 
 const params = computed(() => tasksParamsFromFilters(filters));
 
@@ -54,10 +56,9 @@ const statusItems = computed<SelectMenuItem[]>(() => [
   })),
 ]);
 
-const kindItems = computed<SelectMenuItem[]>(() => [
-  { label: t("operations.tasks.filters.kindAll"), value: undefined },
-  ...(definitions.value ?? []).map((d) => ({ label: d.kind, value: d.kind })),
-]);
+const keyItems = computed<SelectMenuItem[]>(() =>
+  definitionSummaries.value.map((d) => ({ label: d.key, value: d.key })),
+);
 
 const hasActiveTasks = computed(() =>
   tasks.value.some((task) => task.status === "pending" || task.status === "running"),
@@ -69,55 +70,46 @@ watch(hasActiveTasks, (active) => (active ? resume() : pause()), { immediate: tr
 
 onUnmounted(pause);
 
-// Create task: the input form is generated from the kind's JSON Schema.
+// Create task: the input form is generated from the key's JSON Schema.
 
 const createOpen = ref(false);
-const createKind = ref<string | undefined>(undefined);
+const createKey = ref<string | undefined>(undefined);
 const createState = ref<FormState>({});
+const createInputSchema = ref<JsonSchemaLike | undefined>(undefined);
 const creating = ref(false);
-
-const createKindItems = computed<SelectMenuItem[]>(() =>
-  (definitions.value ?? []).map((d) => ({ label: d.kind, value: d.kind })),
-);
-
-const selectedDefinition = computed<TaskDefinition | undefined>(() =>
-  (definitions.value ?? []).find((d) => d.kind === createKind.value),
-);
-
-const createInputSchema = computed<JsonSchemaLike | undefined>(() => {
-  const schema = selectedDefinition.value?.input_schema;
-  return typeof schema === "object" && schema !== null ? (schema as JsonSchemaLike) : undefined;
-});
 
 const createZodSchema = computed(() =>
   createInputSchema.value ? buildZodSchema(createInputSchema.value) : z.object({}),
 );
 
-watch(createKind, (kind) => {
-  const def = (definitions.value ?? []).find((d) => d.kind === kind);
-  const schema =
-    typeof def?.input_schema === "object" && def?.input_schema !== null
-      ? (def.input_schema as JsonSchemaLike)
-      : undefined;
-  createState.value = schema ? buildFormState(schema) : {};
+watch(createKey, async (key) => {
+  createState.value = {};
+  createInputSchema.value = undefined;
+  if (!key) return;
+  const definition = await getDefinition(key);
+  const schema = definition?.input_schema;
+  if (createKey.value !== key) return;
+  createInputSchema.value =
+    typeof schema === "object" && schema !== null ? (schema as JsonSchemaLike) : undefined;
+  if (createInputSchema.value) {
+    createState.value = buildFormState(createInputSchema.value);
+  }
 });
 
 function openCreate() {
-  createKind.value = definitions.value?.[0]?.kind;
+  createKey.value = definitionSummaries.value[0]?.key;
   createOpen.value = true;
 }
 
 async function onCreate() {
-  if (!createKind.value) return;
+  if (!createKey.value) return;
   creating.value = true;
   try {
-    const payload = {
-      kind: createKind.value,
+    const body: CreateTaskBody = {
+      key: createKey.value,
       input: cleanFormState(createState.value, createInputSchema.value),
     };
-    // The generated client narrows the body to the known kinds' unions; the
-    // schema-driven payload is valid at runtime for any kind.
-    await apertureApi.createTask(payload as CreateTaskBody);
+    await apertureApi.createTask(body);
     createOpen.value = false;
     toast.add({ title: t("operations.tasks.created"), color: "success" });
     await reload();
@@ -147,12 +139,15 @@ async function onCreate() {
           class="w-44"
         />
 
-        <USelectMenu
-          v-model="filters.kind"
-          :items="kindItems"
+        <InfiniteSelectMenu
+          v-model="filters.key"
+          :items="keyItems"
+          :loading="definitionsLoadingMore"
+          :has-more="definitionsHasMore"
           value-key="value"
           size="sm"
           class="w-44"
+          @load-more="loadMoreDefinitions()"
         />
 
         <UCheckbox
@@ -166,7 +161,7 @@ async function onCreate() {
           icon="i-lucide-plus"
           size="sm"
           :label="$t('operations.tasks.create')"
-          :disabled="!definitions?.length"
+          :disabled="!definitionSummaries.length"
           @click="openCreate()"
         />
 
@@ -208,7 +203,7 @@ async function onCreate() {
                     :color="TASK_STATUS_COLORS[task.status]"
                     variant="subtle"
                   />
-                  <span class="font-mono text-sm truncate">{{ task.kind }}</span>
+                  <span class="font-mono text-sm truncate">{{ task.key }}</span>
                   <span class="text-muted text-xs font-mono hidden md:inline">{{ task.id }}</span>
                 </div>
                 <div class="flex items-center gap-3 text-xs text-muted">
@@ -277,12 +272,15 @@ async function onCreate() {
           class="flex flex-col gap-4"
           @submit="onCreate"
         >
-          <UFormField :label="$t('operations.tasks.filters.kind')" name="kind">
-            <USelectMenu
-              v-model="createKind"
-              :items="createKindItems"
+          <UFormField :label="$t('operations.tasks.filters.key')" name="key">
+            <InfiniteSelectMenu
+              v-model="createKey"
+              :items="keyItems"
+              :loading="definitionsLoadingMore"
+              :has-more="definitionsHasMore"
               value-key="value"
               class="w-full"
+              @load-more="loadMoreDefinitions()"
             />
           </UFormField>
 

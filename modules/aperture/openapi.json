@@ -22,6 +22,7 @@
           {
             "name": "limit",
             "in": "query",
+            "description": "Maximum number of items to return. Clamped to `1..=200`, defaults to\n50.",
             "required": false,
             "schema": {
               "type": "integer",
@@ -34,6 +35,7 @@
           {
             "name": "cursor",
             "in": "query",
+            "description": "Cursor from a page's `next_cursor` or `prev_cursor`.",
             "required": false,
             "schema": {
               "type": "string"
@@ -42,6 +44,7 @@
           {
             "name": "order",
             "in": "query",
+            "description": "Sort direction. Defaults to ascending.",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/OrderParam"
@@ -85,7 +88,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "api-key:create"
       }
     },
     "/api/v1/api-keys/{id}": {
@@ -110,7 +114,8 @@
           "404": {
             "description": "Unknown API key"
           }
-        }
+        },
+        "x-required-permission": "api-key:delete"
       }
     },
     "/api/v1/artifacts": {
@@ -170,7 +175,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "artifact:read"
       }
     },
     "/api/v1/artifacts/{key}": {
@@ -202,7 +208,8 @@
           "404": {
             "description": "Unknown artifact"
           }
-        }
+        },
+        "x-required-permission": "artifact:read"
       },
       "put": {
         "summary": "Uploads a new artifact version.",
@@ -247,7 +254,8 @@
           "413": {
             "description": "Body exceeded the maximum upload size"
           }
-        }
+        },
+        "x-required-permission": "artifact:write"
       }
     },
     "/api/v1/artifacts/{key}/versions": {
@@ -334,7 +342,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "artifact:read"
       }
     },
     "/api/v1/artifacts/{key}/versions/{digest}": {
@@ -375,7 +384,8 @@
           "404": {
             "description": "Unknown version"
           }
-        }
+        },
+        "x-required-permission": "artifact:read"
       },
       "delete": {
         "summary": "Evicts one stored version and its blob, if no other version needs it.",
@@ -407,7 +417,8 @@
           "404": {
             "description": "Unknown version"
           }
-        }
+        },
+        "x-required-permission": "artifact:evict"
       }
     },
     "/api/v1/artifacts/{key}/versions/{digest}/blob": {
@@ -470,7 +481,8 @@
           "404": {
             "description": "Unknown version"
           }
-        }
+        },
+        "x-required-permission": "artifact:download"
       }
     },
     "/api/v1/auth/change-password": {
@@ -744,7 +756,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "log:read"
       }
     },
     "/api/v1/logs/boots": {
@@ -755,6 +768,7 @@
           {
             "name": "limit",
             "in": "query",
+            "description": "Maximum number of items to return. Clamped to `1..=200`, defaults to\n50.",
             "required": false,
             "schema": {
               "type": "integer",
@@ -767,6 +781,7 @@
           {
             "name": "cursor",
             "in": "query",
+            "description": "Cursor from a page's `next_cursor` or `prev_cursor`.",
             "required": false,
             "schema": {
               "type": "string"
@@ -775,6 +790,7 @@
           {
             "name": "order",
             "in": "query",
+            "description": "Sort direction. Defaults to ascending.",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/OrderParam"
@@ -792,7 +808,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "log:read"
       }
     },
     "/api/v1/logs/spans": {
@@ -921,7 +938,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "log:read"
       }
     },
     "/api/v1/logs/spans/{id}": {
@@ -953,7 +971,8 @@
           "404": {
             "description": "Unknown span"
           }
-        }
+        },
+        "x-required-permission": "log:read"
       }
     },
     "/api/v1/logs/targets": {
@@ -1010,7 +1029,97 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "log:read"
+      }
+    },
+    "/api/v1/setting-definitions": {
+      "get": {
+        "summary": "Lists the registered setting definitions.",
+        "operationId": "listSettingDefinitions",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return. Clamped to `1..=200`, defaults to\n50.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Cursor from a page's `next_cursor` or `prev_cursor`.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort direction. Defaults to ascending.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrderParam"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Setting definitions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_SettingDefinitionSummary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {}
+        ]
+      }
+    },
+    "/api/v1/setting-definitions/{key}": {
+      "get": {
+        "summary": "Returns one registered setting definition with its full JSON Schema.",
+        "operationId": "getSettingDefinition",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "description": "Setting definition key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Setting definition",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingDefinitionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown setting definition key"
+          }
+        },
+        "security": [
+          {}
+        ]
       }
     },
     "/api/v1/settings": {
@@ -1031,7 +1140,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "setting:read"
       }
     },
     "/api/v1/settings/{key}": {
@@ -1063,7 +1173,8 @@
           "404": {
             "description": "Unknown setting key"
           }
-        }
+        },
+        "x-required-permission": "setting:read"
       },
       "put": {
         "summary": "Replaces the value of one setting key.",
@@ -1106,28 +1217,97 @@
           "404": {
             "description": "Unknown setting key"
           }
-        }
+        },
+        "x-required-permission": "setting:update"
       }
     },
     "/api/v1/task-definitions": {
       "get": {
-        "summary": "Lists the registered task kinds with their capabilities and JSON Schemas.",
+        "summary": "Lists the registered task definitions.",
         "operationId": "listTaskDefinitions",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return. Clamped to `1..=200`, defaults to\n50.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Cursor from a page's `next_cursor` or `prev_cursor`.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort direction. Defaults to ascending.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrderParam"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Task definitions",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TaskDefinitionResponse"
-                  }
+                  "$ref": "#/components/schemas/Page_TaskDefinitionSummary"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {}
+        ]
+      }
+    },
+    "/api/v1/task-definitions/{key}": {
+      "get": {
+        "summary": "Returns one registered task definition with its full JSON Schemas.",
+        "operationId": "getTaskDefinition",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "description": "Task definition key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task definition",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDefinitionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown task definition key"
+          }
+        },
+        "security": [
+          {}
+        ]
       }
     },
     "/api/v1/task-schedules": {
@@ -1175,7 +1355,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "task-schedule:read"
       },
       "post": {
         "summary": "Creates a new periodic task schedule.",
@@ -1204,7 +1385,8 @@
           "422": {
             "description": "Invalid input"
           }
-        }
+        },
+        "x-required-permission": "task-schedule:create"
       }
     },
     "/api/v1/task-schedules/{id}": {
@@ -1236,7 +1418,8 @@
           "404": {
             "description": "Unknown task schedule"
           }
-        }
+        },
+        "x-required-permission": "task-schedule:read"
       },
       "delete": {
         "summary": "Deletes a task schedule.",
@@ -1259,7 +1442,8 @@
           "404": {
             "description": "Unknown task schedule"
           }
-        }
+        },
+        "x-required-permission": "task-schedule:delete"
       },
       "patch": {
         "summary": "Updates a task schedule's interval and/or enabled flag.",
@@ -1299,12 +1483,13 @@
           "404": {
             "description": "Unknown task schedule"
           }
-        }
+        },
+        "x-required-permission": "task-schedule:update"
       }
     },
     "/api/v1/tasks": {
       "get": {
-        "summary": "Lists task invocations, optionally filtered by status, kind, and parent.\nRunning tasks carry live progress.",
+        "summary": "Lists task invocations, optionally filtered by status, key, and parent.\nRunning tasks carry live progress.",
         "operationId": "listTasks",
         "parameters": [
           {
@@ -1348,9 +1533,9 @@
             }
           },
           {
-            "name": "kind",
+            "name": "key",
             "in": "query",
-            "description": "Only tasks of this kind.",
+            "description": "Only tasks of this definition key.",
             "required": false,
             "schema": {
               "type": "string"
@@ -1422,17 +1607,18 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "task:read"
       },
       "post": {
-        "summary": "Creates a task of the given kind and starts it.",
-        "description": "The body input is validated against the kind's input schema.",
+        "summary": "Creates a task of the given definition key and starts it.",
+        "description": "The body input is validated against the key's input schema.",
         "operationId": "createTask",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateTaskInput"
+                "$ref": "#/components/schemas/CreateTaskRequest"
               }
             }
           },
@@ -1450,9 +1636,10 @@
             }
           },
           "400": {
-            "description": "Unknown kind or invalid input"
+            "description": "Unknown key or invalid input"
           }
-        }
+        },
+        "x-required-permission": "task:create"
       }
     },
     "/api/v1/tasks/{id}": {
@@ -1484,7 +1671,8 @@
           "404": {
             "description": "Unknown task"
           }
-        }
+        },
+        "x-required-permission": "task:read"
       }
     },
     "/api/v1/tasks/{id}/cancel": {
@@ -1510,12 +1698,13 @@
             "description": "Unknown task"
           },
           "409": {
-            "description": "Task kind cannot be cancelled"
+            "description": "Task key cannot be cancelled"
           },
           "410": {
             "description": "Task has already finished"
           }
-        }
+        },
+        "x-required-permission": "task:cancel"
       }
     },
     "/api/v1/users": {
@@ -1526,6 +1715,7 @@
           {
             "name": "limit",
             "in": "query",
+            "description": "Maximum number of items to return. Clamped to `1..=200`, defaults to\n50.",
             "required": false,
             "schema": {
               "type": "integer",
@@ -1538,6 +1728,7 @@
           {
             "name": "cursor",
             "in": "query",
+            "description": "Cursor from a page's `next_cursor` or `prev_cursor`.",
             "required": false,
             "schema": {
               "type": "string"
@@ -1546,6 +1737,7 @@
           {
             "name": "order",
             "in": "query",
+            "description": "Sort direction. Defaults to ascending.",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/OrderParam"
@@ -1563,7 +1755,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "user:read"
       },
       "post": {
         "summary": "Creates a new user.",
@@ -1592,7 +1785,8 @@
           "403": {
             "description": "Insufficient permissions"
           }
-        }
+        },
+        "x-required-permission": "user:create"
       }
     },
     "/api/v1/users/{id}": {
@@ -1624,7 +1818,8 @@
           "404": {
             "description": "Unknown user"
           }
-        }
+        },
+        "x-required-permission": "user:read"
       },
       "delete": {
         "summary": "Deletes a user.",
@@ -1647,12 +1842,14 @@
           "404": {
             "description": "Unknown user"
           }
-        }
+        },
+        "x-required-permission": "user:delete"
       }
     },
     "/api/v1/users/{id}/avatar": {
       "get": {
-        "summary": "Returns a deterministic constellation avatar for a user as inline SVG.",
+        "summary": "Returns a deterministic avatar for a user as inline SVG.",
+        "description": "The avatar style and animation are read from the `avatar_style` and\n`avatar_animation` settings on every request, so the output can be\nreconfigured at runtime. The response carries a strong `ETag` derived from\nthe active style and animation, so a client that already has a fresh copy\n(per `If-None-Match`) gets a `304 Not Modified` with an empty body.",
         "operationId": "getUserAvatar",
         "parameters": [
           {
@@ -1673,11 +1870,34 @@
                 "schema": {
                   "type": "string"
                 },
-                "description": "Immutable caching directive"
+                "description": "Caching directive"
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Strong tag derived from the active style and animation"
               }
             },
             "content": {
               "image/svg+xml": {}
+            }
+          },
+          "304": {
+            "description": "Not Modified",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Caching directive"
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Strong tag derived from the active style and animation"
+              }
             }
           }
         }
@@ -1954,63 +2174,20 @@
           }
         }
       },
-      "CreateTaskInput": {
-        "oneOf": [
-          {
-            "type": "object",
-            "required": [
-              "kind",
-              "input"
-            ],
-            "properties": {
-              "input": {
-                "$ref": "#/components/schemas/DownloadInput"
-              },
-              "kind": {
-                "type": "string",
-                "enum": [
-                  "download"
-                ]
-              }
-            }
-          },
-          {
-            "type": "object",
-            "required": [
-              "kind",
-              "input"
-            ],
-            "properties": {
-              "input": {
-                "$ref": "#/components/schemas/RotateCertificateInput"
-              },
-              "kind": {
-                "type": "string",
-                "enum": [
-                  "rotate-certificate"
-                ]
-              }
-            }
-          }
-        ],
-        "discriminator": {
-          "propertyName": "kind"
-        }
-      },
       "CreateTaskRequest": {
         "type": "object",
         "description": "Body for `POST /api/v1/tasks`.",
         "required": [
-          "kind",
+          "key",
           "input"
         ],
         "properties": {
           "input": {
-            "description": "The task input, matching the kind's input schema."
+            "description": "The task input, matching the key's input schema."
           },
-          "kind": {
+          "key": {
             "type": "string",
-            "description": "The kind of task to create."
+            "description": "The key of the task definition to create."
           }
         }
       },
@@ -2018,7 +2195,7 @@
         "type": "object",
         "description": "Body for `POST /api/v1/task-schedules`.",
         "required": [
-          "kind",
+          "key",
           "input",
           "interval"
         ],
@@ -2027,7 +2204,7 @@
           "interval": {
             "$ref": "#/components/schemas/Interval"
           },
-          "kind": {
+          "key": {
             "type": "string"
           }
         }
@@ -2102,81 +2279,6 @@
       "Digest": {
         "type": "string",
         "description": "Content digest, e.g. `sha256:hex`."
-      },
-      "DownloadInput": {
-        "type": "object",
-        "description": "Input for a download task: what to fetch and where from.",
-        "required": [
-          "key",
-          "source"
-        ],
-        "properties": {
-          "key": {
-            "$ref": "#/components/schemas/ArtifactKey",
-            "description": "Logical key to record the artifact under."
-          },
-          "source": {
-            "$ref": "#/components/schemas/DownloadSource",
-            "description": "Where and how to fetch it from."
-          }
-        }
-      },
-      "DownloadOutput": {
-        "type": "object",
-        "description": "Output of a download task: the stored version that resulted.",
-        "required": [
-          "digest",
-          "size_bytes"
-        ],
-        "properties": {
-          "digest": {
-            "$ref": "#/components/schemas/Digest",
-            "description": "Content digest of the stored blob."
-          },
-          "size_bytes": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Stored blob size in bytes.",
-            "minimum": 0
-          },
-          "version": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Human-readable version, if known."
-          }
-        }
-      },
-      "DownloadSource": {
-        "oneOf": [
-          {
-            "type": "object",
-            "description": "A layer of an OCI image.",
-            "required": [
-              "reference",
-              "media_type",
-              "type"
-            ],
-            "properties": {
-              "media_type": {
-                "$ref": "#/components/schemas/MediaType",
-                "description": "The media type of the layer to pull."
-              },
-              "reference": {
-                "type": "string",
-                "description": "The image reference, for example `ghcr.io/org/image:tag`."
-              },
-              "type": {
-                "type": "string",
-                "enum": [
-                  "oci"
-                ]
-              }
-            }
-          }
-        ],
-        "description": "Where a download fetches from."
       },
       "EventId": {
         "type": "string",
@@ -2915,6 +3017,46 @@
           }
         }
       },
+      "Page_SettingDefinitionSummary": {
+        "type": "object",
+        "description": "A page of results plus the cursors for the neighbouring pages.",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "A registered setting definition in a listing.",
+              "required": [
+                "key"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "description": "The key string."
+                }
+              }
+            },
+            "description": "The rows in this page."
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
+          },
+          "prev_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
+          }
+        }
+      },
       "Page_String": {
         "type": "object",
         "description": "A page of results plus the cursors for the neighbouring pages.",
@@ -2926,6 +3068,56 @@
             "type": "array",
             "items": {
               "type": "string"
+            },
+            "description": "The rows in this page."
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the next page. Null at the end."
+          },
+          "prev_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cursor to pass as `?cursor=` for the previous page. Null at the start."
+          }
+        }
+      },
+      "Page_TaskDefinitionSummary": {
+        "type": "object",
+        "description": "A page of results plus the cursors for the neighbouring pages.",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "A registered task definition in a listing.",
+              "required": [
+                "key",
+                "cancellable",
+                "resumable"
+              ],
+              "properties": {
+                "cancellable": {
+                  "type": "boolean",
+                  "description": "Whether the key can be cancelled."
+                },
+                "key": {
+                  "type": "string",
+                  "description": "The key string."
+                },
+                "resumable": {
+                  "type": "boolean",
+                  "description": "Whether the key is safe to interrupt across a restart."
+                }
+              }
             },
             "description": "The rows in this page."
           },
@@ -2959,7 +3151,7 @@
               "description": "One task invocation, returned by the task endpoints.",
               "required": [
                 "id",
-                "kind",
+                "key",
                 "status",
                 "input",
                 "created_at"
@@ -2992,9 +3184,9 @@
                 "input": {
                   "description": "The input the task was created with."
                 },
-                "kind": {
+                "key": {
                   "type": "string",
-                  "description": "The kind of task."
+                  "description": "The key of the task's definition."
                 },
                 "output": {
                   "description": "The output, once the task succeeds."
@@ -3066,7 +3258,7 @@
               "type": "object",
               "required": [
                 "id",
-                "kind",
+                "key",
                 "input",
                 "interval",
                 "next_run_at",
@@ -3088,7 +3280,7 @@
                 "interval": {
                   "$ref": "#/components/schemas/Interval"
                 },
-                "kind": {
+                "key": {
                   "type": "string"
                 },
                 "last_run_at": {
@@ -3258,19 +3450,33 @@
           "viewer"
         ]
       },
-      "RotateCertificateInput": {
+      "SettingDefinitionResponse": {
         "type": "object",
-        "description": "Rotation takes no parameters (identity-preserving)."
-      },
-      "RotateCertificateOutput": {
-        "type": "object",
+        "description": "One registered setting definition, with its full JSON Schema.",
         "required": [
-          "rotated"
+          "key",
+          "value_schema"
         ],
         "properties": {
-          "rotated": {
-            "type": "boolean",
-            "description": "Whether the leaf was actually re-issued."
+          "key": {
+            "type": "string",
+            "description": "The key string."
+          },
+          "value_schema": {
+            "description": "Standalone JSON Schema (draft 2020-12) of the key's value type."
+          }
+        }
+      },
+      "SettingDefinitionSummary": {
+        "type": "object",
+        "description": "A registered setting definition in a listing.",
+        "required": [
+          "key"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "The key string."
           }
         }
       },
@@ -3320,9 +3526,9 @@
       },
       "TaskDefinitionResponse": {
         "type": "object",
-        "description": "A registered task kind, with its capabilities and JSON Schemas.",
+        "description": "One registered task definition, with full JSON Schemas.",
         "required": [
-          "kind",
+          "key",
           "cancellable",
           "resumable",
           "input_schema",
@@ -3331,21 +3537,44 @@
         "properties": {
           "cancellable": {
             "type": "boolean",
-            "description": "Whether the kind can be cancelled."
+            "description": "Whether the key can be cancelled."
           },
           "input_schema": {
-            "description": "JSON Schema of the kind's input."
+            "description": "Standalone JSON Schema (draft 2020-12) of the key's input type."
           },
-          "kind": {
+          "key": {
             "type": "string",
-            "description": "The kind string."
+            "description": "The key string."
           },
           "output_schema": {
-            "description": "JSON Schema of the kind's output."
+            "description": "Standalone JSON Schema (draft 2020-12) of the key's output type."
           },
           "resumable": {
             "type": "boolean",
-            "description": "Whether the kind is safe to interrupt across a restart."
+            "description": "Whether the key is safe to interrupt across a restart."
+          }
+        }
+      },
+      "TaskDefinitionSummary": {
+        "type": "object",
+        "description": "A registered task definition in a listing.",
+        "required": [
+          "key",
+          "cancellable",
+          "resumable"
+        ],
+        "properties": {
+          "cancellable": {
+            "type": "boolean",
+            "description": "Whether the key can be cancelled."
+          },
+          "key": {
+            "type": "string",
+            "description": "The key string."
+          },
+          "resumable": {
+            "type": "boolean",
+            "description": "Whether the key is safe to interrupt across a restart."
           }
         }
       },
@@ -3358,7 +3587,7 @@
         "description": "One task invocation, returned by the task endpoints.",
         "required": [
           "id",
-          "kind",
+          "key",
           "status",
           "input",
           "created_at"
@@ -3391,9 +3620,9 @@
           "input": {
             "description": "The input the task was created with."
           },
-          "kind": {
+          "key": {
             "type": "string",
-            "description": "The kind of task."
+            "description": "The key of the task's definition."
           },
           "output": {
             "description": "The output, once the task succeeds."
@@ -3442,7 +3671,7 @@
         "type": "object",
         "required": [
           "id",
-          "kind",
+          "key",
           "input",
           "interval",
           "next_run_at",
@@ -3464,7 +3693,7 @@
           "interval": {
             "$ref": "#/components/schemas/Interval"
           },
-          "kind": {
+          "key": {
             "type": "string"
           },
           "last_run_at": {

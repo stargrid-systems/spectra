@@ -1,29 +1,52 @@
 <script setup lang="ts">
 import type { SelectMenuItem } from "@nuxt/ui";
 import * as z from "zod/v4/mini";
-import type {
-  ListTaskSchedulesParams,
-  TaskDefinition,
-  TaskSchedule,
-} from "~~/modules/aperture/runtime/types";
+import type { ListTaskSchedulesParams, TaskSchedule } from "~~/modules/aperture/runtime/types";
 import type { JsonSchemaLike } from "~/utils/schemaDisplay";
 import { buildFormState, buildZodSchema, cleanFormState, type FormState } from "~/utils/schemaForm";
+import {
+  useTaskDefinitionCache,
+  useTaskDefinitionSummaries,
+} from "~/composables/useTaskDefinitions";
 
 const { t } = useI18n();
 const toast = useToast();
 const fmt = useFormatter();
 const localePath = useLocalePath();
 
-const { data: definitions } = useAsyncData<TaskDefinition[]>(
-  "task-definitions",
-  () => apertureApi.listTaskDefinitions(),
-  { server: false },
-);
+const {
+  items: definitionSummaries,
+  loadingMore: definitionsLoadingMore,
+  hasMore: definitionsHasMore,
+  loadMore: loadMoreDefinitions,
+} = useTaskDefinitionSummaries();
 
-function inputSchemaFor(kind: string): JsonSchemaLike | undefined {
-  const schema = (definitions.value ?? []).find((d) => d.kind === kind)?.input_schema;
-  return typeof schema === "object" && schema !== null ? (schema as JsonSchemaLike) : undefined;
+const { getDefinition } = useTaskDefinitionCache();
+
+const definitionSchemas = ref<Map<string, JsonSchemaLike | undefined>>(new Map());
+
+function inputSchemaFor(key: string): JsonSchemaLike | undefined {
+  return definitionSchemas.value.get(key);
 }
+
+// Schemas render inline per row; fetch them lazily for visible keys.
+watch(
+  definitionSummaries,
+  (summaries) => {
+    for (const { key } of summaries) {
+      if (definitionSchemas.value.has(key)) continue;
+      definitionSchemas.value.set(key, undefined);
+      void getDefinition(key).then((definition) => {
+        const schema = definition?.input_schema;
+        definitionSchemas.value.set(
+          key,
+          typeof schema === "object" && schema !== null ? (schema as JsonSchemaLike) : undefined,
+        );
+      });
+    }
+  },
+  { immediate: true },
+);
 
 const {
   items: schedules,
@@ -36,6 +59,25 @@ const {
   reload,
 } = useCursorPager<TaskSchedule, ListTaskSchedulesParams>((query) =>
   apertureApi.listTaskSchedules(query),
+);
+
+// Also fetch schemas for schedule keys that have no definition summary yet.
+watch(
+  schedules,
+  (rows) => {
+    for (const row of rows) {
+      if (definitionSchemas.value.has(row.key)) continue;
+      definitionSchemas.value.set(row.key, undefined);
+      void getDefinition(row.key).then((definition) => {
+        const schema = definition?.input_schema;
+        definitionSchemas.value.set(
+          row.key,
+          typeof schema === "object" && schema !== null ? (schema as JsonSchemaLike) : undefined,
+        );
+      });
+    }
+  },
+  { immediate: true },
 );
 
 function formatTimestamp(ts: Temporal.Instant): string {
@@ -75,40 +117,46 @@ async function onDelete(schedule: TaskSchedule) {
 // Create modal.
 
 const createOpen = ref(false);
-const createKind = ref<string | undefined>(undefined);
+const createKey = ref<string | undefined>(undefined);
 const createState = ref<FormState>({});
+const createInputSchema = ref<JsonSchemaLike | undefined>(undefined);
 const createInterval = ref<Temporal.Duration | undefined>(undefined);
 const creating = ref(false);
 
-const kindItems = computed<SelectMenuItem[]>(() =>
-  (definitions.value ?? []).map((d) => ({ label: d.kind, value: d.kind })),
-);
-
-const createInputSchema = computed<JsonSchemaLike | undefined>(() =>
-  createKind.value ? inputSchemaFor(createKind.value) : undefined,
+const keyItems = computed<SelectMenuItem[]>(() =>
+  definitionSummaries.value.map((d) => ({ label: d.key, value: d.key })),
 );
 
 const createZodSchema = computed(() =>
   createInputSchema.value ? buildZodSchema(createInputSchema.value) : z.object({}),
 );
 
-watch(createKind, (kind) => {
-  const schema = kind ? inputSchemaFor(kind) : undefined;
-  createState.value = schema ? buildFormState(schema) : {};
+watch(createKey, async (key) => {
+  createState.value = {};
+  createInputSchema.value = undefined;
+  if (!key) return;
+  const definition = await getDefinition(key);
+  if (createKey.value !== key) return;
+  const schema = definition?.input_schema;
+  createInputSchema.value =
+    typeof schema === "object" && schema !== null ? (schema as JsonSchemaLike) : undefined;
+  if (createInputSchema.value) {
+    createState.value = buildFormState(createInputSchema.value);
+  }
 });
 
 function openCreate() {
-  createKind.value = definitions.value?.[0]?.kind;
+  createKey.value = definitionSummaries.value[0]?.key;
   createInterval.value = undefined;
   createOpen.value = true;
 }
 
 async function onCreate() {
-  if (!createKind.value || !createInterval.value) return;
+  if (!createKey.value || !createInterval.value) return;
   creating.value = true;
   try {
     await apertureApi.createTaskSchedule({
-      kind: createKind.value,
+      key: createKey.value,
       input: cleanFormState(createState.value, createInputSchema.value),
       interval: createInterval.value.toString(),
     });
@@ -170,7 +218,7 @@ async function onEdit() {
           icon="i-lucide-plus"
           size="sm"
           :label="$t('operations.schedules.create')"
-          :disabled="!definitions?.length"
+          :disabled="!definitionSummaries.length"
           @click="openCreate()"
         />
       </div>
@@ -195,7 +243,7 @@ async function onEdit() {
                     :model-value="schedule.enabled"
                     @update:model-value="() => toggleEnabled(schedule)"
                   />
-                  <span class="font-mono text-sm truncate">{{ schedule.kind }}</span>
+                  <span class="font-mono text-sm truncate">{{ schedule.key }}</span>
                   <UBadge :label="formatInterval(schedule)" variant="subtle" />
                   <span class="text-muted text-xs font-mono hidden md:inline">
                     {{ schedule.id }}
@@ -249,7 +297,7 @@ async function onEdit() {
                 </div>
                 <SchemaValue
                   :value="schedule.input"
-                  :schema="inputSchemaFor(schedule.kind)"
+                  :schema="inputSchemaFor(schedule.key)"
                   :empty-text="$t('common.noParameters')"
                 />
               </div>
@@ -277,8 +325,16 @@ async function onEdit() {
           class="flex flex-col gap-4"
           @submit="onCreate()"
         >
-          <UFormField :label="$t('operations.tasks.filters.kind')" name="kind">
-            <USelectMenu v-model="createKind" :items="kindItems" value-key="value" class="w-full" />
+          <UFormField :label="$t('operations.tasks.filters.key')" name="key">
+            <InfiniteSelectMenu
+              v-model="createKey"
+              :items="keyItems"
+              :loading="definitionsLoadingMore"
+              :has-more="definitionsHasMore"
+              value-key="value"
+              class="w-full"
+              @load-more="loadMoreDefinitions()"
+            />
           </UFormField>
 
           <p

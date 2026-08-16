@@ -54,6 +54,12 @@ export type ListTasksParams = NonNullable<operations["listTasks"]["parameters"][
 export type ListTaskSchedulesParams = NonNullable<
   operations["listTaskSchedules"]["parameters"]["query"]
 >;
+export type ListTaskDefinitionsParams = NonNullable<
+  operations["listTaskDefinitions"]["parameters"]["query"]
+>;
+export type ListSettingDefinitionsParams = NonNullable<
+  operations["listSettingDefinitions"]["parameters"]["query"]
+>;
 export type ListArtifactsParams = NonNullable<operations["listArtifacts"]["parameters"]["query"]>;
 export type ListArtifactVersionsParams = NonNullable<
   operations["listArtifactVersions"]["parameters"]["query"]
@@ -72,6 +78,11 @@ export type TaskStatusParam = Schemas["TaskStatusParam"];
 export type TaskProgress = Schemas["ProgressResponse"];
 export type TaskProgressMessage = Schemas["ProgressMessageResponse"];
 export type TaskDefinition = Schemas["TaskDefinitionResponse"];
+export type TaskDefinitionSummary = Schemas["TaskDefinitionSummary"];
+export type TaskDefinitionPage = Page<TaskDefinitionSummary>;
+export type SettingDefinition = Schemas["SettingDefinitionResponse"];
+export type SettingDefinitionSummary = Schemas["SettingDefinitionSummary"];
+export type SettingDefinitionPage = Page<SettingDefinitionSummary>;
 
 export type RawTask = Schemas["TaskResponse"];
 export type Task = Omit<RawTask, "created_at" | "started_at" | "finished_at"> & {
@@ -103,6 +114,6 @@ export type SetupBody = Schemas["SetupRequest"];
 export type ChangePasswordBody = Schemas["ChangePasswordRequest"];
 export type CreateUserBody = Schemas["CreateUserRequest"];
 export type CreateApiKeyBody = Schemas["CreateApiKeyRequest"];
-export type CreateTaskBody = Schemas["CreateTaskInput"];
+export type CreateTaskBody = Schemas["CreateTaskRequest"];
 export type CreateTaskScheduleBody = Schemas["CreateTaskScheduleRequest"];
 export type UpdateTaskScheduleBody = Schemas["UpdateTaskScheduleRequest"];
