@@ -321,6 +321,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/setting-definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists the registered setting definitions. */
+        get: operations["listSettingDefinitions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/setting-definitions/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Returns one registered setting definition with its full JSON Schema. */
+        get: operations["getSettingDefinition"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings": {
         parameters: {
             query?: never;
@@ -363,8 +397,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Lists the registered task kinds with their capabilities and JSON Schemas. */
+        /** Lists the registered task definitions. */
         get: operations["listTaskDefinitions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/task-definitions/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Returns one registered task definition with its full JSON Schemas. */
+        get: operations["getTaskDefinition"];
         put?: never;
         post?: never;
         delete?: never;
@@ -418,14 +469,14 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Lists task invocations, optionally filtered by status, kind, and parent.
+         * Lists task invocations, optionally filtered by status, key, and parent.
          *     Running tasks carry live progress.
          */
         get: operations["listTasks"];
         put?: never;
         /**
-         * Creates a task of the given kind and starts it.
-         * @description The body input is validated against the kind's input schema.
+         * Creates a task of the given definition key and starts it.
+         * @description The body input is validated against the key's input schema.
          */
         post: operations["createTask"];
         delete?: never;
@@ -511,7 +562,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Returns a deterministic constellation avatar for a user as inline SVG. */
+        /**
+         * Returns a deterministic avatar for a user as inline SVG.
+         * @description The avatar style and animation are read from the `avatar_style` and
+         *     `avatar_animation` settings on every request, so the output can be
+         *     reconfigured at runtime. The response carries a strong `ETag` derived from
+         *     the active style and animation, so a client that already has a fresh copy
+         *     (per `If-None-Match`) gets a `304 Not Modified` with an empty body.
+         */
         get: operations["getUserAvatar"];
         put?: never;
         post?: never;
@@ -659,27 +717,18 @@ export interface components {
             name: string;
             prefix: string;
         };
-        CreateTaskInput: {
-            input: components["schemas"]["DownloadInput"];
-            /** @enum {string} */
-            kind: "download";
-        } | {
-            input: components["schemas"]["RotateCertificateInput"];
-            /** @enum {string} */
-            kind: "rotate-certificate";
-        };
         /** @description Body for `POST /api/v1/tasks`. */
         CreateTaskRequest: {
-            /** @description The task input, matching the kind's input schema. */
+            /** @description The task input, matching the key's input schema. */
             input: unknown;
-            /** @description The kind of task to create. */
-            kind: string;
+            /** @description The key of the task definition to create. */
+            key: string;
         };
         /** @description Body for `POST /api/v1/task-schedules`. */
         CreateTaskScheduleRequest: {
             input: unknown;
             interval: components["schemas"]["Interval"];
-            kind: string;
+            key: string;
         };
         CreateUserRequest: {
             password: components["schemas"]["Password"];
@@ -696,34 +745,6 @@ export interface components {
         };
         /** @description Content digest, e.g. `sha256:hex`. */
         Digest: string;
-        /** @description Input for a download task: what to fetch and where from. */
-        DownloadInput: {
-            /** @description Logical key to record the artifact under. */
-            key: components["schemas"]["ArtifactKey"];
-            /** @description Where and how to fetch it from. */
-            source: components["schemas"]["DownloadSource"];
-        };
-        /** @description Output of a download task: the stored version that resulted. */
-        DownloadOutput: {
-            /** @description Content digest of the stored blob. */
-            digest: components["schemas"]["Digest"];
-            /**
-             * Format: int64
-             * @description Stored blob size in bytes.
-             */
-            size_bytes: number;
-            /** @description Human-readable version, if known. */
-            version?: string | null;
-        };
-        /** @description Where a download fetches from. */
-        DownloadSource: {
-            /** @description The media type of the layer to pull. */
-            media_type: components["schemas"]["MediaType"];
-            /** @description The image reference, for example `ghcr.io/org/image:tag`. */
-            reference: string;
-            /** @enum {string} */
-            type: "oci";
-        };
         /** @description Primary key of a row in the `log_events` table. */
         EventId: string;
         /**
@@ -1028,9 +1049,37 @@ export interface components {
             prev_cursor?: string | null;
         };
         /** @description A page of results plus the cursors for the neighbouring pages. */
+        Page_SettingDefinitionSummary: {
+            /** @description The rows in this page. */
+            items: {
+                /** @description The key string. */
+                key: string;
+            }[];
+            /** @description Cursor to pass as `?cursor=` for the next page. Null at the end. */
+            next_cursor?: string | null;
+            /** @description Cursor to pass as `?cursor=` for the previous page. Null at the start. */
+            prev_cursor?: string | null;
+        };
+        /** @description A page of results plus the cursors for the neighbouring pages. */
         Page_String: {
             /** @description The rows in this page. */
             items: string[];
+            /** @description Cursor to pass as `?cursor=` for the next page. Null at the end. */
+            next_cursor?: string | null;
+            /** @description Cursor to pass as `?cursor=` for the previous page. Null at the start. */
+            prev_cursor?: string | null;
+        };
+        /** @description A page of results plus the cursors for the neighbouring pages. */
+        Page_TaskDefinitionSummary: {
+            /** @description The rows in this page. */
+            items: {
+                /** @description Whether the key can be cancelled. */
+                cancellable: boolean;
+                /** @description The key string. */
+                key: string;
+                /** @description Whether the key is safe to interrupt across a restart. */
+                resumable: boolean;
+            }[];
             /** @description Cursor to pass as `?cursor=` for the next page. Null at the end. */
             next_cursor?: string | null;
             /** @description Cursor to pass as `?cursor=` for the previous page. Null at the start. */
@@ -1056,8 +1105,8 @@ export interface components {
                 id: components["schemas"]["TaskId"];
                 /** @description The input the task was created with. */
                 input: unknown;
-                /** @description The kind of task. */
-                kind: string;
+                /** @description The key of the task's definition. */
+                key: string;
                 /** @description The output, once the task succeeds. */
                 output?: unknown;
                 parent_id?: null | components["schemas"]["TaskId"];
@@ -1085,7 +1134,7 @@ export interface components {
                 id: components["schemas"]["TaskScheduleId"];
                 input: unknown;
                 interval: components["schemas"]["Interval"];
-                kind: string;
+                key: string;
                 /** Format: date-time */
                 last_run_at?: string | null;
                 last_task_id?: null | components["schemas"]["TaskId"];
@@ -1155,11 +1204,17 @@ export interface components {
          * @enum {string}
          */
         Role: "admin" | "operator" | "viewer";
-        /** @description Rotation takes no parameters (identity-preserving). */
-        RotateCertificateInput: Record<string, never>;
-        RotateCertificateOutput: {
-            /** @description Whether the leaf was actually re-issued. */
-            rotated: boolean;
+        /** @description One registered setting definition, with its full JSON Schema. */
+        SettingDefinitionResponse: {
+            /** @description The key string. */
+            key: string;
+            /** @description Standalone JSON Schema (draft 2020-12) of the key's value type. */
+            value_schema: unknown;
+        };
+        /** @description A registered setting definition in a listing. */
+        SettingDefinitionSummary: {
+            /** @description The key string. */
+            key: string;
         };
         /** @description One setting key and its current value. */
         SettingResponse: {
@@ -1175,17 +1230,26 @@ export interface components {
         };
         /** @description Primary key of a row in the `log_spans` table. */
         SpanId: string;
-        /** @description A registered task kind, with its capabilities and JSON Schemas. */
+        /** @description One registered task definition, with full JSON Schemas. */
         TaskDefinitionResponse: {
-            /** @description Whether the kind can be cancelled. */
+            /** @description Whether the key can be cancelled. */
             cancellable: boolean;
-            /** @description JSON Schema of the kind's input. */
+            /** @description Standalone JSON Schema (draft 2020-12) of the key's input type. */
             input_schema: unknown;
-            /** @description The kind string. */
-            kind: string;
-            /** @description JSON Schema of the kind's output. */
+            /** @description The key string. */
+            key: string;
+            /** @description Standalone JSON Schema (draft 2020-12) of the key's output type. */
             output_schema: unknown;
-            /** @description Whether the kind is safe to interrupt across a restart. */
+            /** @description Whether the key is safe to interrupt across a restart. */
+            resumable: boolean;
+        };
+        /** @description A registered task definition in a listing. */
+        TaskDefinitionSummary: {
+            /** @description Whether the key can be cancelled. */
+            cancellable: boolean;
+            /** @description The key string. */
+            key: string;
+            /** @description Whether the key is safe to interrupt across a restart. */
             resumable: boolean;
         };
         /** @description Primary key of a row in the `tasks` table. */
@@ -1208,8 +1272,8 @@ export interface components {
             id: components["schemas"]["TaskId"];
             /** @description The input the task was created with. */
             input: unknown;
-            /** @description The kind of task. */
-            kind: string;
+            /** @description The key of the task's definition. */
+            key: string;
             /** @description The output, once the task succeeds. */
             output?: unknown;
             parent_id?: null | components["schemas"]["TaskId"];
@@ -1231,7 +1295,7 @@ export interface components {
             id: components["schemas"]["TaskScheduleId"];
             input: unknown;
             interval: components["schemas"]["Interval"];
-            kind: string;
+            key: string;
             /** Format: date-time */
             last_run_at?: string | null;
             last_task_id?: null | components["schemas"]["TaskId"];
@@ -1301,8 +1365,14 @@ export interface operations {
     listApiKeys: {
         parameters: {
             query?: {
+                /**
+                 * @description Maximum number of items to return. Clamped to `1..=200`, defaults to
+                 *     50.
+                 */
                 limit?: number;
+                /** @description Cursor from a page's `next_cursor` or `prev_cursor`. */
                 cursor?: string;
+                /** @description Sort direction. Defaults to ascending. */
                 order?: components["schemas"]["OrderParam"];
             };
             header?: never;
@@ -1818,8 +1888,14 @@ export interface operations {
     listLogBoots: {
         parameters: {
             query?: {
+                /**
+                 * @description Maximum number of items to return. Clamped to `1..=200`, defaults to
+                 *     50.
+                 */
                 limit?: number;
+                /** @description Cursor from a page's `next_cursor` or `prev_cursor`. */
                 cursor?: string;
+                /** @description Sort direction. Defaults to ascending. */
                 order?: components["schemas"]["OrderParam"];
             };
             header?: never;
@@ -1941,6 +2017,66 @@ export interface operations {
             };
         };
     };
+    listSettingDefinitions: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Maximum number of items to return. Clamped to `1..=200`, defaults to
+                 *     50.
+                 */
+                limit?: number;
+                /** @description Cursor from a page's `next_cursor` or `prev_cursor`. */
+                cursor?: string;
+                /** @description Sort direction. Defaults to ascending. */
+                order?: components["schemas"]["OrderParam"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Setting definitions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_SettingDefinitionSummary"];
+                };
+            };
+        };
+    };
+    getSettingDefinition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Setting definition key */
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Setting definition */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingDefinitionResponse"];
+                };
+            };
+            /** @description Unknown setting definition key */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listSettings: {
         parameters: {
             query?: never;
@@ -2034,7 +2170,17 @@ export interface operations {
     };
     listTaskDefinitions: {
         parameters: {
-            query?: never;
+            query?: {
+                /**
+                 * @description Maximum number of items to return. Clamped to `1..=200`, defaults to
+                 *     50.
+                 */
+                limit?: number;
+                /** @description Cursor from a page's `next_cursor` or `prev_cursor`. */
+                cursor?: string;
+                /** @description Sort direction. Defaults to ascending. */
+                order?: components["schemas"]["OrderParam"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2047,8 +2193,38 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TaskDefinitionResponse"][];
+                    "application/json": components["schemas"]["Page_TaskDefinitionSummary"];
                 };
+            };
+        };
+    };
+    getTaskDefinition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Task definition key */
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Task definition */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskDefinitionResponse"];
+                };
+            };
+            /** @description Unknown task definition key */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -2210,8 +2386,8 @@ export interface operations {
                 order?: components["schemas"]["OrderParam"];
                 /** @description Only tasks in this state, or the `active`/`finished` groups. */
                 status?: components["schemas"]["TaskStatusParam"];
-                /** @description Only tasks of this kind. */
-                kind?: string;
+                /** @description Only tasks of this definition key. */
+                key?: string;
                 /** @description Only children of this task. */
                 parent?: components["schemas"]["TaskId"];
                 /** @description Only top-level tasks (no parent). Ignored when `parent` is set. */
@@ -2257,7 +2433,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateTaskInput"];
+                "application/json": components["schemas"]["CreateTaskRequest"];
             };
         };
         responses: {
@@ -2270,7 +2446,7 @@ export interface operations {
                     "application/json": components["schemas"]["TaskResponse"];
                 };
             };
-            /** @description Unknown kind or invalid input */
+            /** @description Unknown key or invalid input */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -2335,7 +2511,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Task kind cannot be cancelled */
+            /** @description Task key cannot be cancelled */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -2354,8 +2530,14 @@ export interface operations {
     listUsers: {
         parameters: {
             query?: {
+                /**
+                 * @description Maximum number of items to return. Clamped to `1..=200`, defaults to
+                 *     50.
+                 */
                 limit?: number;
+                /** @description Cursor from a page's `next_cursor` or `prev_cursor`. */
                 cursor?: string;
+                /** @description Sort direction. Defaults to ascending. */
                 order?: components["schemas"]["OrderParam"];
             };
             header?: never;
@@ -2479,13 +2661,26 @@ export interface operations {
             /** @description Avatar SVG */
             200: {
                 headers: {
-                    /** @description Immutable caching directive */
+                    /** @description Caching directive */
                     "Cache-Control"?: string;
+                    /** @description Strong tag derived from the active style and animation */
+                    ETag?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "image/svg+xml": unknown;
                 };
+            };
+            /** @description Not Modified */
+            304: {
+                headers: {
+                    /** @description Caching directive */
+                    "Cache-Control"?: string;
+                    /** @description Strong tag derived from the active style and animation */
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

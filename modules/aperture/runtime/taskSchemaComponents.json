@@ -249,63 +249,20 @@
       }
     }
   },
-  "CreateTaskInput": {
-    "oneOf": [
-      {
-        "type": "object",
-        "required": [
-          "kind",
-          "input"
-        ],
-        "properties": {
-          "input": {
-            "$ref": "#/components/schemas/DownloadInput"
-          },
-          "kind": {
-            "type": "string",
-            "enum": [
-              "download"
-            ]
-          }
-        }
-      },
-      {
-        "type": "object",
-        "required": [
-          "kind",
-          "input"
-        ],
-        "properties": {
-          "input": {
-            "$ref": "#/components/schemas/RotateCertificateInput"
-          },
-          "kind": {
-            "type": "string",
-            "enum": [
-              "rotate-certificate"
-            ]
-          }
-        }
-      }
-    ],
-    "discriminator": {
-      "propertyName": "kind"
-    }
-  },
   "CreateTaskRequest": {
     "type": "object",
     "description": "Body for `POST /api/v1/tasks`.",
     "required": [
-      "kind",
+      "key",
       "input"
     ],
     "properties": {
       "input": {
-        "description": "The task input, matching the kind's input schema."
+        "description": "The task input, matching the key's input schema."
       },
-      "kind": {
+      "key": {
         "type": "string",
-        "description": "The kind of task to create."
+        "description": "The key of the task definition to create."
       }
     }
   },
@@ -313,7 +270,7 @@
     "type": "object",
     "description": "Body for `POST /api/v1/task-schedules`.",
     "required": [
-      "kind",
+      "key",
       "input",
       "interval"
     ],
@@ -322,7 +279,7 @@
       "interval": {
         "$ref": "#/components/schemas/Interval"
       },
-      "kind": {
+      "key": {
         "type": "string"
       }
     }
@@ -397,81 +354,6 @@
   "Digest": {
     "type": "string",
     "description": "Content digest, e.g. `sha256:hex`."
-  },
-  "DownloadInput": {
-    "type": "object",
-    "description": "Input for a download task: what to fetch and where from.",
-    "required": [
-      "key",
-      "source"
-    ],
-    "properties": {
-      "key": {
-        "$ref": "#/components/schemas/ArtifactKey",
-        "description": "Logical key to record the artifact under."
-      },
-      "source": {
-        "$ref": "#/components/schemas/DownloadSource",
-        "description": "Where and how to fetch it from."
-      }
-    }
-  },
-  "DownloadOutput": {
-    "type": "object",
-    "description": "Output of a download task: the stored version that resulted.",
-    "required": [
-      "digest",
-      "size_bytes"
-    ],
-    "properties": {
-      "digest": {
-        "$ref": "#/components/schemas/Digest",
-        "description": "Content digest of the stored blob."
-      },
-      "size_bytes": {
-        "type": "integer",
-        "format": "int64",
-        "description": "Stored blob size in bytes.",
-        "minimum": 0
-      },
-      "version": {
-        "type": [
-          "string",
-          "null"
-        ],
-        "description": "Human-readable version, if known."
-      }
-    }
-  },
-  "DownloadSource": {
-    "oneOf": [
-      {
-        "type": "object",
-        "description": "A layer of an OCI image.",
-        "required": [
-          "reference",
-          "media_type",
-          "type"
-        ],
-        "properties": {
-          "media_type": {
-            "$ref": "#/components/schemas/MediaType",
-            "description": "The media type of the layer to pull."
-          },
-          "reference": {
-            "type": "string",
-            "description": "The image reference, for example `ghcr.io/org/image:tag`."
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "oci"
-            ]
-          }
-        }
-      }
-    ],
-    "description": "Where a download fetches from."
   },
   "EventId": {
     "type": "string",
@@ -792,19 +674,33 @@
       "viewer"
     ]
   },
-  "RotateCertificateInput": {
+  "SettingDefinitionResponse": {
     "type": "object",
-    "description": "Rotation takes no parameters (identity-preserving)."
-  },
-  "RotateCertificateOutput": {
-    "type": "object",
+    "description": "One registered setting definition, with its full JSON Schema.",
     "required": [
-      "rotated"
+      "key",
+      "value_schema"
     ],
     "properties": {
-      "rotated": {
-        "type": "boolean",
-        "description": "Whether the leaf was actually re-issued."
+      "key": {
+        "type": "string",
+        "description": "The key string."
+      },
+      "value_schema": {
+        "description": "Standalone JSON Schema (draft 2020-12) of the key's value type."
+      }
+    }
+  },
+  "SettingDefinitionSummary": {
+    "type": "object",
+    "description": "A registered setting definition in a listing.",
+    "required": [
+      "key"
+    ],
+    "properties": {
+      "key": {
+        "type": "string",
+        "description": "The key string."
       }
     }
   },
@@ -854,9 +750,9 @@
   },
   "TaskDefinitionResponse": {
     "type": "object",
-    "description": "A registered task kind, with its capabilities and JSON Schemas.",
+    "description": "One registered task definition, with full JSON Schemas.",
     "required": [
-      "kind",
+      "key",
       "cancellable",
       "resumable",
       "input_schema",
@@ -865,21 +761,44 @@
     "properties": {
       "cancellable": {
         "type": "boolean",
-        "description": "Whether the kind can be cancelled."
+        "description": "Whether the key can be cancelled."
       },
       "input_schema": {
-        "description": "JSON Schema of the kind's input."
+        "description": "Standalone JSON Schema (draft 2020-12) of the key's input type."
       },
-      "kind": {
+      "key": {
         "type": "string",
-        "description": "The kind string."
+        "description": "The key string."
       },
       "output_schema": {
-        "description": "JSON Schema of the kind's output."
+        "description": "Standalone JSON Schema (draft 2020-12) of the key's output type."
       },
       "resumable": {
         "type": "boolean",
-        "description": "Whether the kind is safe to interrupt across a restart."
+        "description": "Whether the key is safe to interrupt across a restart."
+      }
+    }
+  },
+  "TaskDefinitionSummary": {
+    "type": "object",
+    "description": "A registered task definition in a listing.",
+    "required": [
+      "key",
+      "cancellable",
+      "resumable"
+    ],
+    "properties": {
+      "cancellable": {
+        "type": "boolean",
+        "description": "Whether the key can be cancelled."
+      },
+      "key": {
+        "type": "string",
+        "description": "The key string."
+      },
+      "resumable": {
+        "type": "boolean",
+        "description": "Whether the key is safe to interrupt across a restart."
       }
     }
   },
@@ -892,7 +811,7 @@
     "description": "One task invocation, returned by the task endpoints.",
     "required": [
       "id",
-      "kind",
+      "key",
       "status",
       "input",
       "created_at"
@@ -925,9 +844,9 @@
       "input": {
         "description": "The input the task was created with."
       },
-      "kind": {
+      "key": {
         "type": "string",
-        "description": "The kind of task."
+        "description": "The key of the task's definition."
       },
       "output": {
         "description": "The output, once the task succeeds."
@@ -976,7 +895,7 @@
     "type": "object",
     "required": [
       "id",
-      "kind",
+      "key",
       "input",
       "interval",
       "next_run_at",
@@ -998,7 +917,7 @@
       "interval": {
         "$ref": "#/components/schemas/Interval"
       },
-      "kind": {
+      "key": {
         "type": "string"
       },
       "last_run_at": {
