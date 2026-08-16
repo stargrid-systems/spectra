@@ -151,7 +151,8 @@
       "rejectedValue": "The gateway rejected this value.",
       "missingKey": "This setting key no longer exists.",
       "saved": "Setting saved.",
-      "saveFailed": "Failed to save the setting."
+      "saveFailed": "Failed to save the setting.",
+      "fallbackJson": "No schema is available for this key, editing raw JSON."
     }
   },
   "developer": {

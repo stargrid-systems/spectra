@@ -6,7 +6,9 @@ import {
   buildZodSchema,
   cleanFormState,
   defaultOneOfBranch,
+  mergeFormState,
   oneOfBranchTag,
+  type FormState,
 } from "~/utils/schemaForm";
 
 const doc: JsonSchemaLike = {
@@ -151,5 +153,29 @@ describe("buildZodSchema", () => {
 
     const badTag = { key: "k", source: { reference: "r", media_type: "m", type: "docker" } };
     expect(z.safeParse(schema, badTag).success).toBe(false);
+  });
+});
+
+describe("mergeFormState", () => {
+  it("overlays stored values onto schema-seeded defaults", () => {
+    const seed = buildFormState(downloadInput);
+    const merged = mergeFormState(seed, { key: "firmware" });
+    expect(merged.key).toBe("firmware");
+    expect(merged.source).toEqual({ reference: "", media_type: "", type: "oci" });
+  });
+
+  it("merges nested objects and keeps unknown keys", () => {
+    const merged = mergeFormState(
+      { source: { reference: "", media_type: "", type: "oci" }, extra: "" },
+      { source: { reference: "ghcr.io/org/img:1" }, unknown: 3 },
+    );
+    expect(merged.source).toEqual({ reference: "ghcr.io/org/img:1", media_type: "", type: "oci" });
+    expect(merged.unknown).toBe(3);
+  });
+
+  it("returns the seed for non-object values", () => {
+    const seed: FormState = { key: "spectra" };
+    expect(mergeFormState(seed, null)).toBe(seed);
+    expect(mergeFormState(seed, "nope")).toBe(seed);
   });
 });

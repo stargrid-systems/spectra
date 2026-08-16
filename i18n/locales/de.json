@@ -151,7 +151,8 @@
       "rejectedValue": "Der Gateway hat diesen Wert abgelehnt.",
       "missingKey": "Dieser Konfigurationsschlüssel existiert nicht mehr.",
       "saved": "Einstellung gespeichert.",
-      "saveFailed": "Einstellung konnte nicht gespeichert werden."
+      "saveFailed": "Einstellung konnte nicht gespeichert werden.",
+      "fallbackJson": "Für diesen Schlüssel gibt es kein Schema, JSON wird direkt bearbeitet."
     }
   },
   "developer": {

@@ -228,11 +228,14 @@ function setArrayItem(key: string, index: number, value: string) {
                 :name-prefix="`${field.path}.${i}`"
                 :depth="depth + 1"
               />
-              <UInput
+              <SchemaField
                 v-else
-                :model-value="String(asArray(field.key)[i] ?? '')"
-                class="w-full"
-                @update:model-value="(v) => setArrayItem(field.key, i, v)"
+                :model-value="asArray(field.key)[i] ?? ''"
+                :schema="field.schema?.items"
+                :doc="rootDoc"
+                @update:model-value="
+                  (v) => setArrayItem(field.key, i, typeof v === 'string' ? v : String(v ?? ''))
+                "
               />
             </div>
             <UButton
@@ -256,29 +259,10 @@ function setArrayItem(key: string, index: number, value: string) {
       </UFormField>
 
       <UFormField v-else :label="field.label" :description="field.description" :name="field.path">
-        <USelectMenu
-          v-if="field.kind === 'enum'"
-          :model-value="String(state[field.key] ?? '')"
-          :items="enumValues(field.schema)!"
-          class="w-full"
-          @update:model-value="(v) => setLeaf(field.key, typeof v === 'string' ? v : '')"
-        />
-        <UCheckbox
-          v-else-if="field.kind === 'boolean'"
-          :model-value="state[field.key] === true"
-          @update:model-value="(v) => setLeaf(field.key, v === true)"
-        />
-        <UInput
-          v-else-if="field.kind === 'number'"
-          :model-value="String(state[field.key] ?? '')"
-          type="number"
-          class="w-full"
-          @update:model-value="(v) => setLeaf(field.key, typeof v === 'number' ? String(v) : v)"
-        />
-        <UInput
-          v-else
-          :model-value="String(state[field.key] ?? '')"
-          class="w-full"
+        <SchemaField
+          :model-value="state[field.key] ?? ''"
+          :schema="field.schema"
+          :doc="rootDoc"
           @update:model-value="(v) => setLeaf(field.key, v)"
         />
       </UFormField>
