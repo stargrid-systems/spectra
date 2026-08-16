@@ -237,8 +237,8 @@
       "notStarted": "Nicht gestartet",
       "filters": {
         "statusAll": "Alle Status",
-        "kind": "Art",
-        "kindAll": "Alle Arten",
+        "key": "Schlüssel",
+        "keyAll": "Alle Schlüssel",
         "rootOnly": "Nur oberste Ebene"
       },
       "status": {

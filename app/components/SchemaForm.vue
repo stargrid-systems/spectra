@@ -5,14 +5,18 @@ import { buildFormState, oneOfBranchTag, type FormState, type FormValue } from "
 const props = withDefaults(
   defineProps<{
     schema: JsonSchemaLike;
+    /** The standalone document the schema and its $defs belong to. */
+    doc?: JsonSchemaLike;
     namePrefix?: string;
     depth?: number;
   }>(),
-  { namePrefix: "", depth: 0 },
+  { doc: undefined, namePrefix: "", depth: 0 },
 );
 
 // The form state is owned by the surrounding UForm and shared by reference.
 const state = defineModel<FormState>("state", { required: true });
+
+const rootDoc = computed(() => props.doc ?? props.schema);
 
 const MAX_DEPTH = 6;
 
@@ -65,11 +69,11 @@ function classify(field: Omit<Field, "kind" | "branches">): Pick<Field, "kind" |
 }
 
 const fields = computed<Field[]>(() => {
-  const schema = resolveRef(props.schema);
+  const schema = resolveRef(props.schema, rootDoc.value);
   if (!schema?.properties) return [];
   return Object.entries(schema.properties)
     .map(([key, prop]) => {
-      const resolved = resolveRef(prop);
+      const resolved = resolveRef(prop, rootDoc.value);
       const base = {
         key,
         label: resolved?.title ?? key,
@@ -79,7 +83,8 @@ const fields = computed<Field[]>(() => {
       };
       // A single oneOf branch becomes the effective schema; its tag constant
       // is already injected into the state by buildFormState.
-      const single = resolved?.oneOf?.length === 1 ? resolveRef(resolved.oneOf[0]!) : undefined;
+      const single =
+        resolved?.oneOf?.length === 1 ? resolveRef(resolved.oneOf[0]!, rootDoc.value) : undefined;
       const field: Field = {
         ...base,
         schema: single ?? base.schema!,
@@ -108,7 +113,7 @@ function selectBranch(field: Field, label: string | undefined) {
   branchChoices.set(field.key, label ?? "");
   const branch = field.branches?.find((b) => b.label === label)?.branch;
   if (!branch) return;
-  const nested = buildFormState(branch);
+  const nested = buildFormState(branch, rootDoc.value);
   const tag = oneOfBranchTag(branch);
   if (tag) nested[tag[0]] = tag[1];
   state.value[field.key] = nested;
@@ -177,6 +182,7 @@ function setArrayItem(key: string, index: number, value: string) {
         >
           <SchemaForm
             :schema="selectedBranch(field)!"
+            :doc="rootDoc"
             :state="stateAt(field.key)!"
             :name-prefix="field.path"
             :depth="depth + 1"
@@ -193,6 +199,7 @@ function setArrayItem(key: string, index: number, value: string) {
           <SchemaForm
             v-if="stateAt(field.key)"
             :schema="field.schema!"
+            :doc="rootDoc"
             :state="stateAt(field.key)!"
             :name-prefix="field.path"
             :depth="depth + 1"
@@ -216,6 +223,7 @@ function setArrayItem(key: string, index: number, value: string) {
               <SchemaForm
                 v-if="itemAt(field.key, i)"
                 :schema="field.schema!.items!"
+                :doc="rootDoc"
                 :state="itemAt(field.key, i)!"
                 :name-prefix="`${field.path}.${i}`"
                 :depth="depth + 1"

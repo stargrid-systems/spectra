@@ -2,6 +2,7 @@
 import { useIntervalFn } from "@vueuse/core";
 import type { ListTasksParams, Task, TaskDefinition } from "~~/modules/aperture/runtime/types";
 import type { JsonSchemaLike } from "~/utils/schemaDisplay";
+import { useTaskDefinitionCache } from "~/composables/useTaskDefinitions";
 import { TASK_STATUS_COLORS, useTaskDisplay } from "~/composables/useTaskDisplay";
 
 const { t } = useI18n();
@@ -9,6 +10,7 @@ const toast = useToast();
 const route = useRoute();
 const localePath = useLocalePath();
 const { formatTimestamp, formatDuration, progressPercent, progressMessage } = useTaskDisplay();
+const { getDefinition } = useTaskDefinitionCache();
 
 const taskId = computed(() => String(route.params.id));
 
@@ -16,14 +18,15 @@ const task = ref<Task | null>(null);
 const loadError = ref<unknown>(null);
 const loading = ref(false);
 
-const { data: definitionsData } = useAsyncData<TaskDefinition[]>(
-  "task-definitions",
-  () => apertureApi.listTaskDefinitions(),
-  { server: false },
-);
+const definition = ref<TaskDefinition | undefined>(undefined);
 
-const definition = computed<TaskDefinition | undefined>(() =>
-  (definitionsData.value ?? []).find((d) => d.kind === task.value?.kind),
+watch(
+  () => task.value?.key,
+  async (key) => {
+    definition.value = undefined;
+    if (!key) return;
+    definition.value = await getDefinition(key);
+  },
 );
 
 function asSchema(value: unknown): JsonSchemaLike | undefined {
@@ -107,7 +110,7 @@ const {
 </script>
 
 <template>
-  <AppPage :title="task?.kind ?? taskId" back-to="/operations/tasks">
+  <AppPage :title="task?.key ?? taskId" back-to="/operations/tasks">
     <div class="p-4 flex flex-col gap-4">
       <DataState
         :pending="loading && !task"
@@ -126,7 +129,7 @@ const {
                     :color="TASK_STATUS_COLORS[task.status]"
                     variant="subtle"
                   />
-                  <span class="font-mono text-sm truncate">{{ task.kind }}</span>
+                  <span class="font-mono text-sm truncate">{{ task.key }}</span>
                   <span class="text-muted text-xs font-mono">{{ task.id }}</span>
                 </div>
                 <div class="flex items-center gap-2">
@@ -293,7 +296,7 @@ const {
                         :color="TASK_STATUS_COLORS[child.status]"
                         variant="subtle"
                       />
-                      <span class="font-mono text-sm truncate">{{ child.kind }}</span>
+                      <span class="font-mono text-sm truncate">{{ child.key }}</span>
                       <span class="text-muted text-xs font-mono">{{ child.id }}</span>
                     </div>
                     <span class="text-xs text-muted">{{ formatTimestamp(child.created_at) }}</span>

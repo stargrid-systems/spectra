@@ -33,7 +33,7 @@ const queryRootDefaultTrue = z.codec(z.array(z.string()), z.boolean(), {
 
 export const tasksSchema = z.object({
   status: queryStatusFilter,
-  kind: queryOptionalString(),
+  key: queryOptionalString(),
   root: queryRootDefaultTrue,
 });
 
@@ -41,12 +41,12 @@ export type TasksFilters = z.infer<typeof tasksSchema>;
 
 export const tasksQueryKeys: Partial<Record<keyof TasksFilters, string>> = {
   status: "status",
-  kind: "kind",
+  key: "key",
   root: "root",
 };
 
 export function defaultTasksFilters(): TasksFilters {
-  return { status: undefined, kind: undefined, root: true };
+  return { status: undefined, key: undefined, root: true };
 }
 
 export function useTasksFilters(): TasksFilters {
@@ -56,7 +56,7 @@ export function useTasksFilters(): TasksFilters {
 export function tasksParamsFromFilters(filters: TasksFilters): ListTasksParams {
   const p: ListTasksParams = {};
   if (filters.status) p.status = filters.status;
-  if (filters.kind) p.kind = filters.kind;
+  if (filters.key) p.key = filters.key;
   p.root = filters.root;
   return p;
 }

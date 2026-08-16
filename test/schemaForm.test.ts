@@ -9,11 +9,18 @@ import {
   oneOfBranchTag,
 } from "~/utils/schemaForm";
 
+const doc: JsonSchemaLike = {
+  $defs: {
+    ArtifactKey: { type: "string", description: "Logical artifact key." },
+  },
+};
+
 const downloadInput: JsonSchemaLike = {
+  ...doc,
   type: "object",
   required: ["key", "source"],
   properties: {
-    key: { $ref: "#/components/schemas/ArtifactKey", description: "Logical key." },
+    key: { $ref: "#/$defs/ArtifactKey", description: "Logical key." },
     source: {
       oneOf: [
         {

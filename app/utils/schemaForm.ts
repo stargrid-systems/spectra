@@ -43,15 +43,17 @@ export function oneOfBranchTag(branch: JsonSchemaLike): [string, FormValue] | un
  * strings/objects/arrays otherwise. OneOf branches with a single tagged
  * variant are auto-selected and the tag constant is injected.
  */
-export function buildFormState(schemaIn: JsonSchemaLike): FormState {
+export function buildFormState(schemaIn: JsonSchemaLike, doc?: JsonSchemaLike): FormState {
   const state: FormState = {};
-  let schema = resolveRef(schemaIn);
+  // At the document root the schema IS the document its $defs live in.
+  const docRef = doc ?? schemaIn;
+  let schema = resolveRef(schemaIn, docRef);
   if (schema?.oneOf?.length) {
     const branch = defaultOneOfBranch(schema);
     if (branch) {
       schema = branch.branch;
       if (branch.tag) {
-        const nested = buildFormState(branch.branch);
+        const nested = buildFormState(branch.branch, docRef);
         nested[branch.tag[0]] = branch.tag[1];
         return nested;
       }
@@ -62,7 +64,7 @@ export function buildFormState(schemaIn: JsonSchemaLike): FormState {
   if (!schema?.properties) return state;
 
   for (const [key, propIn] of Object.entries(schema.properties)) {
-    const prop = resolveRef(propIn);
+    const prop = resolveRef(propIn, docRef);
     if (!prop) continue;
 
     if (prop.default !== undefined) {
@@ -72,7 +74,7 @@ export function buildFormState(schemaIn: JsonSchemaLike): FormState {
 
     const branch = defaultOneOfBranch(prop);
     if (branch) {
-      const nested = buildFormState(branch.branch);
+      const nested = buildFormState(branch.branch, docRef);
       if (branch.tag) nested[branch.tag[0]] = branch.tag[1];
       state[key] = nested;
       continue;
@@ -80,7 +82,7 @@ export function buildFormState(schemaIn: JsonSchemaLike): FormState {
 
     switch (typeOf(prop)) {
       case "object":
-        state[key] = buildFormState(prop);
+        state[key] = buildFormState(prop, docRef);
         break;
       case "array":
         state[key] = [];
@@ -105,19 +107,24 @@ function isFormState(value: FormValue): value is FormState {
  * fields (kept as strings for the inputs) to numbers, so the request body
  * only carries values the user actually entered.
  */
-export function cleanFormState(state: FormState, schemaIn?: JsonSchemaLike): FormState {
-  const schema = schemaIn ? resolveRef(schemaIn) : undefined;
+export function cleanFormState(
+  state: FormState,
+  schemaIn?: JsonSchemaLike,
+  doc?: JsonSchemaLike,
+): FormState {
+  const docRef = doc ?? schemaIn;
+  const schema = schemaIn ? resolveRef(schemaIn, docRef) : undefined;
   const out: FormState = {};
   for (const [key, value] of Object.entries(state)) {
     if (value === "") continue;
     if (Array.isArray(value)) {
       if (value.length === 0) continue;
       const items = schema?.properties?.[key]?.items;
-      out[key] = value.map((v) => (isFormState(v) ? cleanFormState(v, items) : v));
+      out[key] = value.map((v) => (isFormState(v) ? cleanFormState(v, items, docRef) : v));
       continue;
     }
     if (isFormState(value)) {
-      out[key] = cleanFormState(value, schema?.properties?.[key]);
+      out[key] = cleanFormState(value, schema?.properties?.[key], docRef);
       continue;
     }
     if (
@@ -143,12 +150,17 @@ const INTEGER_RE = /^-?\d+$/;
  * required checks, enum domains, numeric strings, nested objects, and
  * arrays. Optional fields accept the empty-string placeholder.
  */
-export function buildZodSchema(schemaIn: JsonSchemaLike, required = true): z.core.$ZodType {
-  const schema = resolveRef(schemaIn) ?? schemaIn;
+export function buildZodSchema(
+  schemaIn: JsonSchemaLike,
+  required = true,
+  doc?: JsonSchemaLike,
+): z.core.$ZodType {
+  const docRef = doc ?? schemaIn;
+  const schema = resolveRef(schemaIn, docRef) ?? schemaIn;
 
   if (schema.oneOf?.length) {
     const branch = defaultOneOfBranch(schema)?.branch;
-    if (branch) return buildZodSchema(branch, required);
+    if (branch) return buildZodSchema(branch, required, docRef);
   }
 
   switch (typeOf(schema)) {
@@ -156,16 +168,16 @@ export function buildZodSchema(schemaIn: JsonSchemaLike, required = true): z.cor
       const shape: Record<string, z.core.$ZodType> = {};
       const req = new Set(schema.required ?? []);
       for (const [key, propIn] of Object.entries(schema.properties ?? {})) {
-        const prop = resolveRef(propIn);
+        const prop = resolveRef(propIn, docRef);
         if (!prop) continue;
-        const field = buildZodSchema(prop, req.has(key));
+        const field = buildZodSchema(prop, req.has(key), docRef);
         // Optional fields accept absence and the empty-string placeholder.
         shape[key] = req.has(key) ? field : z.optional(z.union([z.literal(""), field]));
       }
       return z.object(shape);
     }
     case "array": {
-      const items = schema.items ? buildZodSchema(schema.items, true) : z.any();
+      const items = schema.items ? buildZodSchema(schema.items, true, docRef) : z.any();
       const arr = z.array(items);
       return required ? arr.check(z.minLength(1)) : arr;
     }

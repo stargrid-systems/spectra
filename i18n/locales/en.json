@@ -237,8 +237,8 @@
       "notStarted": "Not started",
       "filters": {
         "statusAll": "All statuses",
-        "kind": "Kind",
-        "kindAll": "All kinds",
+        "key": "Key",
+        "keyAll": "All keys",
         "rootOnly": "Top-level only"
       },
       "status": {

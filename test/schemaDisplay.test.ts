@@ -6,60 +6,61 @@ import {
   type JsonSchemaLike,
 } from "~/utils/schemaDisplay";
 
-const components: Record<string, JsonSchemaLike> = {
-  ArtifactKey: { type: "string", description: "Logical artifact key." },
-  DownloadSource: {
-    oneOf: [
-      {
-        type: "object",
-        description: "A layer of an OCI image.",
-        required: ["reference", "media_type", "type"],
-        properties: {
-          reference: { type: "string" },
-          media_type: { type: "string" },
-          type: { type: "string", enum: ["oci"] },
-        },
-      },
-    ],
+// Mirrors the standalone documents the definitions endpoints serve:
+// dependencies under $defs, refs as #/$defs/Name.
+const doc: JsonSchemaLike = {
+  type: "object",
+  required: ["key", "source"],
+  properties: {
+    key: { $ref: "#/$defs/ArtifactKey", description: "Logical key." },
+    source: { $ref: "#/$defs/DownloadSource" },
   },
-  DownloadInput: {
-    type: "object",
-    required: ["key", "source"],
-    properties: {
-      key: { $ref: "#/components/schemas/ArtifactKey", description: "Logical key." },
-      source: { $ref: "#/components/schemas/DownloadSource" },
+  $defs: {
+    ArtifactKey: { type: "string", description: "Logical artifact key." },
+    DownloadSource: {
+      oneOf: [
+        {
+          type: "object",
+          description: "A layer of an OCI image.",
+          required: ["reference", "media_type", "type"],
+          properties: {
+            reference: { type: "string" },
+            media_type: { type: "string" },
+            type: { type: "string", enum: ["oci"] },
+          },
+        },
+      ],
     },
   },
 };
 
 describe("resolveRef", () => {
-  it("resolves a $ref to its component", () => {
-    const resolved = resolveRef({ $ref: "#/components/schemas/ArtifactKey" }, components);
+  it("resolves a $defs pointer against the document", () => {
+    const resolved = resolveRef(doc.properties!.key!, doc);
     expect(resolved?.type).toBe("string");
-    expect(resolved?.description).toBe("Logical artifact key.");
+    expect(resolved?.description).toBe("Logical key.");
   });
 
   it("lets sibling keywords win over the target", () => {
-    const resolved = resolveRef(
-      { $ref: "#/components/schemas/ArtifactKey", description: "override" },
-      components,
-    );
+    const resolved = resolveRef({ $ref: "#/$defs/ArtifactKey", description: "override" }, doc);
     expect(resolved?.description).toBe("override");
     expect(resolved?.type).toBe("string");
   });
 
   it("returns the schema untouched without a $ref", () => {
     const schema: JsonSchemaLike = { type: "string" };
-    expect(resolveRef(schema, components)).toBe(schema);
+    expect(resolveRef(schema, doc)).toBe(schema);
   });
 
-  it("returns undefined for unknown refs", () => {
-    expect(resolveRef({ $ref: "#/components/schemas/Nope" }, components)).toBeUndefined();
+  it("returns undefined for unknown pointers or a missing document", () => {
+    expect(resolveRef({ $ref: "#/$defs/Nope" }, doc)).toBeUndefined();
+    expect(resolveRef({ $ref: "#/$defs/ArtifactKey" }, undefined)).toBeUndefined();
+    expect(resolveRef({ $ref: "#/components/schemas/ArtifactKey" }, doc)).toBeUndefined();
   });
 });
 
 describe("pickOneOfBranch", () => {
-  const branches = components.DownloadSource!.oneOf!;
+  const branches = doc.$defs!.DownloadSource!.oneOf!;
 
   it("picks the branch matching the discriminator tag", () => {
     const value = {
@@ -97,9 +98,9 @@ describe("pickOneOfBranch", () => {
 });
 
 describe("schemaEntries", () => {
-  it("orders rows by schema properties and resolves refs", () => {
+  it("orders rows by schema properties and resolves refs against the doc", () => {
     const value = { source: { type: "oci", reference: "r", media_type: "m" }, key: "spectra" };
-    const rows = schemaEntries(components.DownloadInput!, value, components)!;
+    const rows = schemaEntries(doc, value, doc)!;
     expect(rows.map((r) => r.key)).toEqual(["key", "source"]);
     expect(rows[0].description).toBe("Logical key.");
     expect(rows[0].schema?.type).toBe("string");
@@ -111,18 +112,18 @@ describe("schemaEntries", () => {
       source: { type: "oci", reference: "r", media_type: "m" },
       extra: 1,
     };
-    const rows = schemaEntries(components.DownloadInput!, value, components)!;
+    const rows = schemaEntries(doc, value, doc)!;
     expect(rows.at(-1)).toMatchObject({ key: "extra", label: "extra", value: 1 });
     expect(rows.at(-1)?.schema).toBeUndefined();
   });
 
   it("skips schema properties the value does not carry", () => {
-    const rows = schemaEntries(components.DownloadInput!, { key: "spectra" }, components)!;
+    const rows = schemaEntries(doc, { key: "spectra" }, doc)!;
     expect(rows.map((r) => r.key)).toEqual(["key"]);
   });
 
   it("returns undefined for non-object values", () => {
-    expect(schemaEntries(components.DownloadInput!, "nope", components)).toBeUndefined();
-    expect(schemaEntries(components.DownloadInput!, null, components)).toBeUndefined();
+    expect(schemaEntries(doc, "nope", doc)).toBeUndefined();
+    expect(schemaEntries(doc, null, doc)).toBeUndefined();
   });
 });
