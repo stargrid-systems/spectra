@@ -39,6 +39,11 @@ const links = computed(
                 icon: "i-lucide-users",
                 to: localePath("/settings/users"),
               },
+              {
+                label: t("settings.nav.system"),
+                icon: "i-lucide-server",
+                to: localePath("/settings/system"),
+              },
             ]
           : []),
       ],

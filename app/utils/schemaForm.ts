@@ -98,8 +98,33 @@ export function buildFormState(schemaIn: JsonSchemaLike, doc?: JsonSchemaLike): 
   return state;
 }
 
-function isFormState(value: FormValue): value is FormState {
+function isFormState(value: FormValue | undefined): value is FormState {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Overlays a current value onto schema-seeded form state so editing starts
+ * from the stored value while keeping defaults for keys it omits.
+ */
+export function mergeFormState(seed: FormState, value: unknown): FormState {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return seed;
+  const out: FormState = { ...seed };
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    const formValue: FormValue | undefined =
+      typeof v === "string" || typeof v === "number" || typeof v === "boolean" || v === null
+        ? v
+        : Array.isArray(v)
+          ? (v as FormValue[])
+          : (v as FormState);
+    if (formValue === undefined) continue;
+    const seeded = out[k];
+    if (isFormState(seeded) && isFormState(formValue)) {
+      out[k] = mergeFormState(seeded, formValue);
+    } else {
+      out[k] = formValue;
+    }
+  }
+  return out;
 }
 
 /**
