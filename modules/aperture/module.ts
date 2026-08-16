@@ -1,6 +1,6 @@
 import { defineNuxtModule, createResolver, addImports, addImportsDir, addPlugin } from "@nuxt/kit";
 
-// aperture openapi ref, bumped by Renovate: ref=openapi sha=e6f7b0c017082501d076e6d9614d9a9a6ddec621
+// aperture openapi ref, bumped by Renovate: ref=openapi sha=a39aabb05e19ae09c983ee599b1f70e577fa5fa5
 export default defineNuxtModule({
   meta: {
     name: "aperture",
