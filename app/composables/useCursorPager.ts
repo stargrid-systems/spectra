@@ -26,6 +26,16 @@ export function useCursorPager<T, P extends object = Record<string, never>>(
   let gen = 0;
 
   async function load(cursor?: string) {
+    if (params && params() === undefined) {
+      gen++;
+      items.value = [];
+      error.value = null;
+      nextCursor.value = null;
+      prevCursor.value = null;
+      currentCursor.value = undefined;
+      pending.value = false;
+      return;
+    }
     const myGen = ++gen;
     pending.value = true;
     error.value = null;
@@ -49,12 +59,12 @@ export function useCursorPager<T, P extends object = Record<string, never>>(
   const hasPrev = computed(() => prevCursor.value !== null);
 
   function loadNext() {
-    if (nextCursor.value === null) return;
+    if (pending.value || nextCursor.value === null) return;
     void load(nextCursor.value);
   }
 
   function loadPrev() {
-    if (prevCursor.value === null) return;
+    if (pending.value || prevCursor.value === null) return;
     void load(prevCursor.value);
   }
 
@@ -64,7 +74,15 @@ export function useCursorPager<T, P extends object = Record<string, never>>(
 
   if (import.meta.client) {
     const paramsKey = computed(() => JSON.stringify(params?.() ?? null));
-    watch(paramsKey, () => void load(undefined), { immediate: true });
+    watch(
+      paramsKey,
+      () => {
+        items.value = [];
+        error.value = null;
+        void load(undefined);
+      },
+      { immediate: true },
+    );
   }
 
   return { items, pending, error, hasNext, hasPrev, loadNext, loadPrev, reload };

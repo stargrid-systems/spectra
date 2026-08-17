@@ -45,10 +45,6 @@ export const tasksQueryKeys: Partial<Record<keyof TasksFilters, string>> = {
   root: "root",
 };
 
-export function defaultTasksFilters(): TasksFilters {
-  return { status: undefined, key: undefined, root: true };
-}
-
 export function useTasksFilters(): TasksFilters {
   return useRouteQueryState(tasksSchema, { keys: tasksQueryKeys });
 }

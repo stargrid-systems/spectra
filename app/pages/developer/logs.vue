@@ -6,7 +6,7 @@ import type {
   LogEvent,
   LogSpan,
 } from "~~/modules/aperture/runtime/types";
-import { defaultLogsState, queryKeys, schema } from "~/composables/useLogsFilters";
+import { defaultLogsState, logsQueryKeys, logsSchema } from "~/composables/useLogsFilters";
 import { timeRangeDurations, useLogsContextKey } from "~/composables/useLogsContext";
 import { LEVEL_COLORS, LOG_LEVELS } from "~/utils/logLevels";
 
@@ -16,7 +16,7 @@ const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
 
-const filters = useRouteQueryState(schema, { keys: queryKeys });
+const filters = useRouteQueryState(logsSchema, { keys: logsQueryKeys });
 
 const {
   items: targetItemsRaw,

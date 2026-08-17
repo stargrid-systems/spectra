@@ -14,7 +14,6 @@
     "done": "Fertig",
     "next": "Weiter",
     "noParameters": "Keine Parameter.",
-    "notImplemented": "Noch nicht implementiert.",
     "prev": "Zurück",
     "save": "Speichern",
     "rawJson": "JSON-Rohdaten",
@@ -77,7 +76,6 @@
       "role": "Rolle"
     },
     "users": {
-      "title": "Benutzer",
       "create": "Benutzer erstellen",
       "created": "Benutzer erstellt.",
       "createFailed": "Benutzer konnte nicht erstellt werden.",
@@ -89,7 +87,6 @@
       "mustChange": "Muss Passwort ändern"
     },
     "apiKeys": {
-      "title": "API-Schlüssel",
       "create": "API-Schlüssel erstellen",
       "created": "API-Schlüssel erstellt",
       "createFailed": "API-Schlüssel konnte nicht erstellt werden.",
@@ -105,8 +102,6 @@
   },
   "settings": {
     "title": "Einstellungen",
-    "description": "eCube-Präferenzen, Schwellenwerte und regionale Optionen anpassen.",
-    "saved": "Deine Einstellungen wurden gespeichert.",
     "nav": {
       "general": "Allgemein",
       "about": "Info",
@@ -134,7 +129,6 @@
       "about": {
         "title": "Info",
         "description": "Build-Informationen",
-        "version": "Version",
         "spectraVersion": "Spectra-Version",
         "apertureVersion": "Aperture-Version"
       }
@@ -162,19 +156,13 @@
       "title": "Logs",
       "body": "System-Logs ansehen und filtern, um Verhalten nachzuvollziehen und Probleme zu diagnostizieren.",
       "filters": {
-        "level": "Level",
-        "target": "Ziel",
         "targetAll": "Alle Ziele",
         "search": "Nachricht, Ziel oder Felder durchsuchen",
-        "timeRange": "Zeitbereich",
-        "fields": "Feldfilter",
         "fieldKey": "Schlüssel",
         "fieldValue": "Wert",
         "addField": "Feldfilter hinzufügen",
-        "removeField": "Entfernen",
         "hideFields": "Feldfilter ausblenden",
-        "clear": "Filter zurücksetzen",
-        "bootOnly": "Nur dieser Boot"
+        "clear": "Filter zurücksetzen"
       },
       "bootSelect": {
         "allBoots": "Alle Boots",
@@ -238,7 +226,6 @@
       "showAllSpans": "Alle Spans anzeigen",
       "events": "Ereignisse",
       "noEvents": "Keine Ereignisse in diesem Span",
-      "spanId": "Span",
       "childSpans": "Untergeordnete Spans",
       "noChildSpans": "Keine untergeordneten Spans"
     }
@@ -253,6 +240,7 @@
       "notStarted": "Nicht gestartet",
       "filters": {
         "statusAll": "Alle Status",
+        "status": "Status",
         "key": "Schlüssel",
         "keyAll": "Alle Schlüssel",
         "rootOnly": "Nur oberste Ebene"
@@ -302,7 +290,11 @@
       "updateFailed": "Zeitplan konnte nicht aktualisiert werden.",
       "deleted": "Zeitplan gelöscht.",
       "deleteFailed": "Zeitplan konnte nicht gelöscht werden.",
+      "deleteAction": "Zeitplan löschen",
+      "enabled": "Aktiviert",
       "interval": "Intervall",
+      "intervalUnit": "Einheit",
+      "intervalRaw": "Rohdauer (ISO 8601)",
       "nextRun": "Nächste Ausführung",
       "lastRun": "Letzte Ausführung",
       "never": "Nie",
@@ -331,9 +323,11 @@
       "evictFailed": "Version konnte nicht entfernt werden.",
       "filters": {
         "mediaType": "Medientyp",
-        "version": "Version"
+        "version": "Version",
+        "sort": "Sortierung"
       },
       "sort": {
+        "default": "Standard",
         "downloadedAt": "Zuletzt heruntergeladen",
         "sizeBytes": "Größe"
       }

@@ -14,7 +14,6 @@
     "done": "Done",
     "next": "Next",
     "noParameters": "No parameters.",
-    "notImplemented": "Not implemented yet.",
     "prev": "Previous",
     "save": "Save",
     "rawJson": "Raw JSON",
@@ -77,7 +76,6 @@
       "role": "Role"
     },
     "users": {
-      "title": "Users",
       "create": "Create user",
       "created": "User created.",
       "createFailed": "Failed to create user.",
@@ -89,7 +87,6 @@
       "mustChange": "Must change password"
     },
     "apiKeys": {
-      "title": "API keys",
       "create": "Create API key",
       "created": "API key created",
       "createFailed": "Failed to create API key.",
@@ -105,8 +102,6 @@
   },
   "settings": {
     "title": "Settings",
-    "description": "Adjust eCube preferences, thresholds, and regional options.",
-    "saved": "Your settings have been saved.",
     "nav": {
       "general": "General",
       "about": "About",
@@ -134,7 +129,6 @@
       "about": {
         "title": "About",
         "description": "Build information",
-        "version": "Version",
         "spectraVersion": "Spectra version",
         "apertureVersion": "Aperture version"
       }
@@ -162,19 +156,13 @@
       "title": "Logs",
       "body": "View and filter system logs to trace behaviors and diagnose issues.",
       "filters": {
-        "level": "Level",
-        "target": "Target",
         "targetAll": "All targets",
         "search": "Search message, target, or fields",
-        "timeRange": "Time range",
-        "fields": "Field filter",
         "fieldKey": "Key",
         "fieldValue": "Value",
         "addField": "Add field filter",
-        "removeField": "Remove",
         "hideFields": "Hide field filter",
-        "clear": "Clear filters",
-        "bootOnly": "This boot only"
+        "clear": "Clear filters"
       },
       "bootSelect": {
         "allBoots": "All boots",
@@ -238,7 +226,6 @@
       "showAllSpans": "Show all spans",
       "events": "Events",
       "noEvents": "No events in this span",
-      "spanId": "Span",
       "childSpans": "Child spans",
       "noChildSpans": "No child spans"
     }
@@ -253,6 +240,7 @@
       "notStarted": "Not started",
       "filters": {
         "statusAll": "All statuses",
+        "status": "Status",
         "key": "Key",
         "keyAll": "All keys",
         "rootOnly": "Top-level only"
@@ -302,7 +290,11 @@
       "updateFailed": "Failed to update the schedule.",
       "deleted": "Schedule deleted.",
       "deleteFailed": "Failed to delete the schedule.",
+      "deleteAction": "Delete schedule",
+      "enabled": "Enabled",
       "interval": "Interval",
+      "intervalUnit": "Unit",
+      "intervalRaw": "Raw duration (ISO 8601)",
       "nextRun": "Next run",
       "lastRun": "Last run",
       "never": "Never",
@@ -331,9 +323,11 @@
       "evictFailed": "Failed to evict the version.",
       "filters": {
         "mediaType": "Media type",
-        "version": "Version"
+        "version": "Version",
+        "sort": "Sort"
       },
       "sort": {
+        "default": "Default",
         "downloadedAt": "Newest downloaded",
         "sizeBytes": "Size"
       }

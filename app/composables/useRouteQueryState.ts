@@ -109,9 +109,15 @@ export function useRouteQueryState<S extends z.core.$ZodObject>(
   watch(
     state,
     () => {
-      const query = serialize();
-      if (queryEquals(query, cachedQuery)) return;
-      cachedQuery = query;
+      const own = serialize();
+      if (queryEquals(own, cachedQuery)) return;
+      cachedQuery = own;
+      const ownUrlKeys = new Set(stateKeys.map(toUrlKey));
+      const query: Record<string, RouteQueryRaw> = {};
+      for (const [k, v] of Object.entries(route.query)) {
+        if (!ownUrlKeys.has(k)) query[k] = v as RouteQueryRaw;
+      }
+      Object.assign(query, own);
       void router.replace({ query });
     },
     { deep: true },

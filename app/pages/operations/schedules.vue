@@ -2,7 +2,8 @@
 import type { SelectMenuItem } from "@nuxt/ui";
 import * as z from "zod/v4/mini";
 import type { ListTaskSchedulesParams, TaskSchedule } from "~~/modules/aperture/runtime/types";
-import type { JsonSchemaLike } from "~/utils/schemaDisplay";
+import type { JsonSchemaLike } from "~/utils/schemaCore";
+import { durationToUnitCombo } from "~/utils/scheduleInterval";
 import { buildFormState, buildZodSchema, cleanFormState, type FormState } from "~/utils/schemaForm";
 import {
   useTaskDefinitionCache,
@@ -93,11 +94,12 @@ function formatInterval(schedule: TaskSchedule): string {
   return fmt.duration(Temporal.Duration.from(schedule.interval), { fractionDigits: 1 });
 }
 
-async function toggleEnabled(schedule: TaskSchedule) {
-  const next = !schedule.enabled;
+async function toggleEnabled(schedule: TaskSchedule, value?: boolean) {
+  const next = value ?? !schedule.enabled;
   schedule.enabled = next;
   try {
-    await apertureApi.updateTaskSchedule(schedule.id, { enabled: next });
+    const updated = await apertureApi.updateTaskSchedule(schedule.id, { enabled: next });
+    Object.assign(schedule, updated);
   } catch {
     schedule.enabled = !next;
     toast.add({ title: t("operations.schedules.updateFailed"), color: "error" });
@@ -131,7 +133,7 @@ const createZodSchema = computed(() =>
   createInputSchema.value ? buildZodSchema(createInputSchema.value) : z.object({}),
 );
 
-watch(createKey, async (key) => {
+async function applyCreateKey(key: string | undefined) {
   createState.value = {};
   createInputSchema.value = undefined;
   if (!key) return;
@@ -143,10 +145,13 @@ watch(createKey, async (key) => {
   if (createInputSchema.value) {
     createState.value = buildFormState(createInputSchema.value);
   }
-});
+}
+
+watch(createKey, (key) => void applyCreateKey(key));
 
 function openCreate() {
   createKey.value = definitionSummaries.value[0]?.key;
+  void applyCreateKey(createKey.value);
   createInterval.value = undefined;
   createOpen.value = true;
 }
@@ -175,21 +180,48 @@ async function onCreate() {
 const editOpen = ref(false);
 const editTarget = ref<TaskSchedule | null>(null);
 const editInterval = ref<Temporal.Duration | undefined>(undefined);
+const editIntervalRaw = ref<string | null>(null);
 const editing = ref(false);
 
 function openEdit(schedule: TaskSchedule) {
   editTarget.value = schedule;
-  editInterval.value = Temporal.Duration.from(schedule.interval);
+  const duration = Temporal.Duration.from(schedule.interval);
+  const combo = durationToUnitCombo(duration);
+  if (combo) {
+    editInterval.value = duration;
+    editIntervalRaw.value = null;
+  } else {
+    // Sub-second intervals have no value+unit form; keep the raw string.
+    editInterval.value = undefined;
+    editIntervalRaw.value = schedule.interval;
+  }
   editOpen.value = true;
 }
 
+const editIntervalValid = computed(() => {
+  if (editIntervalRaw.value !== null) {
+    try {
+      Temporal.Duration.from(editIntervalRaw.value);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  return editInterval.value !== undefined;
+});
+
 async function onEdit() {
-  if (!editTarget.value || !editInterval.value) return;
+  if (!editTarget.value || !editIntervalValid.value) return;
+  let interval: string;
+  if (editIntervalRaw.value !== null) {
+    interval = editIntervalRaw.value;
+  } else {
+    if (!editInterval.value) return;
+    interval = editInterval.value.toString();
+  }
   editing.value = true;
   try {
-    await apertureApi.updateTaskSchedule(editTarget.value.id, {
-      interval: editInterval.value.toString(),
-    });
+    await apertureApi.updateTaskSchedule(editTarget.value.id, { interval });
     editOpen.value = false;
     toast.add({ title: t("operations.schedules.edited"), color: "success" });
     await reload();
@@ -241,7 +273,8 @@ async function onEdit() {
                 <div class="flex items-center gap-3 min-w-0">
                   <USwitch
                     :model-value="schedule.enabled"
-                    @update:model-value="() => toggleEnabled(schedule)"
+                    :aria-label="$t('operations.schedules.enabled')"
+                    @update:model-value="(value) => toggleEnabled(schedule, value)"
                   />
                   <span class="font-mono text-sm truncate">{{ schedule.key }}</span>
                   <UBadge :label="formatInterval(schedule)" variant="subtle" />
@@ -284,6 +317,7 @@ async function onEdit() {
                     color="error"
                     variant="ghost"
                     size="xs"
+                    :aria-label="$t('operations.schedules.deleteAction')"
                     @click="onDelete(schedule)"
                   />
                 </div>
@@ -374,17 +408,25 @@ async function onEdit() {
       <template #body>
         <div class="flex flex-col gap-4">
           <UFormField
+            v-if="editIntervalRaw === null"
             :label="$t('operations.schedules.interval')"
-            :help="!editInterval ? $t('operations.schedules.invalidInterval') : undefined"
+            :help="!editIntervalValid ? $t('operations.schedules.invalidInterval') : undefined"
           >
             <IntervalInput v-model="editInterval" />
+          </UFormField>
+          <UFormField
+            v-else
+            :label="$t('operations.schedules.intervalRaw')"
+            :help="!editIntervalValid ? $t('operations.schedules.invalidInterval') : undefined"
+          >
+            <UInput v-model="editIntervalRaw" class="font-mono" />
           </UFormField>
           <div class="flex justify-end gap-2">
             <UButton variant="ghost" :label="$t('common.cancel')" @click="editOpen = false" />
             <UButton
               :loading="editing"
               :label="$t('common.save')"
-              :disabled="!editInterval"
+              :disabled="!editIntervalValid"
               @click="onEdit()"
             />
           </div>

@@ -105,8 +105,9 @@ test("artifacts list, versions view, download, and evict", async ({ page }) => {
   await expect(page.getByText("spectra", { exact: true })).toBeVisible();
   await expect(page.getByText("3 versions")).toBeVisible();
 
-  // Open the versions view for the key.
-  await page.getByText("spectra", { exact: true }).click();
+  // Open the versions view for the key. The card is one big link overlay
+  // (the anchor has no box; its inset span is the hit area).
+  await page.getByRole("link", { name: "Card link" }).locator("span").click();
   await expect(page).toHaveURL(/key=spectra/);
   await expect(
     page.getByText("sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
@@ -205,4 +206,161 @@ test("upload posts the file body under the key", async ({ page }) => {
 
   await expect.poll(() => captured.uploads.length).toBe(1);
   expect(captured.uploads[0]).toEqual({ key: "firmware", body: "firmware-bytes" });
+});
+
+test("sort filter applies and resets to default", async ({ page }) => {
+  const versionQueries: string[] = [];
+
+  await page.route("**/api/v1/**", async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const pathname = decodeURIComponent(url.pathname);
+
+    if (pathname === "/api/v1/auth/setup-status") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ setup_required: false }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/auth/me") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          actor_id: "2",
+          user_id: "1",
+          display_name: "admin",
+          username: "admin",
+          roles: ["admin"],
+          must_change_password: false,
+        }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/artifacts" && request.method() === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ items: stubArtifacts, next_cursor: null, prev_cursor: null }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/artifacts/spectra/versions") {
+      versionQueries.push(url.search);
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ items: stubVersions, next_cursor: null, prev_cursor: null }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({}),
+    });
+  });
+
+  await page.goto("/en/operations/artifacts", { waitUntil: "domcontentloaded" });
+
+  // The sort filter lives in the versions view of a key. The card is one big
+  // link overlay (the anchor has no box; its inset span is the hit area).
+  await page.getByRole("link", { name: "Card link" }).locator("span").click();
+  await expect(page.getByText("application/vnd.oci.image.layer.v1.tar")).toBeVisible();
+
+  await page.getByRole("button", { name: "Sort", exact: true }).click();
+  await page.getByRole("option", { name: "Size" }).click();
+  await expect.poll(() => versionQueries.some((s) => s.includes("sort=size_bytes"))).toBe(true);
+
+  const sortedCount = versionQueries.length;
+  await page.getByRole("button", { name: "Sort", exact: true }).click();
+  await page.getByRole("option", { name: "Default" }).click();
+  await expect.poll(() => versionQueries.length).toBeGreaterThan(sortedCount);
+  expect(versionQueries[versionQueries.length - 1]!).not.toContain("sort=");
+});
+
+test("pagination moves next and back with cursors", async ({ page }) => {
+  const listQueries: string[] = [];
+
+  const summaryFor = (key: string) => ({
+    key,
+    version: `1.0.0-${key}`,
+    version_count: 1,
+    digest: `sha256:${key.repeat(64).slice(0, 64)}`,
+    size_bytes: 1_000_000,
+    source: `oci:ghcr.io/org/${key}:1`,
+    downloaded_at: iso(60_000),
+  });
+
+  const pageOne = { items: [summaryFor("a")], next_cursor: "c2", prev_cursor: null };
+  const pageTwo = { items: [summaryFor("b")], next_cursor: null, prev_cursor: "c1" };
+
+  await page.route("**/api/v1/**", async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const pathname = decodeURIComponent(url.pathname);
+
+    if (pathname === "/api/v1/auth/setup-status") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ setup_required: false }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/auth/me") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          actor_id: "2",
+          user_id: "1",
+          display_name: "admin",
+          username: "admin",
+          roles: ["admin"],
+          must_change_password: false,
+        }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/artifacts" && request.method() === "GET") {
+      listQueries.push(url.search);
+      const cursor = url.searchParams.get("cursor");
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        // Requests without a cursor and with the prev cursor both show page 1.
+        body: JSON.stringify(cursor === "c2" ? pageTwo : pageOne),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({}),
+    });
+  });
+
+  await page.goto("/en/operations/artifacts", { waitUntil: "domcontentloaded" });
+
+  // The header avatar fallback also shows a bare "a", so identify pages by
+  // the unique version string of the rendered card.
+  await expect(page.getByText("1.0.0-a", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await expect.poll(() => listQueries.some((s) => s.includes("cursor=c2"))).toBe(true);
+  await expect(page.getByText("1.0.0-b", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Previous", exact: true }).click();
+  await expect.poll(() => listQueries.some((s) => s.includes("cursor=c1"))).toBe(true);
+  await expect(page.getByText("1.0.0-a", { exact: true })).toBeVisible();
 });

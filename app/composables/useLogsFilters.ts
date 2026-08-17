@@ -62,7 +62,7 @@ const expandCodec = z.codec(
   },
 );
 
-export const schema = z.object({
+export const logsSchema = z.object({
   level: queryLogLevel(DEFAULT_LEVEL),
   target: queryStringArray(),
   search: queryOptionalString(),
@@ -75,9 +75,9 @@ export const schema = z.object({
   until: querySingle(instantCodec),
 });
 
-export type LogsState = z.infer<typeof schema>;
+export type LogsState = z.infer<typeof logsSchema>;
 
-export const queryKeys: Partial<Record<keyof LogsState, string>> = {
+export const logsQueryKeys: Partial<Record<keyof LogsState, string>> = {
   search: "q",
   timeRange: "range",
   bootId: "boot",
