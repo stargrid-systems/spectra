@@ -1,11 +1,6 @@
 <script setup lang="ts">
-import {
-  pickOneOfBranch,
-  resolveRef,
-  schemaEntries,
-  type JsonSchemaLike,
-  type SchemaRow,
-} from "~/utils/schemaDisplay";
+import { pickOneOfBranch, schemaEntries } from "~/utils/schemaDisplay";
+import { resolveRef, type JsonSchemaLike } from "~/utils/schemaCore";
 import { formatValue } from "~/utils/logFields";
 
 const props = withDefaults(
@@ -45,8 +40,6 @@ const rows = computed(() => {
 const isObject = (v: unknown): boolean => typeof v === "object" && v !== null && !Array.isArray(v);
 
 const isArray = Array.isArray;
-
-const rowSchema = (row: SchemaRow): JsonSchemaLike | undefined => row.schema;
 
 function scalarType(schema: JsonSchemaLike | undefined): "bool" | "enum" | "text" {
   if (schema?.type === "boolean") return "bool";
@@ -96,7 +89,7 @@ const rawJson = computed(() => {
         <SchemaValue
           v-if="isObject(row.value) || isArray(row.value)"
           :value="row.value"
-          :schema="rowSchema(row)"
+          :schema="row.schema"
           :doc="rootDoc"
           :depth="depth + 1"
           :empty-text="emptyText"

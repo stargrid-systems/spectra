@@ -1,20 +1,14 @@
 import * as z from "zod/v4/mini";
-import { resolveRef, type JsonSchemaLike } from "~/utils/schemaDisplay";
+import { oneOfBranchTag, resolveRef, stringEnums, type JsonSchemaLike, typeOf } from "./schemaCore";
 
 export type FormValue =
   string | number | boolean | null | FormValue[] | { [key: string]: FormValue };
 export type FormState = { [key: string]: FormValue };
 
-function typeOf(schema: JsonSchemaLike): string | undefined {
-  if (typeof schema.type === "string") return schema.type;
-  if (Array.isArray(schema.type)) return schema.type.find((t) => t !== "null");
-  return undefined;
-}
-
 /**
  * The branch a `oneOf` schema should use for form state. A single tagged
- * branch (`type`/`kind` enum with one value) is auto-selected; with several
- * candidates the caller must let the user choose.
+ * branch (`type`/`kind`/`key` enum with one value) is auto-selected; with
+ * several candidates the caller must let the user choose.
  */
 export function defaultOneOfBranch(
   schema: JsonSchemaLike,
@@ -24,17 +18,9 @@ export function defaultOneOfBranch(
   if (tagged.length === 1) {
     const branch = tagged[0]!;
     const tag = oneOfBranchTag(branch);
-    return tag ? { branch, tag } : { branch };
+    return tag ? { branch, tag: [tag[0], tag[1] as FormValue] } : { branch };
   }
   if (schema.oneOf.length === 1) return { branch: schema.oneOf[0]! };
-  return undefined;
-}
-
-export function oneOfBranchTag(branch: JsonSchemaLike): [string, FormValue] | undefined {
-  for (const key of ["type", "kind"]) {
-    const value = branch.properties?.[key]?.enum?.[0];
-    if (value !== undefined) return [key, value as FormValue];
-  }
   return undefined;
 }
 
@@ -90,9 +76,11 @@ export function buildFormState(schemaIn: JsonSchemaLike, doc?: JsonSchemaLike): 
       case "boolean":
         state[key] = false;
         break;
-      default:
-        state[key] = "";
+      default: {
+        const values = stringEnums(prop);
+        state[key] = values?.length === 1 ? (values[0] ?? "") : "";
         break;
+      }
     }
   }
   return state;
@@ -130,7 +118,8 @@ export function mergeFormState(seed: FormState, value: unknown): FormState {
 /**
  * Strips empty-string and empty-array placeholders and converts numeric
  * fields (kept as strings for the inputs) to numbers, so the request body
- * only carries values the user actually entered.
+ * only carries values the user actually entered. Numeric conversion resolves
+ * `$ref` targets, array item schemas, and the auto-selected `oneOf` branch.
  */
 export function cleanFormState(
   state: FormState,
@@ -142,38 +131,59 @@ export function cleanFormState(
   const out: FormState = {};
   for (const [key, value] of Object.entries(state)) {
     if (value === "") continue;
+    const prop = schema?.properties?.[key] ? resolveRef(schema.properties[key], docRef) : undefined;
     if (Array.isArray(value)) {
       if (value.length === 0) continue;
-      const items = schema?.properties?.[key]?.items;
-      out[key] = value.map((v) => (isFormState(v) ? cleanFormState(v, items, docRef) : v));
+      const items = prop?.items ? resolveRef(prop.items, docRef) : undefined;
+      out[key] = value.map((v) =>
+        isFormState(v) ? cleanFormState(v, items, docRef) : (toNumber(v, items) ?? v),
+      );
       continue;
     }
     if (isFormState(value)) {
-      out[key] = cleanFormState(value, schema?.properties?.[key], docRef);
+      let sub = prop;
+      if (sub?.oneOf?.length) sub = defaultOneOfBranch(sub)?.branch;
+      out[key] = cleanFormState(value, sub, docRef);
       continue;
     }
-    if (
-      typeof value === "string" &&
-      (typeOf(schema?.properties?.[key] ?? {}) === "number" ||
-        typeOf(schema?.properties?.[key] ?? {}) === "integer") &&
-      value.trim() !== "" &&
-      !Number.isNaN(Number(value))
-    ) {
-      out[key] = Number(value);
-      continue;
-    }
-    out[key] = value;
+    out[key] = toNumber(value, prop) ?? value;
   }
   return out;
 }
 
-const NUMBER_RE = /^-?\d+(\.\d+)?$/;
+function toNumber(value: unknown, schema?: JsonSchemaLike): number | undefined {
+  const t = typeOf(schema ?? {});
+  if (
+    (t === "number" || t === "integer") &&
+    typeof value === "string" &&
+    value.trim() !== "" &&
+    !Number.isNaN(Number(value))
+  ) {
+    return Number(value);
+  }
+  return undefined;
+}
+
+const NUMBER_RE = /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/;
 const INTEGER_RE = /^-?\d+$/;
 
 /**
+ * Wraps a numeric predicate as a zod check for string-backed number fields.
+ * The zod/v4/mini check protocol hands the payload with `.value` and expects
+ * issues pushed, not a boolean return.
+ */
+function numericCheck(pred: (value: string) => boolean) {
+  return z.check((payload: z.core.ParsePayload<string>) => {
+    if (pred(payload.value)) return;
+    payload.issues.push({ code: "custom", input: payload.value });
+  });
+}
+
+/**
  * Builds a zod schema validating form state against the JSON Schema:
- * required checks, enum domains, numeric strings, nested objects, and
- * arrays. Optional fields accept the empty-string placeholder.
+ * required checks, enum domains, numeric strings, nested objects, arrays,
+ * and the declared string/number/array constraints. Optional fields accept
+ * the empty-string placeholder.
  */
 export function buildZodSchema(
   schemaIn: JsonSchemaLike,
@@ -203,15 +213,28 @@ export function buildZodSchema(
     }
     case "array": {
       const items = schema.items ? buildZodSchema(schema.items, true, docRef) : z.any();
-      const arr = z.array(items);
-      return required ? arr.check(z.minLength(1)) : arr;
+      let arr = z.array(items);
+      if (schema.minItems !== undefined) arr = arr.check(z.minLength(schema.minItems));
+      return required ? arr.check(z.minLength(Math.max(1, schema.minItems ?? 1))) : arr;
     }
     case "boolean":
       return z.boolean();
     case "number":
     case "integer": {
       const re = typeOf(schema) === "integer" ? INTEGER_RE : NUMBER_RE;
-      const num = z.string().check(z.regex(re));
+      let num = z.string().check(z.regex(re));
+      const min = schema.minimum;
+      if (min !== undefined) num = num.check(numericCheck((value) => Number(value) >= min));
+      const max = schema.maximum;
+      if (max !== undefined) num = num.check(numericCheck((value) => Number(value) <= max));
+      const exclusiveMinimum = schema.exclusiveMinimum;
+      if (exclusiveMinimum !== undefined) {
+        num = num.check(numericCheck((value) => Number(value) > exclusiveMinimum));
+      }
+      const exclusiveMaximum = schema.exclusiveMaximum;
+      if (exclusiveMaximum !== undefined) {
+        num = num.check(numericCheck((value) => Number(value) < exclusiveMaximum));
+      }
       return required ? num.check(z.minLength(1)) : num;
     }
     case "string": {
@@ -219,7 +242,14 @@ export function buildZodSchema(
         const values: [string, ...string[]] = schema.enum as [string, ...string[]];
         return z.enum(values);
       }
-      return required ? z.string().check(z.minLength(1)) : z.string();
+      let str = z.string();
+      const minLength = schema.minLength;
+      if (minLength !== undefined) str = str.check(z.minLength(minLength));
+      const maxLength = schema.maxLength;
+      if (maxLength !== undefined) str = str.check(z.maxLength(maxLength));
+      const pattern = schema.pattern;
+      if (pattern !== undefined) str = str.check(z.regex(new RegExp(pattern)));
+      return required ? str.check(z.minLength(1)) : str;
     }
     default:
       return z.any();

@@ -1,39 +1,6 @@
-export interface JsonSchemaLike {
-  $ref?: string;
-  $defs?: Record<string, JsonSchemaLike>;
-  type?: string | string[];
-  title?: string;
-  description?: string;
-  enum?: unknown[];
-  oneOf?: JsonSchemaLike[];
-  properties?: Record<string, JsonSchemaLike>;
-  items?: JsonSchemaLike;
-  required?: string[];
-  format?: string;
-  default?: unknown;
-  [key: string]: unknown;
-}
+import { isRecord, oneOfBranchTag, resolveRef, type JsonSchemaLike } from "./schemaCore";
 
-/**
- * Resolves `$ref` pointers against the standalone schema document they came
- * from. Definitions endpoints serve draft 2020-12 documents with dependencies
- * under `$defs`, so `#/$defs/Name` is the shape in play. Sibling keywords next
- * to `$ref` (e.g. a `description`) win over the target. Returns undefined for
- * pointers the document does not contain.
- */
-export function resolveRef(
-  schema: JsonSchemaLike,
-  doc?: JsonSchemaLike,
-): JsonSchemaLike | undefined {
-  if (!schema.$ref) return schema;
-  const prefix = "#/$defs/";
-  if (!schema.$ref.startsWith(prefix) || !doc?.$defs) return undefined;
-  const name = schema.$ref.slice(prefix.length);
-  const target = doc.$defs[name];
-  if (!target) return undefined;
-  const { $ref: _, ...siblings } = schema;
-  return { ...resolveRef(target, doc), ...siblings };
-}
+export type { JsonSchemaLike } from "./schemaCore";
 
 /**
  * Picks the `oneOf` branch the given value matches. Prefers a literal
@@ -44,31 +11,22 @@ export function pickOneOfBranch(
   branches: JsonSchemaLike[],
   value: unknown,
 ): JsonSchemaLike | undefined {
-  if (typeof value !== "object" || value === null) return undefined;
-  const record = value as Record<string, unknown>;
+  if (!isRecord(value)) return undefined;
 
   for (const branch of branches) {
-    const tag = tagValue(branch);
-    if (tag && recordMatchesTag(record, tag)) return branch;
+    const tag = oneOfBranchTag(branch);
+    if (tag && recordMatchesTag(value, tag)) return branch;
   }
 
   let best: { branch: JsonSchemaLike; score: number } | undefined;
   for (const branch of branches) {
-    const required = (branch.required ?? []).filter((k) => k in record);
+    const required = (branch.required ?? []).filter((k) => k in value);
     if (required.length === 0) continue;
     const total = branch.required?.length ?? 0;
     const score = required.length / total;
     if (!best || score > best.score) best = { branch, score };
   }
   return best?.branch;
-}
-
-function tagValue(branch: JsonSchemaLike): [string, unknown] | undefined {
-  for (const key of ["type", "kind", "key"]) {
-    const prop = branch.properties?.[key];
-    if (prop?.enum?.length === 1) return [key, prop.enum[0]];
-  }
-  return undefined;
 }
 
 function recordMatchesTag(record: Record<string, unknown>, [key, expected]: [string, unknown]) {

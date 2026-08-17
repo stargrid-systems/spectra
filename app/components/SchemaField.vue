@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { resolveRef, type JsonSchemaLike } from "~/utils/schemaDisplay";
+import { resolveRef, stringEnums, typeOf, type JsonSchemaLike } from "~/utils/schemaCore";
 
 /**
  * Leaf widget for a schema property: enum select, boolean checkbox, number
@@ -20,15 +20,22 @@ const resolved = computed(() =>
   props.schema ? resolveRef(props.schema, props.doc ?? props.schema) : undefined,
 );
 
-const enumValues = computed<string[] | undefined>(() => {
-  if (!resolved.value?.enum?.length) return undefined;
-  return resolved.value.enum.filter((v): v is string => typeof v === "string");
+const enumValues = computed<string[] | undefined>(() =>
+  resolved.value ? stringEnums(resolved.value) : undefined,
+);
+
+const isBoolean = computed(() => typeOf(resolved.value) === "boolean");
+const isNumber = computed(() => {
+  const t = typeOf(resolved.value);
+  return t === "number" || t === "integer";
 });
 
-const isBoolean = computed(() => resolved.value?.type === "boolean");
-const isNumber = computed(() => {
-  const t = resolved.value?.type;
-  return t === "number" || t === "integer";
+const numberStep = computed<number | undefined>(() => {
+  const multiple = resolved.value?.multipleOf;
+  if (typeof multiple === "number" && multiple > 0 && Number.isFinite(multiple)) {
+    return multiple;
+  }
+  return typeOf(resolved.value) === "integer" ? 1 : undefined;
 });
 
 function setText(v: string | number | null | undefined) {
@@ -57,8 +64,17 @@ function setText(v: string | number | null | undefined) {
     v-else-if="isNumber"
     :model-value="String(model ?? '')"
     type="number"
+    :min="resolved?.minimum"
+    :max="resolved?.maximum"
+    :step="numberStep"
     class="w-full"
     @update:model-value="setText"
   />
-  <UInput v-else :model-value="String(model ?? '')" class="w-full" @update:model-value="setText" />
+  <UInput
+    v-else
+    :model-value="String(model ?? '')"
+    :maxlength="resolved?.maxLength"
+    class="w-full"
+    @update:model-value="setText"
+  />
 </template>
