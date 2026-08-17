@@ -503,7 +503,9 @@ test("cancel rejection 409 shows not-cancellable toast", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "download" })).toBeVisible();
   await page.getByRole("button", { name: "Cancel task" }).click();
-  await expect(page.getByText("This task kind cannot be cancelled.")).toBeVisible();
+  await expect(
+    page.getByText("This task kind cannot be cancelled.", { exact: true }),
+  ).toBeVisible();
 });
 
 test("cancel rejection 410 shows already-finished toast", async ({ page }) => {
@@ -594,7 +596,7 @@ test("cancel rejection 410 shows already-finished toast", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "download" })).toBeVisible();
   await page.getByRole("button", { name: "Cancel task" }).click();
-  await expect(page.getByText("This task has already finished.")).toBeVisible();
+  await expect(page.getByText("This task has already finished.", { exact: true })).toBeVisible();
 });
 
 test("key filter selects and clears", async ({ page }) => {
