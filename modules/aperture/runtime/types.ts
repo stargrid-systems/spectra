@@ -3,8 +3,6 @@ import type { components, operations } from "./generated";
 type Schemas = components["schemas"];
 
 export type VersionResponse = Schemas["VersionResponse"];
-export type OrderParam = Schemas["OrderParam"];
-export type VersionSortParam = Schemas["VersionSortParam"];
 export type LevelResponse = Schemas["LevelResponse"];
 
 export type RawLogEvent = Schemas["LogEventResponse"];
@@ -76,8 +74,6 @@ export type Setting = Schemas["SettingResponse"];
 
 export type TaskStatus = Schemas["TaskStatusResponse"];
 export type TaskStatusParam = Schemas["TaskStatusParam"];
-export type TaskProgress = Schemas["ProgressResponse"];
-export type TaskProgressMessage = Schemas["ProgressMessageResponse"];
 export type TaskDefinition = Schemas["TaskDefinitionResponse"];
 export type TaskDefinitionSummary = Schemas["TaskDefinitionSummary"];
 export type TaskDefinitionPage = Page<TaskDefinitionSummary>;

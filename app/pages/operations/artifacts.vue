@@ -7,6 +7,7 @@ import type {
   ListArtifactVersionsParams,
 } from "~~/modules/aperture/runtime/types";
 import {
+  ARTIFACT_SORTS,
   artifactsParamsFromFilters,
   useArtifactsFilters,
   useArtifactVersionsFilters,
@@ -17,6 +18,7 @@ import { bytesToUnit } from "~/utils/formatBytes";
 const { t } = useI18n();
 const toast = useToast();
 const fmt = useFormatter();
+const localePath = useLocalePath();
 
 const filters = useArtifactsFilters();
 const versionFilters = useArtifactVersionsFilters();
@@ -60,13 +62,6 @@ const {
 
 const selectedKey = computed(() => filters.key);
 
-function openKey(key: string) {
-  filters.key = key;
-  versionFilters.media_type = undefined;
-  versionFilters.version = undefined;
-  versionFilters.sort = undefined;
-}
-
 // Versions view.
 
 const versionsParams = computed<ListArtifactVersionsParams>(() =>
@@ -87,9 +82,17 @@ const {
   () => (selectedKey.value ? versionsParams.value : undefined),
 );
 
+const SORT_LABEL_KEYS = {
+  downloaded_at: "downloadedAt",
+  size_bytes: "sizeBytes",
+} as const;
+
 const sortItems = computed<SelectMenuItem[]>(() => [
-  { label: t("operations.artifacts.sort.downloadedAt"), value: "downloaded_at" },
-  { label: t("operations.artifacts.sort.sizeBytes"), value: "size_bytes" },
+  { label: t("operations.artifacts.sort.default"), value: undefined },
+  ...ARTIFACT_SORTS.map((s) => ({
+    label: t(`operations.artifacts.sort.${SORT_LABEL_KEYS[s]}`),
+    value: s,
+  })),
 ]);
 
 async function onEvict(version: ArtifactVersion) {
@@ -140,7 +143,7 @@ async function onUpload() {
     uploadOpen.value = false;
     toast.add({ title: t("operations.artifacts.uploaded"), color: "success" });
     if (selectedKey.value && selectedKey.value === uploadKey.value.trim()) {
-      await versionsReload();
+      await Promise.all([versionsReload(), listReload()]);
     } else {
       await listReload();
     }
@@ -197,6 +200,7 @@ async function onUpload() {
             value-key="value"
             size="sm"
             class="w-44"
+            :aria-label="$t('operations.artifacts.filters.sort')"
           />
         </template>
 
@@ -234,8 +238,7 @@ async function onUpload() {
             v-for="artifact in artifacts"
             :key="artifact.key"
             variant="subtle"
-            class="cursor-pointer"
-            @click="openKey(artifact.key)"
+            :to="localePath({ path: '/operations/artifacts', query: { key: artifact.key } })"
           >
             <div class="flex flex-wrap sm:items-center justify-between gap-3">
               <div class="flex items-center gap-3 min-w-0">
@@ -287,8 +290,8 @@ async function onUpload() {
                   {{ version.digest }}
                 </span>
                 <span class="text-muted text-xs">
-                  <template v-if="version.version">{{ version.version }} · </template>
-                  <template v-if="version.media_type">{{ version.media_type }} · </template>
+                  <template v-if="version.version">{{ version.version }} / </template>
+                  <template v-if="version.media_type">{{ version.media_type }} / </template>
                   {{ formatBytes(version.size_bytes) }}
                 </span>
               </div>

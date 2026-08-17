@@ -1,7 +1,5 @@
 import { isRecord, oneOfBranchTag, resolveRef, type JsonSchemaLike } from "./schemaCore";
 
-export type { JsonSchemaLike } from "./schemaCore";
-
 /**
  * Picks the `oneOf` branch the given value matches. Prefers a literal
  * discriminator (`type`/`kind`/`key` enum constant), then falls back to

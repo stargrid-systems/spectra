@@ -3,7 +3,7 @@ import type { SelectMenuItem } from "@nuxt/ui";
 import * as z from "zod/v4/mini";
 import { useIntervalFn } from "@vueuse/core";
 import type { CreateTaskBody, ListTasksParams, Task } from "~~/modules/aperture/runtime/types";
-import type { JsonSchemaLike } from "~/utils/schemaDisplay";
+import type { JsonSchemaLike } from "~/utils/schemaCore";
 import { buildFormState, buildZodSchema, cleanFormState, type FormState } from "~/utils/schemaForm";
 import {
   TASK_STATUS_FILTERS,
@@ -56,15 +56,18 @@ const statusItems = computed<SelectMenuItem[]>(() => [
   })),
 ]);
 
-const keyItems = computed<SelectMenuItem[]>(() =>
-  definitionSummaries.value.map((d) => ({ label: d.key, value: d.key })),
-);
+const keyItems = computed<SelectMenuItem[]>(() => [
+  { label: t("operations.tasks.filters.keyAll"), value: undefined },
+  ...definitionSummaries.value.map((d) => ({ label: d.key, value: d.key })),
+]);
 
 const hasActiveTasks = computed(() =>
   tasks.value.some((task) => task.status === "pending" || task.status === "running"),
 );
 
-const { pause, resume } = useIntervalFn(() => void reload(), 3000);
+const { pause, resume } = useIntervalFn(() => {
+  if (!pending.value) void reload();
+}, 3000);
 
 watch(hasActiveTasks, (active) => (active ? resume() : pause()), { immediate: true });
 
@@ -82,22 +85,25 @@ const createZodSchema = computed(() =>
   createInputSchema.value ? buildZodSchema(createInputSchema.value) : z.object({}),
 );
 
-watch(createKey, async (key) => {
+async function applyCreateKey(key: string | undefined) {
   createState.value = {};
   createInputSchema.value = undefined;
   if (!key) return;
   const definition = await getDefinition(key);
-  const schema = definition?.input_schema;
   if (createKey.value !== key) return;
+  const schema = definition?.input_schema;
   createInputSchema.value =
     typeof schema === "object" && schema !== null ? (schema as JsonSchemaLike) : undefined;
   if (createInputSchema.value) {
     createState.value = buildFormState(createInputSchema.value);
   }
-});
+}
+
+watch(createKey, (key) => void applyCreateKey(key));
 
 function openCreate() {
   createKey.value = definitionSummaries.value[0]?.key;
+  void applyCreateKey(createKey.value);
   createOpen.value = true;
 }
 
@@ -111,6 +117,7 @@ async function onCreate() {
     };
     await apertureApi.createTask(body);
     createOpen.value = false;
+    createState.value = {};
     toast.add({ title: t("operations.tasks.created"), color: "success" });
     await reload();
   } catch (err) {
@@ -137,6 +144,7 @@ async function onCreate() {
           value-key="value"
           size="sm"
           class="w-44"
+          :aria-label="$t('operations.tasks.filters.status')"
         />
 
         <InfiniteSelectMenu
@@ -147,6 +155,7 @@ async function onCreate() {
           value-key="value"
           size="sm"
           class="w-44"
+          :aria-label="$t('operations.tasks.filters.key')"
           @load-more="loadMoreDefinitions()"
         />
 
@@ -181,7 +190,7 @@ async function onCreate() {
     <div class="p-4">
       <DataState
         :pending="pending && tasks.length === 0"
-        :error="error ? String(error) : null"
+        :error="tasks.length === 0 && error ? String(error) : null"
         :empty="tasks.length === 0"
         :empty-text="$t('operations.tasks.empty')"
         :error-text="$t('operations.tasks.error')"

@@ -65,6 +65,12 @@ watch([valueText, unit], () => {
       class="flex-1"
       @update:model-value="(v) => (valueText = v ?? '')"
     />
-    <USelectMenu v-model="unit" :items="unitItems" value-key="value" class="w-32" />
+    <USelectMenu
+      v-model="unit"
+      :items="unitItems"
+      value-key="value"
+      class="w-32"
+      :aria-label="$t('operations.schedules.intervalUnit')"
+    />
   </div>
 </template>

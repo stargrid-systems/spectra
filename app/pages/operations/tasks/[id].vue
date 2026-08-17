@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useIntervalFn } from "@vueuse/core";
 import type { ListTasksParams, Task, TaskDefinition } from "~~/modules/aperture/runtime/types";
-import type { JsonSchemaLike } from "~/utils/schemaDisplay";
+import type { JsonSchemaLike } from "~/utils/schemaCore";
 import { useTaskDefinitionCache } from "~/composables/useTaskDefinitions";
 import { TASK_STATUS_COLORS, useTaskDisplay } from "~/composables/useTaskDisplay";
 
@@ -25,7 +25,9 @@ watch(
   async (key) => {
     definition.value = undefined;
     if (!key) return;
-    definition.value = await getDefinition(key);
+    const def = await getDefinition(key);
+    if (task.value?.key !== key) return;
+    definition.value = def;
   },
 );
 
@@ -52,7 +54,9 @@ const isActive = computed(
   () => task.value?.status === "pending" || task.value?.status === "running",
 );
 
-const { pause, resume } = useIntervalFn(() => void load(), 3000);
+const { pause, resume } = useIntervalFn(() => {
+  if (!loading.value) void load();
+}, 3000);
 
 watch(isActive, (active) => (active ? resume() : pause()), { immediate: true });
 
@@ -114,7 +118,7 @@ const {
     <div class="p-4 flex flex-col gap-4">
       <DataState
         :pending="loading && !task"
-        :error="loadError ? String(loadError) : null"
+        :error="!task && loadError ? String(loadError) : null"
         :error-text="$t('operations.tasks.error')"
         :retry-text="$t('common.retry')"
         @retry="load()"
@@ -149,7 +153,7 @@ const {
                     variant="ghost"
                     size="sm"
                     :label="$t('operations.tasks.refresh')"
-                    :loading="loading"
+                    :loading="loading && !task"
                     @click="load()"
                   />
                 </div>
@@ -275,7 +279,7 @@ const {
           <UPageCard :title="$t('operations.tasks.detail.children')" variant="subtle">
             <DataState
               :pending="childrenPending && children.length === 0"
-              :error="childrenError ? String(childrenError) : null"
+              :error="children.length === 0 && childrenError ? String(childrenError) : null"
               :empty="children.length === 0"
               :empty-text="$t('operations.tasks.detail.noChildren')"
               :error-text="$t('operations.tasks.error')"

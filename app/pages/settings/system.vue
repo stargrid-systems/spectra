@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import * as z from "zod/v4/mini";
 import type { Setting } from "~~/modules/aperture/runtime/types";
-import type { JsonSchemaLike } from "~/utils/schemaDisplay";
+import type { JsonSchemaLike } from "~/utils/schemaCore";
 import {
   buildFormState,
   buildZodSchema,
@@ -9,10 +9,7 @@ import {
   mergeFormState,
   type FormState,
 } from "~/utils/schemaForm";
-import {
-  useSettingDefinitionCache,
-  useSettingDefinitionSummaries,
-} from "~/composables/useSettingDefinitions";
+import { useSettingDefinitionCache } from "~/composables/useSettingDefinitions";
 
 const { t } = useI18n();
 const toast = useToast();
@@ -24,7 +21,6 @@ const { data, pending, error, refresh } = await useAsyncData<Setting[]>(
   { server: false },
 );
 
-useSettingDefinitionSummaries();
 const { getDefinition } = useSettingDefinitionCache();
 
 const schemas = ref<Map<string, JsonSchemaLike | undefined>>(new Map());
