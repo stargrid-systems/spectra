@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
 import * as z from "zod/v4/mini";
-import type { JsonSchemaLike } from "~/utils/schemaDisplay";
+import { oneOfBranchTag, type JsonSchemaLike } from "~/utils/schemaCore";
 import {
   buildFormState,
   buildZodSchema,
   cleanFormState,
   defaultOneOfBranch,
   mergeFormState,
-  oneOfBranchTag,
   type FormState,
 } from "~/utils/schemaForm";
 
@@ -87,6 +86,14 @@ describe("buildFormState", () => {
   it("returns an empty state without properties", () => {
     expect(buildFormState({ type: "object" })).toEqual({});
   });
+
+  it("seeds a single-value string enum without a default", () => {
+    const state = buildFormState({
+      type: "object",
+      properties: { kind: { type: "string", enum: ["cron"] } },
+    });
+    expect(state.kind).toBe("cron");
+  });
 });
 
 describe("cleanFormState", () => {
@@ -107,6 +114,44 @@ describe("cleanFormState", () => {
 
   it("keeps booleans as booleans", () => {
     expect(cleanFormState({ verbose: true }, downloadInput)).toEqual({ verbose: true });
+  });
+
+  it("converts numeric strings behind a $ref", () => {
+    const schema: JsonSchemaLike = {
+      $defs: { Secs: { type: "number" } },
+      type: "object",
+      properties: { timeout: { $ref: "#/$defs/Secs" } },
+    };
+    expect(cleanFormState({ timeout: "5" }, schema)).toEqual({ timeout: 5 });
+  });
+
+  it("converts numeric array items", () => {
+    const schema: JsonSchemaLike = {
+      type: "object",
+      properties: { ids: { type: "array", items: { type: "integer" } } },
+    };
+    expect(cleanFormState({ ids: ["1", "2"] }, schema)).toEqual({ ids: [1, 2] });
+  });
+
+  it("converts numeric leaves inside a single-branch oneOf property", () => {
+    const schema: JsonSchemaLike = {
+      type: "object",
+      properties: {
+        job: {
+          oneOf: [
+            {
+              type: "object",
+              properties: {
+                kind: { type: "string", enum: ["cron"] },
+                retries: { type: "integer" },
+              },
+            },
+          ],
+        },
+      },
+    };
+    const state = { job: { kind: "cron", retries: "3" } };
+    expect(cleanFormState(state, schema)).toEqual({ job: { kind: "cron", retries: 3 } });
   });
 });
 
@@ -153,6 +198,39 @@ describe("buildZodSchema", () => {
 
     const badTag = { key: "k", source: { reference: "r", media_type: "m", type: "docker" } };
     expect(z.safeParse(schema, badTag).success).toBe(false);
+  });
+
+  it("accepts scientific notation for type number", () => {
+    const numSchema = buildZodSchema({ type: "number" });
+    expect(z.safeParse(numSchema, "1e3").success).toBe(true);
+    expect(z.safeParse(numSchema, "1.5E-2").success).toBe(true);
+    expect(z.safeParse(numSchema, "-2e+10").success).toBe(true);
+    expect(z.safeParse(numSchema, "abc").success).toBe(false);
+  });
+
+  it("enforces minimum on numeric strings", () => {
+    const minSchema = buildZodSchema({ type: "integer", minimum: 0 });
+    expect(z.safeParse(minSchema, "3").success).toBe(true);
+    expect(z.safeParse(minSchema, "-5").success).toBe(false);
+  });
+
+  it("enforces pattern on strings", () => {
+    const patternSchema = buildZodSchema({ type: "string", pattern: "^[a-z]+$" });
+    expect(z.safeParse(patternSchema, "abc").success).toBe(true);
+    expect(z.safeParse(patternSchema, "ABC").success).toBe(false);
+  });
+
+  it("enforces minLength and maxLength on strings", () => {
+    const lenSchema = buildZodSchema({ type: "string", minLength: 2, maxLength: 4 });
+    expect(z.safeParse(lenSchema, "abc").success).toBe(true);
+    expect(z.safeParse(lenSchema, "a").success).toBe(false);
+    expect(z.safeParse(lenSchema, "abcdef").success).toBe(false);
+  });
+
+  it("enforces minItems on arrays", () => {
+    const arrSchema = buildZodSchema({ type: "array", items: { type: "string" }, minItems: 2 });
+    expect(z.safeParse(arrSchema, ["a", "b"]).success).toBe(true);
+    expect(z.safeParse(arrSchema, ["a"]).success).toBe(false);
   });
 });
 

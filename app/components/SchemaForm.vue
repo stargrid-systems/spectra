@@ -1,6 +1,18 @@
 <script setup lang="ts">
-import { resolveRef, type JsonSchemaLike } from "~/utils/schemaDisplay";
-import { buildFormState, oneOfBranchTag, type FormState, type FormValue } from "~/utils/schemaForm";
+import {
+  isRecord,
+  oneOfBranchTag,
+  resolveRef,
+  stringEnums,
+  type JsonSchemaLike,
+  typeOf,
+} from "~/utils/schemaCore";
+import {
+  buildFormState,
+  defaultOneOfBranch,
+  type FormState,
+  type FormValue,
+} from "~/utils/schemaForm";
 
 const props = withDefaults(
   defineProps<{
@@ -19,18 +31,6 @@ const state = defineModel<FormState>("state", { required: true });
 const rootDoc = computed(() => props.doc ?? props.schema);
 
 const MAX_DEPTH = 6;
-
-function typeOf(schema: JsonSchemaLike | undefined): string | undefined {
-  if (!schema) return undefined;
-  if (typeof schema.type === "string") return schema.type;
-  if (Array.isArray(schema.type)) return schema.type.find((t) => t !== "null");
-  return undefined;
-}
-
-function enumValues(schema: JsonSchemaLike | undefined): string[] | undefined {
-  if (!schema?.enum?.length) return undefined;
-  return schema.enum.filter((v): v is string => typeof v === "string");
-}
 
 interface Field {
   key: string;
@@ -64,12 +64,39 @@ function classify(field: Omit<Field, "kind" | "branches">): Pick<Field, "kind" |
     case "integer":
       return { kind: "number" };
     default:
-      return enumValues(schema)?.length ? { kind: "enum" } : { kind: "text" };
+      return stringEnums(schema ?? {})?.length ? { kind: "enum" } : { kind: "text" };
   }
 }
 
+const rootBranches = computed<{ label: string; branch: JsonSchemaLike }[] | undefined>(() => {
+  const resolved = resolveRef(props.schema, rootDoc.value);
+  if (!resolved?.oneOf?.length) return undefined;
+  if (defaultOneOfBranch(resolved)) return undefined; // single branch unwraps silently
+  return resolved.oneOf.map((branch) => ({
+    label: branch.description ?? String(oneOfBranchTag(branch)?.[1] ?? branch.title ?? "option"),
+    branch,
+  }));
+});
+
+const rootChoice = ref<string | undefined>(undefined);
+const activeRootBranch = computed(
+  () => rootBranches.value?.find((b) => b.label === rootChoice.value) ?? rootBranches.value?.[0],
+);
+
+// A root oneOf with a single resolvable branch renders that branch directly.
+function effectiveSchema(): JsonSchemaLike | undefined {
+  if (rootBranches.value) {
+    const branch = activeRootBranch.value?.branch;
+    return branch ? (resolveRef(branch, rootDoc.value) ?? branch) : undefined;
+  }
+  const resolved = resolveRef(props.schema, rootDoc.value);
+  if (!resolved?.oneOf?.length) return resolved;
+  const branch = defaultOneOfBranch(resolved)?.branch;
+  return branch ? (resolveRef(branch, rootDoc.value) ?? branch) : resolved;
+}
+
 const fields = computed<Field[]>(() => {
-  const schema = resolveRef(props.schema, rootDoc.value);
+  const schema = effectiveSchema();
   if (!schema?.properties) return [];
   return Object.entries(schema.properties)
     .map(([key, prop]) => {
@@ -109,28 +136,27 @@ function selectedBranch(field: Field): JsonSchemaLike | undefined {
   return field.branches.find((b) => b.label === label)?.branch;
 }
 
-function selectBranch(field: Field, label: string | undefined) {
-  branchChoices.set(field.key, label ?? "");
-  const branch = field.branches?.find((b) => b.label === label)?.branch;
-  if (!branch) return;
+function seedBranchState(field: Field, branch: JsonSchemaLike) {
   const nested = buildFormState(branch, rootDoc.value);
   const tag = oneOfBranchTag(branch);
-  if (tag) nested[tag[0]] = tag[1];
+  if (tag) nested[tag[0] as string] = tag[1] as FormValue;
   state.value[field.key] = nested;
 }
 
-function isRecord(value: FormValue | undefined): value is FormState {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+function selectBranch(field: Field, label: string | undefined) {
+  branchChoices.set(field.key, label ?? "");
+  const branch = field.branches?.find((b) => b.label === label)?.branch;
+  if (branch) seedBranchState(field, branch);
 }
 
 function stateAt(key: string): FormState | undefined {
   const v = state.value[key];
-  return isRecord(v) ? v : undefined;
+  return isRecord(v) ? (v as FormState) : undefined;
 }
 
 function itemAt(key: string, index: number): FormState | undefined {
   const v = asArray(key)[index];
-  return isRecord(v) ? v : undefined;
+  return isRecord(v) ? (v as FormState) : undefined;
 }
 
 function asArray(key: string): FormValue[] {
@@ -159,10 +185,50 @@ function setArrayItem(key: string, index: number, value: string) {
   arr[index] = value;
   state.value[key] = arr;
 }
+
+function selectRootBranch(label: string | undefined) {
+  rootChoice.value = label;
+  const branch = rootBranches.value?.find((b) => b.label === label)?.branch;
+  if (!branch) return;
+  const nested = buildFormState(branch, rootDoc.value);
+  const tag = oneOfBranchTag(branch);
+  if (tag) nested[tag[0] as string] = tag[1] as FormValue;
+  state.value = nested;
+}
+
+watch(
+  rootBranches,
+  (branches) => {
+    if (!branches?.length) return;
+    if (Object.keys(state.value).length > 0) return;
+    selectRootBranch(branches[0]!.label);
+  },
+  { immediate: true },
+);
+
+watch(
+  () => fields.value.filter((f) => f.kind === "branch-select"),
+  (branchFields) => {
+    for (const field of branchFields) {
+      if (stateAt(field.key) !== undefined) continue;
+      const branch = field.branches?.[0]?.branch;
+      if (branch) seedBranchState(field, branch);
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
   <div class="flex flex-col gap-4">
+    <UFormField v-if="rootBranches" :label="activeRootBranch?.label">
+      <USelectMenu
+        :model-value="activeRootBranch?.label"
+        :items="rootBranches.map((b) => b.label)"
+        class="w-full"
+        @update:model-value="(v) => selectRootBranch(typeof v === 'string' ? v : undefined)"
+      />
+    </UFormField>
     <template v-for="field in fields" :key="field.key">
       <UFormField
         v-if="field.kind === 'branch-select'"

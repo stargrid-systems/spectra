@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  pickOneOfBranch,
-  resolveRef,
-  schemaEntries,
-  type JsonSchemaLike,
-} from "~/utils/schemaDisplay";
+import { pickOneOfBranch, schemaEntries } from "~/utils/schemaDisplay";
+import { resolveRef, type JsonSchemaLike } from "~/utils/schemaCore";
 
 // Mirrors the standalone documents the definitions endpoints serve:
 // dependencies under $defs, refs as #/$defs/Name.
@@ -94,6 +90,29 @@ describe("pickOneOfBranch", () => {
 
   it("returns undefined when no branch matches", () => {
     expect(pickOneOfBranch(branches, { unrelated: true })).toBeUndefined();
+  });
+
+  it("recognizes a branch tagged via a key property enum", () => {
+    const keyed: JsonSchemaLike[] = [
+      {
+        type: "object",
+        required: ["key", "value"],
+        properties: {
+          key: { type: "string", enum: ["checksum"] },
+          value: { type: "string" },
+        },
+      },
+      {
+        type: "object",
+        required: ["key", "data"],
+        properties: {
+          key: { type: "string", enum: ["blob"] },
+          data: { type: "string" },
+        },
+      },
+    ];
+    expect(pickOneOfBranch(keyed, { key: "blob", data: "..." })).toBe(keyed[1]);
+    expect(pickOneOfBranch(keyed, { key: "checksum", value: "..." })).toBe(keyed[0]);
   });
 });
 
