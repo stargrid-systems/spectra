@@ -414,3 +414,279 @@ test("create task form is driven by the key schema", async ({ page }) => {
     },
   });
 });
+
+test("cancel rejection 409 shows not-cancellable toast", async ({ page }) => {
+  await page.route("**/api/v1/**", async (route) => {
+    const url = new URL(route.request().url());
+    const pathname = url.pathname;
+
+    if (pathname === "/api/v1/auth/setup-status") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ setup_required: false }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/auth/me") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          actor_id: "2",
+          user_id: "1",
+          display_name: "admin",
+          username: "admin",
+          roles: ["admin"],
+          must_change_password: false,
+        }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/tasks/task-2") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ...stubDetail, input: ociInput }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/tasks") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ items: [], next_cursor: null, prev_cursor: null }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/task-definitions") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ items: definitionSummaries, next_cursor: null, prev_cursor: null }),
+      });
+      return;
+    }
+
+    const defMatch = pathname.match(/^\/api\/v1\/task-definitions\/(.+)$/);
+    if (defMatch) {
+      const definition = definitionFor(decodeURIComponent(defMatch[1]!));
+      if (!definition) {
+        await route.fulfill({ status: 404 });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(definition),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({}),
+    });
+  });
+
+  // Registered after the catch-all, so this route takes precedence.
+  await page.route("**/api/v1/tasks/task-2/cancel", async (route) => {
+    await route.fulfill({ status: 409 });
+  });
+
+  await page.goto("/en/operations/tasks/task-2", { waitUntil: "domcontentloaded" });
+
+  await expect(page.getByRole("heading", { name: "download" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancel task" }).click();
+  await expect(
+    page.getByText("This task kind cannot be cancelled.", { exact: true }),
+  ).toBeVisible();
+});
+
+test("cancel rejection 410 shows already-finished toast", async ({ page }) => {
+  await page.route("**/api/v1/**", async (route) => {
+    const url = new URL(route.request().url());
+    const pathname = url.pathname;
+
+    if (pathname === "/api/v1/auth/setup-status") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ setup_required: false }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/auth/me") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          actor_id: "2",
+          user_id: "1",
+          display_name: "admin",
+          username: "admin",
+          roles: ["admin"],
+          must_change_password: false,
+        }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/tasks/task-2") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ...stubDetail, input: ociInput }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/tasks") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ items: [], next_cursor: null, prev_cursor: null }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/task-definitions") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ items: definitionSummaries, next_cursor: null, prev_cursor: null }),
+      });
+      return;
+    }
+
+    const defMatch = pathname.match(/^\/api\/v1\/task-definitions\/(.+)$/);
+    if (defMatch) {
+      const definition = definitionFor(decodeURIComponent(defMatch[1]!));
+      if (!definition) {
+        await route.fulfill({ status: 404 });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(definition),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({}),
+    });
+  });
+
+  // Registered after the catch-all, so this route takes precedence.
+  await page.route("**/api/v1/tasks/task-2/cancel", async (route) => {
+    await route.fulfill({ status: 410 });
+  });
+
+  await page.goto("/en/operations/tasks/task-2", { waitUntil: "domcontentloaded" });
+
+  await expect(page.getByRole("heading", { name: "download" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancel task" }).click();
+  await expect(page.getByText("This task has already finished.", { exact: true })).toBeVisible();
+});
+
+test("key filter selects and clears", async ({ page }) => {
+  const taskRequests: string[] = [];
+
+  await page.route("**/api/v1/**", async (route) => {
+    const url = new URL(route.request().url());
+    const pathname = url.pathname;
+
+    if (pathname === "/api/v1/auth/setup-status") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ setup_required: false }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/auth/me") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          actor_id: "2",
+          user_id: "1",
+          display_name: "admin",
+          username: "admin",
+          roles: ["admin"],
+          must_change_password: false,
+        }),
+      });
+      return;
+    }
+
+    if (pathname === TASKS_PATH) {
+      taskRequests.push(url.search);
+      // No active tasks, so the 3s auto-refresh stays paused.
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ items: [stubTasks[0]!], next_cursor: null, prev_cursor: null }),
+      });
+      return;
+    }
+
+    if (pathname === "/api/v1/task-definitions") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ items: definitionSummaries, next_cursor: null, prev_cursor: null }),
+      });
+      return;
+    }
+
+    const defMatch = pathname.match(/^\/api\/v1\/task-definitions\/(.+)$/);
+    if (defMatch) {
+      const definition = definitionFor(decodeURIComponent(defMatch[1]!));
+      if (!definition) {
+        await route.fulfill({ status: 404 });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(definition),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({}),
+    });
+  });
+
+  await page.goto("/en/operations/tasks", { waitUntil: "domcontentloaded" });
+  await expect(page.getByText("download", { exact: true })).toBeVisible();
+
+  // Selecting a key reloads the list with key=<chosen>.
+  await page.getByRole("button", { name: "Key", exact: true }).click();
+  await page.getByRole("option", { name: "download" }).click();
+  await expect.poll(() => taskRequests.some((s) => s.includes("key=download"))).toBe(true);
+  await expect(page).toHaveURL(/key=download/);
+
+  // "All keys" drops the key from both request and URL.
+  const filteredCount = taskRequests.length;
+  await page.getByRole("button", { name: "Key", exact: true }).click();
+  await page.getByRole("option", { name: "All keys" }).click();
+  await expect.poll(() => taskRequests.length).toBeGreaterThan(filteredCount);
+  expect(taskRequests[taskRequests.length - 1]!).not.toContain("key=");
+  await expect(page).toHaveURL((url) => !url.searchParams.has("key"));
+});

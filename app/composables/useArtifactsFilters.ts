@@ -21,7 +21,7 @@ const querySort = z.codec(z.array(z.string()), z.custom<ArtifactSort | undefined
   encode: (v) => (v ? [v] : []),
 });
 
-const artifactsSchema = z.object({
+export const artifactsSchema = z.object({
   q: queryOptionalString(),
   key: queryOptionalString(),
 });
@@ -38,7 +38,7 @@ export function artifactsParamsFromFilters(filters: ArtifactsFilters): ListArtif
   return p;
 }
 
-const versionsSchema = z.object({
+export const versionsSchema = z.object({
   media_type: queryOptionalString(),
   version: queryOptionalString(),
   sort: querySort,

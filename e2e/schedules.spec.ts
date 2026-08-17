@@ -201,3 +201,128 @@ test("create schedule posts key, schema-driven input, and interval", async ({ pa
     interval: "PT10M",
   });
 });
+
+test("edit interval patches the new interval", async ({ page }) => {
+  const captured = { patches: [] as unknown[], creates: [] as unknown[] };
+  await stubSchedulesApi(page, captured);
+
+  let patchedInterval = "PT5M";
+  await page.route("**/api/v1/task-schedules/sched-1", async (route) => {
+    const patch = route.request().postDataJSON();
+    captured.patches.push(patch);
+    patchedInterval = patch.interval;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ...stubSchedule, interval: patch.interval }),
+    });
+  });
+
+  await page.route("**/api/v1/task-schedules", async (route) => {
+    if (route.request().method() === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          items: [{ ...stubSchedule, interval: patchedInterval }],
+          next_cursor: null,
+          prev_cursor: null,
+        }),
+      });
+      return;
+    }
+    await route.fallback();
+  });
+
+  await page.goto("/en/operations/schedules", { waitUntil: "domcontentloaded" });
+
+  await page.getByRole("button", { name: "Edit schedule" }).click();
+
+  const interval = page.getByRole("spinbutton");
+  await expect(interval).toHaveValue("5");
+  await interval.fill("10");
+  await expect(interval).toHaveValue("10");
+
+  await page.getByRole("button", { name: "Save" }).click();
+
+  await expect.poll(() => captured.patches.length).toBe(1);
+  expect(captured.patches[0]).toEqual({ interval: "PT10M" });
+  await expect(page.getByText("10 min", { exact: true })).toBeVisible();
+});
+
+test("delete schedule fires delete and removes the row", async ({ page }) => {
+  const captured = { patches: [] as unknown[], creates: [] as unknown[] };
+  await stubSchedulesApi(page, captured);
+
+  const deletes: string[] = [];
+  await page.route("**/api/v1/task-schedules/sched-1", async (route) => {
+    if (route.request().method() !== "DELETE") {
+      await route.fallback();
+      return;
+    }
+    deletes.push(route.request().url());
+    await route.fulfill({ status: 204 });
+  });
+
+  await page.route("**/api/v1/task-schedules", async (route) => {
+    if (route.request().method() === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          items: deletes.length > 0 ? [] : [stubSchedule],
+          next_cursor: null,
+          prev_cursor: null,
+        }),
+      });
+      return;
+    }
+    await route.fallback();
+  });
+
+  await page.goto("/en/operations/schedules", { waitUntil: "domcontentloaded" });
+  await expect(page.getByText("download", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Delete schedule" }).click();
+
+  await expect.poll(() => deletes.length).toBe(1);
+  await expect(page.getByText("download", { exact: true })).toHaveCount(0);
+});
+
+test("sub-second interval edits through the raw input", async ({ page }) => {
+  const captured = { patches: [] as unknown[], creates: [] as unknown[] };
+  await stubSchedulesApi(page, captured);
+
+  const subSecondSchedule = { ...stubSchedule, interval: "PT0.5S" };
+
+  await page.route("**/api/v1/task-schedules", async (route) => {
+    if (route.request().method() === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          items: [subSecondSchedule],
+          next_cursor: null,
+          prev_cursor: null,
+        }),
+      });
+      return;
+    }
+    await route.fallback();
+  });
+
+  await page.goto("/en/operations/schedules", { waitUntil: "domcontentloaded" });
+  await expect(page.getByText("download", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Edit schedule" }).click();
+
+  const raw = page.getByRole("textbox", { name: "Raw duration (ISO 8601)" });
+  await expect(raw).toHaveValue("PT0.5S");
+  await raw.fill("PT1S");
+  await expect(raw).toHaveValue("PT1S");
+
+  await page.getByRole("button", { name: "Save" }).click();
+
+  await expect.poll(() => captured.patches.length).toBe(1);
+  expect(captured.patches[0]).toEqual({ interval: "PT1S" });
+});
