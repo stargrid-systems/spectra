@@ -45,7 +45,7 @@
     "@nuxt/test-utils": "4.1.0",
     "@playwright/test": "1.62.1",
     "@vue/test-utils": "2.4.11",
-    "eslint": "10.8.1",
+    "eslint": "10.9.0",
     "eslint-config-prettier": "10.1.8",
     "happy-dom": "20.11.6",
     "openapi-typescript": "7.13.0",
