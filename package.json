@@ -1,6 +1,6 @@
 {
   "name": "spectra",
-  "version": "2026.8.3",
+  "version": "2026.8.4",
   "type": "module",
   "private": true,
   "engines": {
